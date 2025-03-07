@@ -40,7 +40,7 @@ conda activate tbs_sensorimotor_intelligence
 
 ## Further Setup
 
-The results of DMC experiments are stored under `DMC_ROOT_DIR`. By default, this is `~/tbp/results/dmc`, but you can change this by setting the `DMC_ROOT_DIR` environment variable. It has the following structure:
+The results of experiments are stored under `DMC_ROOT_DIR`, where we use the acronym DMC for "Demonstrating Monty's Capabilities". By default, this is `~/tbp/results/dmc`, but you can change this by setting the `DMC_ROOT_DIR` environment variable. It has the following structure:
 
 ```
 DMC_ROOT_DIR/
