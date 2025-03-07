@@ -14,9 +14,9 @@
 # you open a new terminal, run:
 #     $ conda config --set auto_activate_base false
 # Finally, activate the environment with:
-#     $ conda activate paper # TODO: Update to your paper's name
+#     $ conda activate tbs_sensorimotor_intelligence
 #
-name: paper # TODO: Update to your paper's name
+name: tbs_sensorimotor_intelligence
 channels:
   - aihabitat
   - pytorch
@@ -26,7 +26,7 @@ channels:
   - thousandbrainsproject
 
 dependencies:
-  - thousandbrainsproject::tbp.monty==0.0.2 # TODO: Pin to desired tbp.monty version for reproducibility
+  - thousandbrainsproject::tbp.monty==0.0.2
   - pip
   - pip:
     - -e .[dev]

@@ -1,30 +1,4 @@
-# tbp.monty_paper
-
-This is a template repository for reproducibility code for papers depending on https://github.com/thousandbrainsproject/tbp.monty.
-
-To create a repository from this template, find and click the "Use this template" button:
-
-![Use this template](./delete_me.png)
-
-## Make it yours
-
-After copying the template, you need to address the following TODOs.
-
-### `environment.yml`
-
-- Update project `name`.
-- Update `tbptslominski::tbp.monty` version.
-- Add any other dependencies.
-
-### `pyproject.toml`
-
-- Update the project `description`
-- Update the project `name`
-- Update the `Repository` and `Issues` URLs
-
-### `delete_me.png`
-
-- Delete this file
+# tbp.tbs_sensorimotor_intelligence
 
 ### `README.md`
 
