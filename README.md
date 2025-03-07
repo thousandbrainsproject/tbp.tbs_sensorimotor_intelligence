@@ -4,8 +4,6 @@ This repository contains code to replicate experiments from our paper, "Thousand
 
 ## Installation & Experiments
 
-Experiments make use of either the Monty framework, or Pytorch in the case of deep learning models. These can be found under their respective directories `monty` and `pytorch`.
-
-For instructions on how to run experiments, please refer to the respective README files in the `monty` and `pytorch` directories.
+Experiments make use of either the Monty framework, or Pytorch in the case of deep learning models. Instructions for environment setup and experiment execution can be found in the README files within `monty` and `pytorch`.
 
 Information on licensing can also be found in the respective directories.
