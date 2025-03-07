@@ -8,3 +8,4 @@ Experiments make use of either the Monty framework, or Pytorch in the case of de
 
 For instructions on how to run experiments, please refer to the respective README files in the `monty` and `pytorch` directories.
 
+Information on licensing can also be found in the respective directories.
