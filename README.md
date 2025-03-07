@@ -1,8 +1,8 @@
 # tbp.tbs_sensorimotor_intelligence
 
-### `README.md`
+This repository contains the code to replicate experiments from our paper, "Thousand Brains Systems: Sensorimotor Intelligence for Rapid, Robust Learning and Inference".
 
-- Update for your project
+Experiments make use of either the Monty framework, or Pytorch in the case of deep learning models. These can be found under their respective directories `monty` and `pytorch`.
 
 ## Installation
 
@@ -14,7 +14,7 @@ To create the environment, run:
 ```
 conda env create -f environment.yml --subdir=osx-64
 conda init zsh
-conda activate paper # TODO: Update to your paper's name
+conda activate tbs_sensorimotor_intelligence
 conda config --env --set subdir osx-64
 ```
 
@@ -22,7 +22,7 @@ conda config --env --set subdir osx-64
 ```
 conda env create -f environment.yml --subdir=osx-64
 conda init
-conda activate paper # TODO: Update to your paper's name
+conda activate tbs_sensorimotor_intelligence
 conda config --env --set subdir osx-64
 ```
 
@@ -30,31 +30,19 @@ conda config --env --set subdir osx-64
 ```
 conda env create -f environment.yml
 conda init zsh
-conda activate paper # TODO: Update to your paper's name
+conda activate tbs_sensorimotor_intelligence
 ```
 
 ### Intel (bash shell)
 ```
 conda env create -f environment.yml
 conda init
-conda activate paper # TODO: Update to your paper's name
+conda activate tbs_sensorimotor_intelligence
 ```
 
 ## Experiments
 
-Experiments are defined in the `configs` directory.
-
-After installing the environment, to run an experiment, run:
-
-```bash
-python run.py -e <experiment_name>
-```
-
-To run an experiment where episodes are executed in parallel, run:
-
-```bash
-python run_parallel.py -e <experiment_name> -n <num_parallel>
-```
+For instructions on how to run experiments, please refer to the respective README files in the `monty` and `pytorch` directories.
 
 ## Development
 
@@ -89,3 +77,4 @@ mypy .
 ```bash
 pytest
 ```
+TODO test this
