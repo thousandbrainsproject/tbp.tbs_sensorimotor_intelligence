@@ -1,6 +1,6 @@
 # tbp.tbs_sensorimotor_intelligence
 
-This repository contains the code to replicate experiments from our paper, "Thousand Brains Systems: Sensorimotor Intelligence for Rapid, Robust Learning and Inference".
+This repository contains code to replicate experiments from our paper, "Thousand Brains Systems: Sensorimotor Intelligence for Rapid, Robust Learning and Inference".
 
 Experiments make use of either the Monty framework, or Pytorch in the case of deep learning models. These can be found under their respective directories `monty` and `pytorch`.
 
@@ -8,7 +8,7 @@ Experiments make use of either the Monty framework, or Pytorch in the case of de
 
 The environment for this project is managed with [conda](https://www.anaconda.com/download/success).
 
-To create the environment, run:
+To create the environment, run the following command, tailored to your system:
 
 ### ARM64 (Apple Silicon) (zsh shell)
 ```
@@ -77,4 +77,3 @@ mypy .
 ```bash
 pytest
 ```
-TODO test this
