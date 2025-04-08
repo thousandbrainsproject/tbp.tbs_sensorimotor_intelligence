@@ -115,7 +115,7 @@ This means performance is evaluated with:
 The main output measure is accuracy and rotation error as a function of training rotations.
 
 **Notes:**
-- Training rotations should be structured:
+- Training rotations are ordered as:
   1. First 6 rotations = cube faces
   2. Next 8 rotations = cube corners
   3. Remaining = random rotations (as otherwise introduces redundancy)
