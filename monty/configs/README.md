@@ -10,7 +10,7 @@ This figure presents results from four inference experiments testing Monty's rob
 
 - `dist_agent_1lm`: Standard inference with no sensor noise or random rotations
 - `dist_agent_1lm_noise`: Tests robustness to sensor noise
-- `dist_agent_1lm_randrot_all`: Tests performance across 14 random rotations
+- `dist_agent_1lm_randrot_all`: Tests performance across 14 random rotations, not seen during training
 - `dist_agent_1lm_randrot_all_noise`: Tests performance with both random rotations and sensor noise
 
 Here we are showing the performance of the "standard" version of Monty, using:
