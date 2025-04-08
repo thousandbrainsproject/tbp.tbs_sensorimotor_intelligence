@@ -154,8 +154,26 @@ def get_eval_patch_config(agent_type: str) -> Dict[str, Any]:
     """
     if agent_type == "dist":
         surf_agent_sm = False
+        features = [
+            "pose_vectors",
+            "pose_fully_defined",
+            "on_object",
+            "principal_curvatures_log",
+            "hsv",
+        ]
     elif agent_type == "surf":
         surf_agent_sm = True
+        features = [
+            "pose_vectors",
+            "pose_fully_defined",
+            "on_object",
+            "object_coverage",
+            "min_depth",
+            "mean_depth",
+            "principal_curvatures",
+            "principal_curvatures_log",
+            "hsv",
+        ]
     else:
         raise ValueError(f"Invalid agent_type: {agent_type}. Must be 'dist' or 'surf'.")
 
@@ -163,15 +181,7 @@ def get_eval_patch_config(agent_type: str) -> Dict[str, Any]:
         sensor_module_class=FeatureChangeSM,
         sensor_module_args=dict(
             sensor_module_id="patch",
-            features=[
-                # morphological features (necessarry)
-                "pose_vectors",
-                "pose_fully_defined",
-                # non-morphological features (optional)
-                "on_object",
-                "principal_curvatures_log",
-                "hsv",
-            ],
+            features=features,
             delta_thresholds={
                 "on_object": 0,
                 "distance": 0.01,
