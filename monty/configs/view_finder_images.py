@@ -300,7 +300,7 @@ Configs
 # Define the 14 standard training rotations used for 'view_finder_base'.
 train_rotations = get_cube_face_and_corner_views_rotations()
 
-# Define out motor system config that uses the custom policy and uses
+# Define our motor system config that uses the custom policy and uses
 # a shorter desired object distance than default.
 motor_system_config = MotorSystemConfigInformedNoTransStepS20(
     motor_system_class=FramedObjectPolicy,
@@ -310,7 +310,7 @@ motor_system_config = MotorSystemConfigInformedNoTransStepS20(
         rotation_degrees=5.0,
         use_goal_state_driven_actions=False,
         switch_frequency=1.0,
-        good_view_percentage=0.5,  # Make sure we define the required
+        good_view_percentage=0.5,
         desired_object_distance=0.2,
     ),
 )
