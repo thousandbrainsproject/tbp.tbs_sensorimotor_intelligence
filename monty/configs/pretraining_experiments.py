@@ -28,7 +28,7 @@ be used for eval experiments. The config 'getter'functions defined here are
  - `get_pretrain_patch_config`
  - `get_pretrain_motor_config`
 
-Names and logger args have follow certain rules for consistency and to help
+Names and logger args follow certain rules for consistency and to help
 avoid accidental conflicts:
  - Model names follow the pattern `{AGENT_TYPE}_agent_{NUM_LMS}lm`, where `AGENT_TYPE`
    is  `"dist"` or `"surf"`.

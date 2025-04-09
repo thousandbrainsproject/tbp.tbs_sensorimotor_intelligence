@@ -131,7 +131,7 @@ The main output measure is accuracy and rotation error as a function of training
 
 ## Figure 8: Computationally Efficient Learning and Inference
 
-### Inference (12 experiments)
+### Inference (2 experiments)
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
 
@@ -140,7 +140,7 @@ There are two experiments, one using hypothesis testing and another using no hyp
 
 **Notes:**
 
-- For the 12 experiments above, `x_percent_threshold` determines the threshold at which the LM determines it has converged. In addition, we explicitly set `evidence_update_threshold="80%".
+- For the experiments above, `x_percent_threshold` determines the threshold at which the LM determines it has converged. In addition, we explicitly set `evidence_update_threshold="80%".
 
 This performance is evaluated with:
 
@@ -151,7 +151,7 @@ This performance is evaluated with:
 
 *Due to ViT model comparison.
 
-The main output measure is accuracy and FLOPs as a function of `x_percent threshold` and whether hypothesis testing was used or not.
+The main output measure is accuracy and FLOPs as a function of whether hypothesis testing was used or not.
 
 ## Pretraining Experiments
 `pretraining_experiments.py` defined pretraining experiments that generate models
