@@ -2,7 +2,7 @@
 
 Below is a summary of configs that correspond to figures in the Demonstrating Monty Capabilities paper, with descriptions motivating the choice of config parameters.
 
-After installing the environment (see `../README.md`), to run an experiment, run:
+After installing the environment (see `../README.md` for instructions), to run an experiment, run:
 
 ```bash
 python run.py -e <experiment_name>
@@ -133,7 +133,7 @@ The main output measure is accuracy and rotation error as a function of training
 
 ### Inference (12 experiments)
 
-There are two sets of experiments, one using hypothesis testing and another using no hypothesis testing.
+There are two experiments, one using hypothesis testing and another using no hypothesis testing.
 
 - `dist_agent_1lm_randrot_nohyp_x_percent_20p` - 20% threshold (No Hypothesis Testing)
 - `dist_agent_1lm_randrot_x_percent_20p` - 20% threshold (With Hypothesis Testing)
