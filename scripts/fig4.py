@@ -56,10 +56,12 @@ from tbp.monty.frameworks.utils.logging_utils import get_pose_error
 
 init_matplotlib_style()
 
-
 # Directories to save plots and tables to.
 OUT_DIR = DMC_ANALYSIS_DIR / "fig4"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Set numpy seed for reproducibility
+np.random.seed(0)
 
 
 """
