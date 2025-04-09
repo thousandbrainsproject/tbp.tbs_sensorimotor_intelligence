@@ -140,7 +140,7 @@ There are two experiments, one using hypothesis testing and another using no hyp
 
 **Notes:**
 
-- For the 12 experiments above, `x_percent_threshold` determines the threshold at which the LM determines it has converged. In addition, we explicitly set `evidence_update_threshold="80%".
+- For the experiments above, `x_percent_threshold` determines the threshold at which the LM determines it has converged. In addition, we explicitly set `evidence_update_threshold="80%".
 
 This performance is evaluated with:
 
