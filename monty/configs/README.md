@@ -201,7 +201,6 @@ All experiments save their results to subdirectories of `DMC_ROOT` / `visualizat
 ## Other Experiments
 `view_finder_experiments.py` defines five experiments:
 - view_finder_base: 14 standard training rotations
-- view_finder_randrot_all: 14 randomly generated rotations
 - view_finder_randrot: 5 pre-defined "random" rotations
 - view_finder_32: 32 training rotations for rapid learning experiments
 - view_finder_base_highres: 14 standard training rotations at 512x512 resolution.
