@@ -151,7 +151,7 @@ This performance is evaluated with:
 
 *Due to ViT model comparison.
 
-The main output measure is accuracy and FLOPs as a function of `x_percent threshold` and whether hypothesis testing was used or not.
+The main output measure is accuracy and FLOPs as a function of whether hypothesis testing was used or not.
 
 ## Pretraining Experiments
 `pretraining_experiments.py` defined pretraining experiments that generate models
