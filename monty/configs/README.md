@@ -2,6 +2,17 @@
 
 Below is a summary of configs that correspond to figures in the Demonstrating Monty Capabilities paper, with descriptions motivating the choice of config parameters.
 
+After installing the environment (see `../README.md`), to run an experiment, run:
+
+```bash
+python run.py -e <experiment_name>
+```
+or
+```bash
+python run_parallel.py -e <experiment_name> -n <num_parallel>
+```
+to run an experiment in parallel.
+
 ## Figure 1 & 2: Diagramatic Figures With No Experiments
 
 ## Figure 3: Robust Sensorimotor Inference
