@@ -477,8 +477,6 @@ class ObjectModel:
         return self + (-translation)
 
 
-
-
 def load_object_model(
     model_name: str,
     object_name: str,
