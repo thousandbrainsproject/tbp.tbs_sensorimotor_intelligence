@@ -17,7 +17,6 @@ about the object and pose for each image.
 Four experiment configs generate output used by the ViT-based model, each storing
 images at 224x224 resolution:
 - view_finder_base: 14 standard training rotations
-- view_finder_randrot_all: 14 randomly generated rotations
 - view_finder_randrot: 5 pre-defined "random" rotations
 - view_finder_32: 32 training rotations for rapid learning experiments
 
@@ -358,17 +357,6 @@ dataset_args.env_init_args["agents"][0].agent_args["resolutions"] = [
 dataset_args.__post_init__()
 
 """
-14 Randomly Generated Rotations
--------------------------------
-"""
-view_finder_randrot_all = copy.deepcopy(view_finder_base)
-view_finder_randrot_all["experiment_args"].n_eval_epochs = 14
-view_finder_randrot_all["logging_config"].run_name = "view_finder_randrot_all"
-view_finder_randrot_all[
-    "eval_dataloader_args"
-].object_init_sampler = RandomRotationObjectInitializer()
-
-"""
 5 (Pre-defined) Random Rotations
 --------------------------------
 """
@@ -409,7 +397,6 @@ view_finder_base_highres["dataset_args"].__post_init__()
 
 CONFIGS = {
     "view_finder_base": view_finder_base,
-    "view_finder_randrot_all": view_finder_randrot_all,
     "view_finder_randrot": view_finder_randrot,
     "view_finder_32": view_finder_32,
     "view_finder_base_highres": view_finder_base_highres,
