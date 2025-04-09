@@ -21,9 +21,7 @@ Here we are showing the performance of the "standard" version of Monty, using:
 
 The main output measures are accuracy, rotation error (degrees), and Chamfer distance for each condition.
 
-Figure 3 also include an analysis of symmetric rotations, the data for which is generated with the experiment `fig3_symmetry_run` which is defined in `visualizations.py`.
-
-## Default Parameters for Figures 4+
+## Default Parameters for Figures 5+
 Unless specified otherwise, the following figures/experiments use:
 - 77 objects
 - 5 predefined "random" rotations. These rotations were randomly generated but are kept constant across experiments. 
@@ -126,18 +124,8 @@ The main output measure is accuracy and rotation error as a function of training
 
 There are two sets of experiments, one using hypothesis testing and another using no hypothesis testing.
 
-- `dist_agent_1lm_randrot_nohyp_x_percent_5p` - 5% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_nohyp_x_percent_10p` - 10% threshold (No Hypothesis Testing)
 - `dist_agent_1lm_randrot_nohyp_x_percent_20p` - 20% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_nohyp_x_percent_40p` - 40% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_nohyp_x_percent_60p` - 60% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_nohyp_x_percent_80p` - 80% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_5p` - 5% threshold (With Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_10p` - 10% threshold (With Hypothesis Testing)
 - `dist_agent_1lm_randrot_x_percent_20p` - 20% threshold (With Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_40p` - 40% threshold (With Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_60p` - 60% threshold (With Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_80p` - 80% threshold (With Hypothesis Testing)
 
 **Notes:**
 
