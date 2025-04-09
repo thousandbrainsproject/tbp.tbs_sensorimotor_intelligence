@@ -131,7 +131,7 @@ The main output measure is accuracy and rotation error as a function of training
 
 ## Figure 8: Computationally Efficient Learning and Inference
 
-### Inference (12 experiments)
+### Inference (2 experiments)
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
 
