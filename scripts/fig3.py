@@ -364,10 +364,7 @@ def plot_evidence_graphs_and_patches():
     all_evidences = stats["LM_0"]["evidences"]
     all_possible_locations = stats["LM_0"]["possible_locations"]
     all_possible_rotations = stats["LM_0"]["possible_rotations"]
-    objects = {
-        name: load_object_model("dist_agent_1lm_10distinctobj", name)
-        for name in object_names
-    }
+    objects = {name: load_object_model("dist_agent_1lm", name) for name in object_names}
     for name, obj in objects.items():
         obj.evidences, obj.locations = [], []
         for i in range(n_steps):
