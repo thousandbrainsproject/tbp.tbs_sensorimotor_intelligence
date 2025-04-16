@@ -462,7 +462,8 @@ def plot_evidence_graphs_and_patches():
                 vmin=evidences_min,
                 vmax=evidences_max,
                 s=sizes,
-                linewidths=0,
+                linewidths=0.5,
+                edgecolor="black",
             )
 
             ax.view_init(100, -100, -10)
