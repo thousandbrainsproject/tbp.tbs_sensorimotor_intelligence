@@ -348,7 +348,7 @@ Panel C: Accuracy
 """
 
 
-def plot_accuracy():
+def plot_accuracy_double():
     """Plot accuracy of 1-LM and multi-LM experiments.
 
     Requires the following experiments to have been run:
@@ -454,6 +454,106 @@ def plot_accuracy():
     plt.show()
 
 
+def plot_accuracy():
+    """Plot accuracy of 1-LM and multi-LM experiments.
+
+    Requires the following experiments to have been run:
+    - `dist_agent_1lm_randrot_noise`
+    - `dist_agent_2lm_half_lms_match_randrot_noise`
+    - `dist_agent_4lm_half_lms_match_randrot_noise`
+    - `dist_agent_8lm_half_lms_match_randrot_noise`
+    - `dist_agent_16lm_half_lms_match_randrot_noise`
+    - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
+
+    """
+
+    # Initialize output directory.
+    out_dir = OUT_DIR / "performance"
+    out_dir.mkdir(exist_ok=True, parents=True)
+
+    one_lm_color = TBP_COLORS["blue"]
+    multi_lm_group = FIXED_MIN_LMS_MATCH_EXPERIMENTS
+    multi_lm_color = TBP_COLORS["purple"]
+
+    fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
+    top_ax, bottom_ax = axes
+    fig.subplots_adjust(hspace=0.05)
+
+    # Plot params.
+    ylims = [(0, 25), (75, 100)]
+    bar_width = 0.8
+    xticks = np.arange(5)
+
+    # 1-LM
+    percent_correct_1lm, _ = get_accuracy(ONE_LM_EXPERIMENT)
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.bar(
+            xticks[0],
+            [percent_correct_1lm],
+            color=one_lm_color,
+            width=bar_width,
+        )
+
+    # Multi-LM
+    accuracies = [get_accuracy(exp) for exp in multi_lm_group]
+    percent_correct = [acc[0] for acc in accuracies]
+    percent_tied = [acc[1] for acc in accuracies]
+
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        # Plot percent correct.
+        ax.bar(
+            xticks[1:],
+            percent_correct,
+            color=multi_lm_color,
+            width=bar_width,
+        )
+        # Plot percent confused but confused and correct were tied.
+        ax.bar(
+            xticks[1:],
+            percent_tied,
+            bottom=percent_correct,
+            color=multi_lm_color,
+            alpha=0.5,
+            width=bar_width,
+        )
+
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.set_ylim(ylims[ax_num])
+
+    # Sets parameters for both x-axes (they're shared, so removing ticks for the
+    # top plot removes ticks for the bottom plot).
+    bottom_ax.set_xlabel("Num. LMs")
+    bottom_ax.set_xticks(xticks)
+    bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
+
+    bottom_ax.set_ylabel("% Correct")
+    bottom_ax.set_yticks([0, 10, 20])
+    top_ax.spines.bottom.set_visible(False)
+    top_ax.set_yticks([80, 90, 100])
+
+    # Draw y-axis divider markers.
+    marker_kwargs = dict(
+        marker=[(-1, -0.5), (1, 0.5)],
+        markersize=8,
+        linestyle="none",
+        color="k",
+        mec="k",
+        mew=1,
+        clip_on=False,
+    )
+    top_ax.plot([0], [0], transform=top_ax.transAxes, **marker_kwargs)
+    bottom_ax.plot([0], [1], transform=bottom_ax.transAxes, **marker_kwargs)
+
+    fig.savefig(out_dir / "accuracy.png")
+    fig.savefig(out_dir / "accuracy.svg")
+    plt.show()
+
+
 """
 --------------------------------------------------------------------------------
 Panel C: Steps
@@ -461,7 +561,7 @@ Panel C: Steps
 """
 
 
-def plot_steps():
+def plot_steps_double():
     """Plot the number of steps taken by 1-LM and multi-LM experiments.
 
     Requires the following experiments to have been run:
@@ -602,7 +702,142 @@ def plot_steps():
     plt.show()
 
 
+def plot_steps():
+    """Plot the number of steps taken by 1-LM and multi-LM experiments.
+
+    Requires the following experiments to have been run:
+    - `dist_agent_1lm_randrot_noise`
+    - `dist_agent_2lm_half_lms_match_randrot_noise`
+    - `dist_agent_4lm_half_lms_match_randrot_noise`
+    - `dist_agent_8lm_half_lms_match_randrot_noise`
+    - `dist_agent_16lm_half_lms_match_randrot_noise`
+    - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
+
+    """
+    # Initialize output directory.
+    out_dir = OUT_DIR / "performance"
+    out_dir.mkdir(exist_ok=True, parents=True)
+
+    one_lm_color = TBP_COLORS["blue"]
+    multi_lm_group = FIXED_MIN_LMS_MATCH_EXPERIMENTS
+    multi_lm_color = TBP_COLORS["purple"]
+
+    fig = plt.figure(figsize=(3.4, 3))
+    gs = fig.add_gridspec(3, 1)  # 3 rows, bottom plot will take 2 rows
+
+    # Create the two subplots with shared x-axis
+    top_ax = fig.add_subplot(gs[0, 0])  # Top subplot takes 1/3
+    bottom_ax = fig.add_subplot(gs[1:, 0], sharex=top_ax)  # Bottom subplot takes 2/3
+
+    # fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
+    # top_ax, bottom_ax = axes
+    fig.subplots_adjust(hspace=0.05)
+
+    # Plot params.
+    ylims = [(0, 110), (440, 500)]
+    yticks = [
+        [0, 25, 50, 75, 100],
+        [450, 475, 500],
+    ]
+    bar_width = 0.8
+    xticks = np.arange(5)
+    bw_method = 0.1
+    # 1-LM
+    n_steps_1lm = get_n_steps(ONE_LM_EXPERIMENT)
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        violinplot(
+            [n_steps_1lm],
+            [xticks[0]],
+            color=one_lm_color,
+            width=bar_width,
+            showmedians=True,
+            median_style=dict(color="lightgray"),
+            bw_method=bw_method,
+            ax=ax,
+        )
+        ax.scatter(
+            xticks[0],
+            np.mean(n_steps_1lm),
+            color=one_lm_color,
+            marker="o",
+            edgecolor="black",
+            facecolor="black",
+            s=20,
+        )
+
+    # Multi-LM
+    n_steps = [get_n_steps(exp) for exp in multi_lm_group]
+
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        # Plot percent correct.
+        violinplot(
+            n_steps,
+            xticks[1:],
+            color=multi_lm_color,
+            width=bar_width,
+            showmedians=True,
+            median_style=dict(color="lightgray"),
+            bw_method=bw_method,
+            ax=ax,
+        )
+
+        means = [np.mean(arr) for arr in n_steps]
+        ax.scatter(
+            xticks[1:],
+            means,
+            color=multi_lm_color,
+            marker="o",
+            edgecolor="black",
+            facecolor="black",
+            s=20,
+        )
+        ax.plot(xticks[1:], means, color="k", linestyle="-", linewidth=2, zorder=10)
+        ax.plot(
+            xticks[1:],
+            means,
+            color=multi_lm_color,
+            linestyle="-",
+            linewidth=1,
+            zorder=15,
+        )
+
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.set_ylim(ylims[ax_num])
+        ax.set_yticks(yticks[ax_num])
+
+    # Sets parameters for both x-axes (they're shared, so removing ticks for the
+    # top plot removes ticks for the bottom plot).
+    bottom_ax.set_xlabel("Num. LMs")
+    bottom_ax.set_xticks(xticks)
+    bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
+
+    bottom_ax.set_ylabel("Steps")
+    top_ax.spines.bottom.set_visible(False)
+
+    # Draw y-axis divider markers.
+    marker_kwargs = dict(
+        marker=[(-1, -0.5), (1, 0.5)],
+        markersize=8,
+        linestyle="none",
+        color="k",
+        mec="k",
+        mew=1,
+        clip_on=False,
+    )
+    top_ax.plot([0], [0], transform=top_ax.transAxes, **marker_kwargs)
+    bottom_ax.plot([0], [1], transform=bottom_ax.transAxes, **marker_kwargs)
+
+    fig.savefig(out_dir / "steps.png")
+    fig.savefig(out_dir / "steps.svg")
+    plt.show()
+
+
 if __name__ == "__main__":
-    plot_8lm_patches()
+    # plot_8lm_patches()
     plot_accuracy()
     plot_steps()
