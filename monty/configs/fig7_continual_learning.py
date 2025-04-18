@@ -73,7 +73,7 @@ class PretrainContinualLearningExperimentWithCheckpointing(
     def run_epoch(self):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
-            for i in range(len(TRAIN_ROTATIONS)):
+            for _ in range(len(TRAIN_ROTATIONS)):
                 logging.info(f"Current object: {self.dataloader.current_object}")
                 logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
                 self.run_episode()
@@ -87,8 +87,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     def __init__(self, object_names, object_init_sampler, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if isinstance(object_names, list):
-            self.object_names = object_names
-            self.source_object_list = list(dict.fromkeys(object_names))
+            self.object_names = sorted(object_names) # Sort to match the order of ViT Continual Learning
+            self.source_object_list = sorted(list(dict.fromkeys(object_names)))
         else:
             raise ValueError("Object names should be a list")
     
@@ -113,7 +113,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.episodes += 1
 
     def pre_epoch(self):
-        self.change_object_by_idx(0)
+        self.change_object_by_idx(self.current_object)
 
     def post_epoch(self):
         self.epochs += 1
@@ -633,6 +633,10 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(pretrain_dist_
 pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
     dict(
         experiment_class=PretrainContinualLearningExperimentWithCheckpointing,
+        experiment_args=ExperimentArgs(
+            n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
+            do_eval=False,
+        ),
         logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="INFO"),
         train_dataloader_class=InformedEnvironmentDataLoader, # Need to customize this
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs( # Need to customize this
@@ -645,6 +649,54 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
     )
 )
 
+def make_continual_learning_eval_config(task_id: int) -> dict:
+    """Make an eval config that loads a pretrained model checkpoint.
+
+    The returned config specifies a 1-LM distant agent that evaluates on
+      - All objects up to and including the `task_id`th object
+      - 14 standard rotations
+      - no sensor noise
+      - no hypothesis-testing
+    and loads a model pretrained after `task_id` epochs.
+
+    Args:
+        task_id (int): The ID of the task to evaluate on.
+    Returns:
+        dict: Config for a partially trained model.
+    """
+    config = deepcopy(dist_agent_1lm)
+    config["experiment_args"].n_eval_epochs = task_id
+
+    # Change model loading path
+    config["experiment_args"].model_name_or_path = str(
+        DMC_PRETRAIN_DIR
+        / f"continual_learning_dist_agent_1lm_checkpoints/pretrained/checkpoints/{task_id}/model.pt"
+    )
+    config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
+        object_names=SHUFFLED_YCB_OBJECTS[:task_id + 1],
+        object_init_sampler=PredefinedObjectInitializer(
+            change_every_episode=True,
+            rotations=TRAIN_ROTATIONS
+        ),
+    )
+
+    # Rename the experiment
+    config[
+        "logging_config"
+    ].run_name = f"continual_learning_dist_agent_1lm_checkpoints_task{task_id}"
+
+    # Disable hypothesis-testing
+    config[
+        "monty_config"
+    ].motor_system_config.motor_system_args.use_goal_state_driven_actions = False
+
+
 CONFIGS = {
     "pretrain_continual_learning_dist_agent_1lm_checkpoints": pretrain_continual_learning_dist_agent_1lm_checkpoints,
 }
+
+# Add all per-task eval configs
+for task_id in range(77):
+    eval_config_name = f"dist_agent_1lm_task{task_id}"
+    CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
+
