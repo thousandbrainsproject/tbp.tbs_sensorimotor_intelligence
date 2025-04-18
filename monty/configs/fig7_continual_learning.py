@@ -49,7 +49,7 @@ from tbp.monty.frameworks.actions.actions import (
 )
 from tbp.monty.frameworks.environments import embodied_data as ED
 from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
-from tbp.monty.frameworks.models.motor_policies import SurfacePolicy
+from tbp.monty.frameworks.models.motor_policies import SurfacePolicy, SurfacePolicyCurvatureInformed
 from tbp.monty.frameworks.experiments.monty_experiment import MontyExperiment
 
 from .common import DMC_PRETRAIN_DIR, make_randrot_variant
@@ -73,8 +73,9 @@ class PretrainContinualLearningExperimentWithCheckpointing(
     def run_epoch(self):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
-            for object_name in self.dataloader.object_names:
-                logging.info(f"Running a simulation to model object: {object_name}")
+            for i in range(len(TRAIN_ROTATIONS)):
+                logging.info(f"Current object: {self.dataloader.current_object}")
+                logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
@@ -632,11 +633,12 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(pretrain_dist_
 pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
     dict(
         experiment_class=PretrainContinualLearningExperimentWithCheckpointing,
-        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="DEBUG"),
+        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="INFO"),
         train_dataloader_class=InformedEnvironmentDataLoader, # Need to customize this
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs( # Need to customize this
             object_names=SHUFFLED_YCB_OBJECTS, 
             object_init_sampler=PredefinedObjectInitializer(
+                change_every_episode=True,
                 rotations=TRAIN_ROTATIONS
             ),
         ),
