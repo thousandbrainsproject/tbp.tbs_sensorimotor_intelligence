@@ -57,7 +57,7 @@ from .common import (
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
 from .fig5_rapid_inference_with_voting import (
     dist_agent_1lm_randrot_noise,
-    dist_agent_8lm_half_lms_match,
+    dist_agent_8lm_randrot_noise,
 )
 from .fig6_rapid_inference_with_model_based_policies import surf_agent_1lm
 from .fig7_rapid_learning import (
@@ -197,7 +197,7 @@ Figure 5
 # `fig5_visualize_8lm_patches`: An experiment that runs one eval step with
 # the 8-LM model so we can collect enough sensor data to visualize the arrangement
 # of the sensors patches on the object. Used in `scripts/fig5.py`. Run in serial.
-fig5_visualize_8lm_patches = deepcopy(dist_agent_8lm_half_lms_match)
+fig5_visualize_8lm_patches = deepcopy(dist_agent_8lm_randrot_noise)
 fig5_visualize_8lm_patches.update(
     dict(
         experiment_args=EvalExperimentArgs(
