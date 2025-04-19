@@ -13,25 +13,17 @@ This module defines the following single-LM config:
  This is distinct from `dist_agent_1lm_randrot_all_noise` used in figure 3 in that it
  uses 5 random rotations instead of 14.
 
-This module also defines defines the following multi-LM configs where half the number
-of LMs must match before terminating an episode:
- - `dist_agent_2lm_half_lms_match_randrot_noise`
- - `dist_agent_4lm_half_lms_match_randrot_noise`
- - `dist_agent_8lm_half_lms_match_randrot_noise`
- - `dist_agent_16lm_half_lms_match_randrot_noise`
-
- In addition, there are variants where the minimum number of LMs that must match is
- fixed to 2:
- - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+This module also defines defines the following multi-LM configs:
+ - `dist_agent_2lm_randrot_noise`
+ - `dist_agent_4lm_randrot_noise`
+ - `dist_agent_8lm_randrot_noise`
+ - `dist_agent_16lm_randrot_noise`
 
 All of these experiments use:
  - 77 objects
  - Goal-state-driven/hypothesis-testing policy active
  - Sensor noise and 5 (predefined) random rotations
- - Voting over 2, 4, 8, or 16 LMs
+ - Voting over 2, 4, 8, or 16 LM, and terminating when 2 LMs have converged.
 
 """
 
