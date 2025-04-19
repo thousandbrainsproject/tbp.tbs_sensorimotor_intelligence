@@ -36,6 +36,7 @@ All of these experiments use:
 """
 
 from copy import deepcopy
+from typing import Any, Mapping
 
 from tbp.monty.frameworks.config_utils.config_args import make_multi_lm_monty_config
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
@@ -58,6 +59,7 @@ from .common import (
     MIN_EVAL_STEPS,
     RANDOM_ROTATIONS_5,
     DMCEvalLoggingConfig,
+    add_sensor_noise,
     get_eval_lm_config,
     get_eval_motor_config,
     get_eval_patch_config,
@@ -65,184 +67,89 @@ from .common import (
 )
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
 
-# - Set up arguments for `make_multi_lm_monty_config`. The following arguments
-# are used for all multi-LM configs.
-mlm_learning_module_config = get_eval_lm_config("dist")
-mlm_sensor_module_config = get_eval_patch_config("dist")
-mlm_motor_system_config = get_eval_motor_config("dist")
-mlm_monty_config_args = {
-    "monty_class": MontyForEvidenceGraphMatching,
-    "learning_module_class": mlm_learning_module_config["learning_module_class"],
-    "learning_module_args": mlm_learning_module_config["learning_module_args"],
-    "sensor_module_class": mlm_sensor_module_config["sensor_module_class"],
-    "sensor_module_args": mlm_sensor_module_config["sensor_module_args"],
-    "motor_system_class": mlm_motor_system_config.motor_system_class,
-    "motor_system_args": mlm_motor_system_config.motor_system_args,
-    "monty_args": dict(min_eval_steps=MIN_EVAL_STEPS),
-}
 
-"""
-Create the Multi-LM configs. Note that we are setting the predefined rotations
-in these configs, but we will use `make_randrot_noise_variant` anyway to handle
-setting run names the way we want.
-"""
+def make_multi_lm_eval_config(num_lms: int) -> Mapping[str, Any]:
+    """Create an experiment config for multi-LM evaluation experiments.
 
-dist_agent_2lm_half_lms_match = dict(
-    experiment_class=MontyObjectRecognitionExperiment,
-    experiment_args=EvalExperimentArgs(
-        model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_2lm/pretrained"),
-        n_eval_epochs=len(RANDOM_ROTATIONS_5),
-        max_total_steps=MAX_TOTAL_STEPS,
-        max_eval_steps=MAX_EVAL_STEPS,
-        min_lms_match=1,
-    ),
-    logging_config=DMCEvalLoggingConfig(run_name="dist_agent_2lm_half_lms_match"),
-    monty_config=make_multi_lm_monty_config(2, **mlm_monty_config_args),
-    # Set up environment.
-    dataset_class=ED.EnvironmentDataset,
-    dataset_args=make_multi_sensor_habitat_dataset_args(2),
-    eval_dataloader_class=ED.InformedEnvironmentDataLoader,
-    eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-        object_names=SHUFFLED_YCB_OBJECTS,
-        object_init_sampler=PredefinedObjectInitializer(rotations=RANDOM_ROTATIONS_5),
-    ),
-)
+    Args:
+        num_lms: Number of LMs to use in the multi-LM config.
 
-dist_agent_4lm_half_lms_match = dict(
-    experiment_class=MontyObjectRecognitionExperiment,
-    experiment_args=EvalExperimentArgs(
-        model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_4lm/pretrained"),
-        n_eval_epochs=len(RANDOM_ROTATIONS_5),
-        max_total_steps=MAX_TOTAL_STEPS,
-        max_eval_steps=MAX_EVAL_STEPS,
-        min_lms_match=2,
-    ),
-    logging_config=DMCEvalLoggingConfig(run_name="dist_agent_4lm_half_lms_match"),
-    monty_config=make_multi_lm_monty_config(4, **mlm_monty_config_args),
-    # Set up environment.
-    dataset_class=ED.EnvironmentDataset,
-    dataset_args=make_multi_sensor_habitat_dataset_args(4),
-    eval_dataloader_class=ED.InformedEnvironmentDataLoader,
-    eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-        object_names=SHUFFLED_YCB_OBJECTS,
-        object_init_sampler=PredefinedObjectInitializer(rotations=RANDOM_ROTATIONS_5),
-    ),
-)
+    Returns:
+        An experiment config for multi-LM evaluation experiments. The config will
+        use the 5 predefined random rotations, sensor noise, and will terminate
+        when 2 LMs have converged.
+    """
 
-dist_agent_8lm_half_lms_match = dict(
-    experiment_class=MontyObjectRecognitionExperiment,
-    experiment_args=EvalExperimentArgs(
-        model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_8lm/pretrained"),
-        n_eval_epochs=len(RANDOM_ROTATIONS_5),
-        max_total_steps=MAX_TOTAL_STEPS,
-        max_eval_steps=MAX_EVAL_STEPS,
-        min_lms_match=4,
-    ),
-    logging_config=DMCEvalLoggingConfig(run_name="dist_agent_8lm_half_lms_match"),
-    monty_config=make_multi_lm_monty_config(8, **mlm_monty_config_args),
-    # Set up environment.
-    dataset_class=ED.EnvironmentDataset,
-    dataset_args=make_multi_sensor_habitat_dataset_args(8),
-    eval_dataloader_class=ED.InformedEnvironmentDataLoader,
-    eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-        object_names=SHUFFLED_YCB_OBJECTS,
-        object_init_sampler=PredefinedObjectInitializer(rotations=RANDOM_ROTATIONS_5),
-    ),
-)
+    # Set up arguments for `make_multi_lm_monty_config`.
+    mlm_learning_module_config = get_eval_lm_config("dist")
+    mlm_sensor_module_config = get_eval_patch_config("dist")
+    mlm_motor_system_config = get_eval_motor_config("dist")
+    mlm_monty_config_args = {
+        "monty_class": MontyForEvidenceGraphMatching,
+        "learning_module_class": mlm_learning_module_config["learning_module_class"],
+        "learning_module_args": mlm_learning_module_config["learning_module_args"],
+        "sensor_module_class": mlm_sensor_module_config["sensor_module_class"],
+        "sensor_module_args": mlm_sensor_module_config["sensor_module_args"],
+        "motor_system_class": mlm_motor_system_config.motor_system_class,
+        "motor_system_args": mlm_motor_system_config.motor_system_args,
+        "monty_args": dict(min_eval_steps=MIN_EVAL_STEPS),
+    }
 
-dist_agent_16lm_half_lms_match = dict(
-    experiment_class=MontyObjectRecognitionExperiment,
-    experiment_args=EvalExperimentArgs(
-        model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_16lm/pretrained"),
-        n_eval_epochs=len(RANDOM_ROTATIONS_5),
-        max_total_steps=MAX_TOTAL_STEPS,
-        max_eval_steps=MAX_EVAL_STEPS,
-        min_lms_match=8,
-    ),
-    logging_config=DMCEvalLoggingConfig(run_name="dist_agent_16lm_half_lms_match"),
-    monty_config=make_multi_lm_monty_config(16, **mlm_monty_config_args),
-    # Set up environment.
-    dataset_class=ED.EnvironmentDataset,
-    dataset_args=make_multi_sensor_habitat_dataset_args(16),
-    eval_dataloader_class=ED.InformedEnvironmentDataLoader,
-    eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-        object_names=SHUFFLED_YCB_OBJECTS,
-        object_init_sampler=PredefinedObjectInitializer(rotations=RANDOM_ROTATIONS_5),
-    ),
-)
+    # Initialize the config.
+    config = dict(
+        experiment_class=MontyObjectRecognitionExperiment,
+        experiment_args=EvalExperimentArgs(
+            model_name_or_path=str(
+                DMC_PRETRAIN_DIR / f"dist_agent_{num_lms}lm/pretrained"
+            ),
+            n_eval_epochs=len(RANDOM_ROTATIONS_5),
+            max_total_steps=MAX_TOTAL_STEPS,
+            max_eval_steps=MAX_EVAL_STEPS,
+            min_lms_match=2,
+        ),
+        logging_config=DMCEvalLoggingConfig(
+            run_name=f"dist_agent_{num_lms}lm_randrot_noise"
+        ),
+        monty_config=make_multi_lm_monty_config(num_lms, **mlm_monty_config_args),
+        dataset_class=ED.EnvironmentDataset,
+        dataset_args=make_multi_sensor_habitat_dataset_args(num_lms),
+        eval_dataloader_class=ED.InformedEnvironmentDataLoader,
+        eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
+            object_names=SHUFFLED_YCB_OBJECTS,
+            object_init_sampler=PredefinedObjectInitializer(
+                rotations=RANDOM_ROTATIONS_5
+            ),
+        ),
+    )
+
+    # Finally, add sensor noise.
+    add_sensor_noise(config)
+
+    return config
+
 
 # ==== The single-LM config ====
 dist_agent_1lm_randrot_noise = make_randrot_noise_variant(dist_agent_1lm)
 
-# ==== Variants where min_lms_match=int(num_lms/2) ====
+# ==== Multi-LM configs ====
 
 # - 2 LMs
-dist_agent_2lm_half_lms_match_randrot_noise = make_randrot_noise_variant(
-    dist_agent_2lm_half_lms_match
-)
+dist_agent_2lm_randrot_noise = make_multi_lm_eval_config(2)
 
 # - 4 LMs
-dist_agent_4lm_half_lms_match_randrot_noise = make_randrot_noise_variant(
-    dist_agent_4lm_half_lms_match
-)
+dist_agent_4lm_randrot_noise = make_multi_lm_eval_config(4)
 
 # - 8 LMs
-dist_agent_8lm_half_lms_match_randrot_noise = make_randrot_noise_variant(
-    dist_agent_8lm_half_lms_match
-)
+dist_agent_8lm_randrot_noise = make_multi_lm_eval_config(8)
 
 # - 16 LMs
-dist_agent_16lm_half_lms_match_randrot_noise = make_randrot_noise_variant(
-    dist_agent_16lm_half_lms_match
-)
-
-# ==== Variants where min_lms_match=min(num_lms, 2) ====
-
-# - 2 LMs
-dist_agent_2lm_fixed_min_lms_match_randrot_noise = deepcopy(
-    dist_agent_2lm_half_lms_match_randrot_noise
-)
-dist_agent_2lm_fixed_min_lms_match_randrot_noise["experiment_args"].min_lms_match = 2
-dist_agent_2lm_fixed_min_lms_match_randrot_noise[
-    "logging_config"
-].run_name = "dist_agent_2lm_fixed_min_lms_match_randrot_noise"
-
-# - 4 LMs
-dist_agent_4lm_fixed_min_lms_match_randrot_noise = deepcopy(
-    dist_agent_4lm_half_lms_match_randrot_noise
-)
-dist_agent_4lm_fixed_min_lms_match_randrot_noise["experiment_args"].min_lms_match = 2
-dist_agent_4lm_fixed_min_lms_match_randrot_noise[
-    "logging_config"
-].run_name = "dist_agent_4lm_fixed_min_lms_match_randrot_noise"
-
-# - 8 LMs
-dist_agent_8lm_fixed_min_lms_match_randrot_noise = deepcopy(
-    dist_agent_8lm_half_lms_match_randrot_noise
-)
-dist_agent_8lm_fixed_min_lms_match_randrot_noise["experiment_args"].min_lms_match = 2
-dist_agent_8lm_fixed_min_lms_match_randrot_noise[
-    "logging_config"
-].run_name = "dist_agent_8lm_fixed_min_lms_match_randrot_noise"
-
-# - 16 LMs
-dist_agent_16lm_fixed_min_lms_match_randrot_noise = deepcopy(
-    dist_agent_16lm_half_lms_match_randrot_noise
-)
-dist_agent_16lm_fixed_min_lms_match_randrot_noise["experiment_args"].min_lms_match = 2
-dist_agent_16lm_fixed_min_lms_match_randrot_noise[
-    "logging_config"
-].run_name = "dist_agent_16lm_fixed_min_lms_match_randrot_noise"
+dist_agent_16lm_randrot_noise = make_multi_lm_eval_config(16)
 
 
 CONFIGS = {
     "dist_agent_1lm_randrot_noise": dist_agent_1lm_randrot_noise,
-    "dist_agent_2lm_half_lms_match_randrot_noise": dist_agent_2lm_half_lms_match_randrot_noise,
-    "dist_agent_4lm_half_lms_match_randrot_noise": dist_agent_4lm_half_lms_match_randrot_noise,
-    "dist_agent_8lm_half_lms_match_randrot_noise": dist_agent_8lm_half_lms_match_randrot_noise,
-    "dist_agent_16lm_half_lms_match_randrot_noise": dist_agent_16lm_half_lms_match_randrot_noise,
-    "dist_agent_2lm_fixed_min_lms_match_randrot_noise": dist_agent_2lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_4lm_fixed_min_lms_match_randrot_noise": dist_agent_4lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_8lm_fixed_min_lms_match_randrot_noise": dist_agent_8lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_16lm_fixed_min_lms_match_randrot_noise": dist_agent_16lm_fixed_min_lms_match_randrot_noise,
+    "dist_agent_2lm_randrot_noise": dist_agent_2lm_randrot_noise,
+    "dist_agent_4lm_randrot_noise": dist_agent_4lm_randrot_noise,
+    "dist_agent_8lm_randrot_noise": dist_agent_8lm_randrot_noise,
+    "dist_agent_16lm_randrot_noise": dist_agent_16lm_randrot_noise,
 }
