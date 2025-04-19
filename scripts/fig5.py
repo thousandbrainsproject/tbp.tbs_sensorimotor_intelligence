@@ -572,6 +572,6 @@ def plot_steps():
 
 
 if __name__ == "__main__":
-    # plot_8lm_patches()
+    plot_8lm_patches()
     plot_accuracy()
     plot_steps()
