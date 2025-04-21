@@ -98,6 +98,7 @@ select = [
     "E265", # Block comment should start with '# '
 ]
 ignore = [
+    "C4", # C4XX: ignore all Flake8 comprehensions
     "COM812", # Trailing comma missing; conflicts with ruff format
     "ISC001", # Implicitly concatenated string literals on one line; conflicts with ruff format
 ]
