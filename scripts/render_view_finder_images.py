@@ -103,7 +103,7 @@ def parse_args():
 
 
 def render_figures(experiment: str) -> None:
-    """Render figures for each object showing its rotations"""
+    """Render figures for each object showing its rotations."""
     # Initialize storage directory.
     data_dir = VIEW_FINDER_DIR / f"{experiment}/view_finder_rgbd"
     visualization_dir = data_dir / "visualizations"

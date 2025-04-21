@@ -182,7 +182,7 @@ class ViewFinderRGBDHandler(MontyHandler):
 
 
 class FramedObjectPolicy(InformedPolicy):
-    """Custom motor policy that helps keep the object in-frame
+    """Custom motor policy that helps keep the object in-frame.
 
     Reimplements `InformedPolicy.move_close_enough` to add an extra termination
     condition: if the object enters a small buffer region in the view-finder's

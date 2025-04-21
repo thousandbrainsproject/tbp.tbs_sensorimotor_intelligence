@@ -6,7 +6,7 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-"""Figure 7: Rapid Learning
+"""Figure 7: Rapid Learning.
 
 Consists of one pretraining experiment and 6 evaluation experiments:
 - pretrain_dist_agent_1lm_checkpoints
@@ -194,10 +194,22 @@ dist_agent_1lm_randrot_nohyp_32rot_trained = make_partially_trained_eval_config(
 
 CONFIGS = {
     "pretrain_dist_agent_1lm_checkpoints": pretrain_dist_agent_1lm_checkpoints,
-    "dist_agent_1lm_randrot_nohyp_1rot_trained": dist_agent_1lm_randrot_nohyp_1rot_trained,
-    "dist_agent_1lm_randrot_nohyp_2rot_trained": dist_agent_1lm_randrot_nohyp_2rot_trained,
-    "dist_agent_1lm_randrot_nohyp_4rot_trained": dist_agent_1lm_randrot_nohyp_4rot_trained,
-    "dist_agent_1lm_randrot_nohyp_8rot_trained": dist_agent_1lm_randrot_nohyp_8rot_trained,
-    "dist_agent_1lm_randrot_nohyp_16rot_trained": dist_agent_1lm_randrot_nohyp_16rot_trained,
-    "dist_agent_1lm_randrot_nohyp_32rot_trained": dist_agent_1lm_randrot_nohyp_32rot_trained,
+    "dist_agent_1lm_randrot_nohyp_1rot_trained": (
+        dist_agent_1lm_randrot_nohyp_1rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_2rot_trained": (
+        dist_agent_1lm_randrot_nohyp_2rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_4rot_trained": (
+        dist_agent_1lm_randrot_nohyp_4rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_8rot_trained": (
+        dist_agent_1lm_randrot_nohyp_8rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_16rot_trained": (
+        dist_agent_1lm_randrot_nohyp_16rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_32rot_trained": (
+        dist_agent_1lm_randrot_nohyp_32rot_trained
+    ),
 }
