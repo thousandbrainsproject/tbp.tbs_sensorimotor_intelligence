@@ -165,7 +165,6 @@ def init_overview_plot(
     Returns:
         matplotlib.figure.Figure: Summary plot.
     """
-
     fig, axes = plt.subplots(1, 3, figsize=figsize)
     xticks = list(range(len(conditions)))
     # Plot distribution of num_steps

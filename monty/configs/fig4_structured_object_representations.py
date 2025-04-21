@@ -54,7 +54,6 @@ class LastMaxEvidenceHandler(SelectiveEvidenceHandler):
         **kwargs,
     ) -> None:
         """Store only maxima of final evidence values."""
-
         # Initialize output data.
         episode_total, buffer_data = self.init_buffer_data(
             data, episode, mode, **kwargs
