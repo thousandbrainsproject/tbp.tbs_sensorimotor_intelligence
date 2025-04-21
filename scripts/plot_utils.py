@@ -112,7 +112,6 @@ def axes3d_clean(ax: Axes3D, grid: bool = True) -> None:
         ax: The 3D axes to clean.
         grid: Whether to show the background grid. Default is True.
     """
-
     # Remove dark spines that outline the plot.
     for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
         axis.line.set_color((1, 1, 1, 0))
@@ -188,7 +187,6 @@ def add_gradient_background(
     vmax: float = 0.9,
 ) -> np.ndarray:
     """Add a grayscale gradient background to an RGBA image."""
-
     width, height = image.shape[0], image.shape[1]
 
     # First, create the gradient background.
@@ -302,7 +300,6 @@ def violinplot(
     Returns:
         plt.Axes: The axes containing the violin plot
     """
-
     # Move positions and shrink widths if we're doing half violins.
     if side == "both":
         offset = 0

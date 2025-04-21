@@ -61,7 +61,6 @@ def load_eval_stats(exp: os.PathLike) -> pd.DataFrame:
     Returns:
         pd.DataFrame
     """
-
     path = Path(exp).expanduser()
 
     if path.exists():

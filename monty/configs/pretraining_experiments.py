@@ -160,7 +160,6 @@ def get_pretrain_patch_config(agent_type: str) -> Dict[str, Any]:
     Returns:
         dict: Configuration dictionary for the surface patch sensor module.
     """
-
     if agent_type == "dist":
         return dict(
             sensor_module_class=HabitatDistantPatchSM,

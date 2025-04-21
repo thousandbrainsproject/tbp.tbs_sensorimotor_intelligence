@@ -142,7 +142,6 @@ class MLHEvidenceHandler(SelectiveEvidenceHandler):
         **kwargs,
     ) -> None:
         """Store only final evidence data and no sensor data."""
-
         # Initialize output data.
         episode_total, buffer_data = self.init_buffer_data(
             data, episode, mode, **kwargs
@@ -268,7 +267,6 @@ class HypothesisDrivenPolicyEvidenceHandler(SelectiveEvidenceHandler):
         **kwargs,
     ) -> None:
         """Store only final evidence data and no sensor data."""
-
         # Initialize output data.
         episode_total, buffer_data = self.init_buffer_data(
             data, episode, mode, **kwargs
