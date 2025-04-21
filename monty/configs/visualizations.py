@@ -330,7 +330,9 @@ fig6_hypothesis_driven_policy["eval_dataloader_args"] = (
 )
 
 CONFIGS = {
-    "fig2_pretrain_surf_agent_1lm_checkpoints": fig2_pretrain_surf_agent_1lm_checkpoints,
+    "fig2_pretrain_surf_agent_1lm_checkpoints": (
+        fig2_pretrain_surf_agent_1lm_checkpoints
+    ),
     "fig3_evidence_run": fig3_evidence_run,
     "fig4_symmetry_run": fig4_symmetry_run,
     "fig5_visualize_8lm_patches": fig5_visualize_8lm_patches,

@@ -194,10 +194,22 @@ dist_agent_1lm_randrot_nohyp_32rot_trained = make_partially_trained_eval_config(
 
 CONFIGS = {
     "pretrain_dist_agent_1lm_checkpoints": pretrain_dist_agent_1lm_checkpoints,
-    "dist_agent_1lm_randrot_nohyp_1rot_trained": dist_agent_1lm_randrot_nohyp_1rot_trained,
-    "dist_agent_1lm_randrot_nohyp_2rot_trained": dist_agent_1lm_randrot_nohyp_2rot_trained,
-    "dist_agent_1lm_randrot_nohyp_4rot_trained": dist_agent_1lm_randrot_nohyp_4rot_trained,
-    "dist_agent_1lm_randrot_nohyp_8rot_trained": dist_agent_1lm_randrot_nohyp_8rot_trained,
-    "dist_agent_1lm_randrot_nohyp_16rot_trained": dist_agent_1lm_randrot_nohyp_16rot_trained,
-    "dist_agent_1lm_randrot_nohyp_32rot_trained": dist_agent_1lm_randrot_nohyp_32rot_trained,
+    "dist_agent_1lm_randrot_nohyp_1rot_trained": (
+        dist_agent_1lm_randrot_nohyp_1rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_2rot_trained": (
+        dist_agent_1lm_randrot_nohyp_2rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_4rot_trained": (
+        dist_agent_1lm_randrot_nohyp_4rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_8rot_trained": (
+        dist_agent_1lm_randrot_nohyp_8rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_16rot_trained": (
+        dist_agent_1lm_randrot_nohyp_16rot_trained
+    ),
+    "dist_agent_1lm_randrot_nohyp_32rot_trained": (
+        dist_agent_1lm_randrot_nohyp_32rot_trained
+    ),
 }

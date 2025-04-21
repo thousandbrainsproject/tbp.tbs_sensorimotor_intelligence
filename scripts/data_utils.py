@@ -273,8 +273,8 @@ def load_perf_stat_flops(exp: os.PathLike) -> pd.DataFrame:
 def load_vit_predictions(path: os.PathLike) -> pd.DataFrame:
     """Load and process ViT model predictions from a CSV file.
 
-    This function reads a CSV file containing ViT model predictions with real and predicted
-    class labels and quaternions, and returns a DataFrame with processed data.
+    This function reads a CSV file containing ViT model predictions with real and 
+    predicted class labels and quaternions, and returns a DataFrame with processed data.
 
     Args:
         path (os.PathLike): Path to the CSV file containing ViT predictions.

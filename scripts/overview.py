@@ -364,7 +364,6 @@ def plot_fig7(save: bool = False):
         load_eval_stats("dist_agent_1lm_randrot_nohyp_x_percent_10p"),
         load_eval_stats("dist_agent_1lm_randrot_nohyp_x_percent_20p"),
         load_eval_stats("dist_agent_1lm_randrot_nohyp_x_percent_30p"),
-        # load_eval_stats("dist_agent_1lm_randrot_nohyp_x_percent_30p_evidence_update_all"),
     ]
     conditions = ["5%", "10%", "20%", "30%"]
     fig = init_overview_plot(dataframes, conditions, figsize=(7, 3))
