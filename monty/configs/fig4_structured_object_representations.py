@@ -7,7 +7,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""Configs for Figure 4: Structured Object Representations
+"""Configs for Figure 4: Structured Object Representations.
 
 This module defines the following experiment:
  - `surf_agent_1lm_randrot_noise_10simobj`
