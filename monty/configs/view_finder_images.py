@@ -147,7 +147,6 @@ class ViewFinderRGBDHandler(MontyHandler):
             episode (int): The current episode number.
             mode (str): The mode (train or eval).
         """
-
         if not self.initialized:
             self.initialize(data, output_dir, episode, mode, **kwargs)
 

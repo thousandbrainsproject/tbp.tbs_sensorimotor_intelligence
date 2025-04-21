@@ -259,7 +259,6 @@ def get_relative_evidence_matrices() -> np.ndarray:
         matrix is the relative evidence matrix for the corresponding epoch.
 
     """
-
     exp_dir = DMC_RESULTS_DIR / "surf_agent_1lm_randrot_noise_10simobj"
     eval_stats = load_eval_stats(exp_dir / "eval_stats.csv")
     detailed_stats = DetailedJSONStatsInterface(exp_dir / "detailed_run_stats.json")
@@ -294,7 +293,6 @@ def load_symmetry_rotations(stats: Mapping) -> List[SimpleNamespace]:
        A list of SimpleNamespace objects, each representing a symmetric rotation.
 
     """
-
     # Get MLH object name -- symmetric rotations are only computed for the MLH object.
     object_name = stats["LM_0"]["current_mlh"][-1]["graph_id"]
 
@@ -353,7 +351,6 @@ def plot_dendrogram():
 
     NOTE: Also plots a confusion matrix, which is not used in the paper.
     """
-
     out_dir = OUT_DIR / "dendrogram"
     out_dir.mkdir(parents=True, exist_ok=True)
 

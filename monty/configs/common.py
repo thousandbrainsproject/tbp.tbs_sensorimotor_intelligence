@@ -318,7 +318,6 @@ def make_randrot_variant(
     Returns:
         An experiment config that uses the 5 predefined random rotations.
     """
-
     config = deepcopy(template)
 
     # Optionally, use the provided run name. Otherwise, append "_randrot" to the
@@ -355,7 +354,6 @@ def make_randrot_noise_variant(
         An experiment config that uses the 5 predefined random rotations and has
         added sensor noise.
     """
-
     config = make_randrot_variant(template)
     config = make_noise_variant(config, run_name=run_name)
     return config
@@ -472,7 +470,6 @@ class SelectiveEvidenceHandler(DetailedJSONHandler):
         Returns:
             Tuple[int, Mapping]: The episode number and the data to save.
         """
-
         # Get basic and detailed data.
         if mode == "train":
             episode_total = kwargs["train_episodes_to_total"][episode]

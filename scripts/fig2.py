@@ -68,7 +68,6 @@ def plot_object_views(
         vmin: The minimum value for the gradient background.
         vmax: The maximum value for the gradient background.
     """
-
     # Initialize input and output paths.
     data_dir = VIEW_FINDER_DIR / "view_finder_base_highres/view_finder_rgbd"
     png_dir = OUT_DIR / f"object_views/{object_name}/png"

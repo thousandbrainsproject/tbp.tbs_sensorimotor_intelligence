@@ -350,7 +350,6 @@ def plot_accuracy():
     Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
 
     """
-
     # Initialize output directory.
     out_dir = OUT_DIR / "performance"
     out_dir.mkdir(exist_ok=True, parents=True)
