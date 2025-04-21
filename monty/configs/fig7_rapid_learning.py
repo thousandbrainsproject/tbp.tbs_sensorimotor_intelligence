@@ -6,7 +6,7 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-"""Figure 7: Rapid Learning
+"""Figure 7: Rapid Learning.
 
 Consists of one pretraining experiment and 6 evaluation experiments:
 - pretrain_dist_agent_1lm_checkpoints

@@ -6,7 +6,7 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-"""Configs for visualizations (not core experiments)
+"""Configs for visualizations (not core experiments).
 
 This file contains configs defined solely for making visualizations that go into
 paper figures. The configs defined are:
