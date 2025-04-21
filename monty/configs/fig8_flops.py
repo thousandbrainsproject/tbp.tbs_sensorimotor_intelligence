@@ -29,8 +29,8 @@ Experiments use:
  - No sensor noise
  - No voting
 
-The main output measure is accuracy and FLOPs as a function of x-percent threshold and whether
-hypothesis testing is used.
+The main output measure is accuracy and FLOPs as a function of x-percent threshold and 
+whether hypothesis testing is used.
 """
 
 import copy
@@ -166,12 +166,24 @@ dist_agent_1lm_randrot_x_percent_80p = update_x_percent_threshold_in_config(
 
 
 CONFIGS = {
-    "dist_agent_1lm_randrot_nohyp_x_percent_5p": dist_agent_1lm_randrot_nohyp_x_percent_5p,
-    "dist_agent_1lm_randrot_nohyp_x_percent_10p": dist_agent_1lm_randrot_nohyp_x_percent_10p,
-    "dist_agent_1lm_randrot_nohyp_x_percent_20p": dist_agent_1lm_randrot_nohyp_x_percent_20p,
-    "dist_agent_1lm_randrot_nohyp_x_percent_40p": dist_agent_1lm_randrot_nohyp_x_percent_40p,
-    "dist_agent_1lm_randrot_nohyp_x_percent_60p": dist_agent_1lm_randrot_nohyp_x_percent_60p,
-    "dist_agent_1lm_randrot_nohyp_x_percent_80p": dist_agent_1lm_randrot_nohyp_x_percent_80p,
+    "dist_agent_1lm_randrot_nohyp_x_percent_5p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_5p
+    ),
+    "dist_agent_1lm_randrot_nohyp_x_percent_10p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_10p
+    ),
+    "dist_agent_1lm_randrot_nohyp_x_percent_20p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_20p
+    ),
+    "dist_agent_1lm_randrot_nohyp_x_percent_40p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_40p
+    ),
+    "dist_agent_1lm_randrot_nohyp_x_percent_60p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_60p
+    ),
+    "dist_agent_1lm_randrot_nohyp_x_percent_80p": (
+        dist_agent_1lm_randrot_nohyp_x_percent_80p
+    ),
     "dist_agent_1lm_randrot_x_percent_5p": dist_agent_1lm_randrot_x_percent_5p,
     "dist_agent_1lm_randrot_x_percent_10p": dist_agent_1lm_randrot_x_percent_10p,
     "dist_agent_1lm_randrot_x_percent_20p": dist_agent_1lm_randrot_x_percent_20p,

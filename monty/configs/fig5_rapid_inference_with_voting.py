@@ -237,12 +237,28 @@ dist_agent_16lm_fixed_min_lms_match_randrot_noise[
 
 CONFIGS = {
     "dist_agent_1lm_randrot_noise": dist_agent_1lm_randrot_noise,
-    "dist_agent_2lm_half_lms_match_randrot_noise": dist_agent_2lm_half_lms_match_randrot_noise,
-    "dist_agent_4lm_half_lms_match_randrot_noise": dist_agent_4lm_half_lms_match_randrot_noise,
-    "dist_agent_8lm_half_lms_match_randrot_noise": dist_agent_8lm_half_lms_match_randrot_noise,
-    "dist_agent_16lm_half_lms_match_randrot_noise": dist_agent_16lm_half_lms_match_randrot_noise,
-    "dist_agent_2lm_fixed_min_lms_match_randrot_noise": dist_agent_2lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_4lm_fixed_min_lms_match_randrot_noise": dist_agent_4lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_8lm_fixed_min_lms_match_randrot_noise": dist_agent_8lm_fixed_min_lms_match_randrot_noise,
-    "dist_agent_16lm_fixed_min_lms_match_randrot_noise": dist_agent_16lm_fixed_min_lms_match_randrot_noise,
+    "dist_agent_2lm_half_lms_match_randrot_noise": (
+        dist_agent_2lm_half_lms_match_randrot_noise
+    ),
+    "dist_agent_4lm_half_lms_match_randrot_noise": (
+        dist_agent_4lm_half_lms_match_randrot_noise
+    ),
+    "dist_agent_8lm_half_lms_match_randrot_noise": (
+        dist_agent_8lm_half_lms_match_randrot_noise
+    ),
+    "dist_agent_16lm_half_lms_match_randrot_noise": (
+        dist_agent_16lm_half_lms_match_randrot_noise
+    ),
+    "dist_agent_2lm_fixed_min_lms_match_randrot_noise": (
+        dist_agent_2lm_fixed_min_lms_match_randrot_noise
+    ),
+    "dist_agent_4lm_fixed_min_lms_match_randrot_noise": (
+        dist_agent_4lm_fixed_min_lms_match_randrot_noise
+    ),
+    "dist_agent_8lm_fixed_min_lms_match_randrot_noise": (
+        dist_agent_8lm_fixed_min_lms_match_randrot_noise
+    ),
+    "dist_agent_16lm_fixed_min_lms_match_randrot_noise": (
+        dist_agent_16lm_fixed_min_lms_match_randrot_noise
+    ),
 }

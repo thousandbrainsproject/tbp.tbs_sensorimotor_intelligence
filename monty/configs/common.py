@@ -307,7 +307,7 @@ def make_randrot_variant(
     template: Dict[str, Any],
     run_name: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Create a copy of an experiment config that uses the 5 predefined random rotations.
+    """Create a copy of an experiment config that uses 5 predefined random rotations.
 
     Args:
         template: Experiment config to copy.
