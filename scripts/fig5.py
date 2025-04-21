@@ -26,8 +26,6 @@ Running the above functions requires that the following experiments have been ru
  - `dist_agent_16lm_randrot_noise`
 """
 
-from typing import Tuple
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -47,6 +45,7 @@ from plot_utils import (
 )
 
 init_matplotlib_style()
+np.random.seed(0)
 
 OUT_DIR = DMC_ANALYSIS_DIR / "fig5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -80,7 +79,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A dataframe with a single row per episode.
     """
-    PERFORMANCE_OPTIONS = (
+    performance_options = (
         "correct",
         "confused",
         "no_match",
@@ -100,7 +99,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     output_data = {
         "primary_performance": np.zeros(n_episodes, dtype=object),
     }
-    for name in PERFORMANCE_OPTIONS:
+    for name in performance_options:
         output_data[f"n_{name}"] = np.zeros(n_episodes, dtype=int)
 
     episode_groups = eval_stats.groupby("episode")
@@ -108,10 +107,10 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
         # Find one result given many LM results.
         row = {}
 
-        perf_counts = {key: 0 for key in PERFORMANCE_OPTIONS}
+        perf_counts = {key: 0 for key in performance_options}
         perf_counts.update(df.primary_performance.value_counts())
         found = []
-        for name in PERFORMANCE_OPTIONS:
+        for name in performance_options:
             row[f"n_{name}"] = perf_counts[name]
             if perf_counts[name] > 0:
                 found.append(name)
@@ -124,16 +123,26 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
             elif row["n_confused"] < row["n_correct"]:
                 performance = "correct"
             else:
-                # Ties go to "confused" by default, but the tie can be broken
-                # in favor of "correct" if the number of LMs with "correct_mlh"
-                # exceeds the number of LMs with "confused_mlh".
-                performance = "confused"
-                if row["n_correct_mlh"] > row["n_confused_mlh"]:
+                if row["n_confused_mlh"] > row["n_correct_mlh"]:
+                    performance = "confused"
+                elif row["n_confused_mlh"] < row["n_correct_mlh"]:
                     performance = "correct"
+                else:
+                    if np.random.rand() < 0.5:
+                        performance = "correct"
+                    else:
+                        performance = "confused"
 
         elif performance == "correct_mlh":
-            if row["n_confused_mlh"] >= row["n_correct_mlh"]:
+            if row["n_confused_mlh"] > row["n_correct_mlh"]:
                 performance = "confused_mlh"
+            elif row["n_confused_mlh"] < row["n_correct_mlh"]:
+                performance = "correct_mlh"
+            else:
+                if np.random.rand() < 0.5:
+                    performance = "correct_mlh"
+                else:
+                    performance = "confused_mlh"
 
         row["primary_performance"] = performance
 
@@ -157,17 +166,14 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def get_accuracy(experiment: str) -> Tuple[float, float]:
+def get_accuracy(experiment: str) -> float:
     """Get the percent correct and percent LMS tied for an experiment."""
     eval_stats = load_eval_stats(experiment)
     reduced_stats = reduce_eval_stats(eval_stats)
     percent_correct = 100 * get_frequency(
         reduced_stats["primary_performance"], ("correct", "correct_mlh")
     )
-    is_confused = reduced_stats.primary_performance == "confused"
-    is_tied = is_confused & (reduced_stats.n_correct == reduced_stats.n_confused)
-    percent_tied = 100 * is_tied.sum() / len(is_tied)
-    return percent_correct, percent_tied
+    return percent_correct
 
 
 def get_n_steps(experiment: str) -> np.ndarray:
@@ -368,36 +374,25 @@ def plot_accuracy():
     xticks = np.arange(5)
 
     # 1-LM
-    percent_correct_1lm, _ = get_accuracy(ONE_LM_EXPERIMENT)
+    percent_correct_1lm = get_accuracy(ONE_LM_EXPERIMENT)
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.bar(
             xticks[0],
             [percent_correct_1lm],
             color=one_lm_color,
             width=bar_width,
+            label="no voting",
         )
 
     # Multi-LM
-    accuracies = [get_accuracy(exp) for exp in multi_lm_group]
-    percent_correct = [acc[0] for acc in accuracies]
-    percent_tied = [acc[1] for acc in accuracies]
-
+    percent_correct = np.array([get_accuracy(exp) for exp in multi_lm_group])
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
-        # Plot percent correct.
         ax.bar(
             xticks[1:],
             percent_correct,
             color=multi_lm_color,
             width=bar_width,
-        )
-        # Plot percent confused but confused and correct were tied.
-        ax.bar(
-            xticks[1:],
-            percent_tied,
-            bottom=percent_correct,
-            color=multi_lm_color,
-            alpha=0.5,
-            width=bar_width,
+            label="voting",
         )
 
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
@@ -408,6 +403,7 @@ def plot_accuracy():
     bottom_ax.set_xlabel("Num. LMs")
     bottom_ax.set_xticks(xticks)
     bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
+    bottom_ax.legend(loc="lower right")
 
     bottom_ax.set_ylabel("% Correct")
     bottom_ax.set_yticks([0, 10, 20])
