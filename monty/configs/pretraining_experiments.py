@@ -125,7 +125,7 @@ def get_pretrain_lm_config(agent_type: str) -> Dict[str, Any]:
     if agent_type == "dist":
         graph_delta_distance_threshold = 0.001
     elif agent_type == "surf":
-        graph_delta_distance_threshold = 0.0001
+        graph_delta_distance_threshold = 0.01
     else:
         raise ValueError(f"Invalid agent_type: {agent_type}. Must be 'dist' or 'surf'.")
 
