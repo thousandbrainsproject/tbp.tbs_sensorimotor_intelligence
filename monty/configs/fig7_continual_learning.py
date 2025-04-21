@@ -21,13 +21,14 @@ The dataloader is customized such that after each epoch contains one object acro
 
 This means performance is evaluated with:
 - 77 objects
-- 14 standard rotations
+- 5 random rotations
 - NO sensor noise*
 - NO hypothesis-testing*
 - No voting
 - Each evaluation observes all objects up to that point
 """
 
+import os
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -51,9 +52,9 @@ from tbp.monty.frameworks.environments import embodied_data as ED
 from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
 from tbp.monty.frameworks.models.motor_policies import SurfacePolicy, SurfacePolicyCurvatureInformed
 from tbp.monty.frameworks.experiments.monty_experiment import MontyExperiment
-
-from .common import DMC_PRETRAIN_DIR, make_randrot_variant
-from .fig3_robust_sensorimotor_inference import dist_agent_1lm
+from tbp.monty.frameworks.experiments.object_recognition_experiments import MontyObjectRecognitionExperiment
+from .common import DMC_PRETRAIN_DIR, make_randrot_variant, RANDOM_ROTATIONS_5
+from .fig3_robust_sensorimotor_inference import dist_agent_1lm, TEST_ROTATIONS
 from .pretraining_experiments import DMCPretrainLoggingConfig, pretrain_dist_agent_1lm
 from .fig7_rapid_learning import PretrainingExperimentWithCheckpointing
 from .pretraining_experiments import TRAIN_ROTATIONS
@@ -80,6 +81,35 @@ class PretrainContinualLearningExperimentWithCheckpointing(
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
         self.post_epoch()
+
+class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
+    """Continual learning evaluation experiment."""
+
+    def run_epoch(self):
+        self.pre_epoch()
+        if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
+            for _ in range(len(RANDOM_ROTATIONS_5)):
+                logging.info(f"Current object: {self.dataloader.current_object}")
+                logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
+                self.run_episode()  
+        else:
+            raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
+        self.post_epoch()
+
+    @property
+    def logger_args(self):
+        args = dict(
+            total_train_steps=self.total_train_steps,
+            train_episodes=self.train_episodes,
+            train_epochs=self.train_epochs,
+            total_eval_steps=self.total_eval_steps,
+            eval_episodes=self.eval_episodes,
+            eval_epochs=self.eval_epochs,
+        )
+        if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
+            args.update(target=self.dataloader.primary_target)
+        return args
+
 
 class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     """Dataloader for continual learning with one object across all rotations."""
@@ -111,15 +141,18 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.object_init_sampler.post_episode()
         self.object_params = self.object_init_sampler()
         self.episodes += 1
+        self.set_primary_target(self.current_object, self.object_params)
 
     def pre_epoch(self):
         self.change_object_by_idx(self.current_object)
+        self.set_primary_target(self.current_object, self.object_params)
 
     def post_epoch(self):
         self.epochs += 1
         self.object_init_sampler.post_epoch()
         self.object_params = self.object_init_sampler()
         self.cycle_object()
+        self.set_primary_target(self.current_object, self.object_params)
 
     def create_semantic_mapping(self):
         """Create a unique semantic ID (positive integer) for each object.
@@ -183,10 +216,13 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         )
 
         self.current_object = idx
+
+    def set_primary_target(self, idx, object_params):
+        self.current_object = idx
         self.primary_target = {
             "object": self.object_names[idx],
             "semantic_id": self.semantic_label_to_id[self.object_names[idx]],
-            **self.object_params,
+            **object_params,
         }
         logging.info(f"New primary target: {self.primary_target}")
 
@@ -637,7 +673,7 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
             do_eval=False,
         ),
-        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="INFO"),
+        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="DEBUG"),
         train_dataloader_class=InformedEnvironmentDataLoader, # Need to customize this
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs( # Need to customize this
             object_names=SHUFFLED_YCB_OBJECTS, 
@@ -665,18 +701,26 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
         dict: Config for a partially trained model.
     """
     config = deepcopy(dist_agent_1lm)
-    config["experiment_args"].n_eval_epochs = task_id
+    config["experiment_args"].n_eval_epochs = task_id + 1
 
     # Change model loading path
-    config["experiment_args"].model_name_or_path = str(
+    model_path = str(
         DMC_PRETRAIN_DIR
-        / f"continual_learning_dist_agent_1lm_checkpoints/pretrained/checkpoints/{task_id}/model.pt"
+        / f"continual_learning_dist_agent_1lm_checkpoints/pretrained/checkpoints/{task_id + 1}/model.pt"
     )
+    # Check if the model path exists
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model path {model_path} does not exist")
+    
+    config["experiment_class"] = EvalContinualLearningExperiment
+    config["experiment_args"].model_name_or_path = model_path
+
+    config["eval_dataloader_class"] = InformedEnvironmentDataLoader
     config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
-        object_names=SHUFFLED_YCB_OBJECTS[:task_id + 1],
+        object_names=sorted(SHUFFLED_YCB_OBJECTS)[:task_id + 1],
         object_init_sampler=PredefinedObjectInitializer(
             change_every_episode=True,
-            rotations=TRAIN_ROTATIONS
+            rotations=RANDOM_ROTATIONS_5
         ),
     )
 
@@ -684,11 +728,16 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     config[
         "logging_config"
     ].run_name = f"continual_learning_dist_agent_1lm_checkpoints_task{task_id}"
+    config["logging_config"].python_log_level = "INFO"
+    # Disable wandb logging to save WandB space and time
+    config["logging_config"].wandb_handlers = []
 
     # Disable hypothesis-testing
     config[
         "monty_config"
     ].motor_system_config.motor_system_args.use_goal_state_driven_actions = False
+
+    return config
 
 
 CONFIGS = {
@@ -697,6 +746,6 @@ CONFIGS = {
 
 # Add all per-task eval configs
 for task_id in range(77):
-    eval_config_name = f"dist_agent_1lm_task{task_id}"
+    eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
     CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
 
