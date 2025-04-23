@@ -146,7 +146,7 @@ def plot_performance() -> None:
     xticks = np.arange(4) * 1.3
     bar_positions = xticks - bar_width / 2 - gap / 2
     violin_positions = xticks + violin_width / 2 + gap / 2
-    median_style = dict(color="lightgray", lw=1, ls="-")
+    median_style = dict(color="lightgray", lw=2, ls="-")
 
     # Plot accuracy bars
     ax1.bar(
