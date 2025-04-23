@@ -13,7 +13,8 @@ Panel A: Dendrogram and Similar Object Models
  - `plot_similar_object_models()`
 
 Panel B: Example Symmetry Episode
- - `plot_icup_symmetry_episode()`
+ - `plot_symmetry_episodes()`: generates 350+ plots, so may take a few minutes.
+   One of the figures generated was used as an example of object symmetry in panel B.
 
 Panels C and D: Rotation Error and Chamfer Distance for All Episodes
  - `plot_symmetry_stats()`
@@ -498,12 +499,10 @@ Panel B: Example Symmetry Episode
 """
 
 
-def plot_all_symmetry_episodes():
+def plot_symmetry_episodes():
     """Plot object models, rotations, and stats for individual episodes.
 
-    This function was used to find an example for panel B. The example, along with
-    hardcoded parameters for reproducibility, can be generated with
-    `plot_icup_symmetry_episode()`.
+    This function was used to find an example for panel B.
 
     Requires the experiment `fig4_symmetry_run` has been run.
 
@@ -653,137 +652,6 @@ def plot_all_symmetry_episodes():
         plt.close(fig)
 
 
-def plot_icup_symmetry_episode():
-    """Plot the icup object models, rotations, and stats used in panel B.
-
-    Requires the experiment `fig4_symmetry_run` has been run.
-
-    Output is saved to `DMC_ANALYSIS_DIR/fig4/icup_symmetry_episode`.
-    """
-    out_dir = OUT_DIR / "icup_symmetry_episode"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    experiment_dir = VISUALIZATION_RESULTS_DIR / "fig4_symmetry_run"
-    detailed_stats = DetailedJSONStatsInterface(
-        experiment_dir / "detailed_run_stats.json"
-    )
-    eval_stats = load_eval_stats(experiment_dir / "eval_stats.csv")
-
-    # Preload models that we'll be rotating.
-    models = {
-        name: load_object_model("dist_agent_1lm", name)
-        for name in eval_stats.primary_target_object.unique()
-    }
-
-    episode = 4
-    sym_id = 105
-    randrot_euler = (10, 20, 70)
-    view_init = dict(elev=40, azim=-90, roll=0)
-
-    stats = detailed_stats[episode]
-    row = eval_stats.iloc[episode]
-
-    # - Load the target rotation.
-    target = SimpleNamespace(
-        rot=Rotation.from_euler("xyz", row.primary_target_rotation_euler, degrees=True),
-        location=row.primary_target_position,
-    )
-
-    # - Load a random rotation.
-    rand = SimpleNamespace(
-        rot=Rotation.from_euler("xyz", randrot_euler, degrees=True),
-        location=np.array([0, 1.5, 0]),
-    )
-
-    # - Load symmetry rotations, and computed pose error.
-    sym_rotations = load_symmetry_rotations(stats)
-    for r in sym_rotations + [target, rand]:
-        r.pose_error = np.degrees(get_pose_error(r.rot.as_quat(), target.rot.as_quat()))
-
-    # - Find mlh, best, and some other symmetric.
-    sym_rotations = sorted(sym_rotations, key=lambda x: x.pose_error)
-    min_ = sym_rotations[0]
-    sym = sym_rotations[sym_id]
-    mlh = sorted(sym_rotations, key=lambda x: x.evidence)[-1]
-
-    # - Compute chamfer distances, and store the stats.
-    rotations = dict(target=target, min=min_, MLH=mlh, sym=sym, rand=rand)
-    model = models[row.primary_target_object] - [0, 1.5, 0]
-    target_obj = model.rotated(target.rot)
-    rotation_errors = []
-    chamfer_distances = []
-    for name, r in rotations.items():
-        r.obj = model.rotated(r.rot)
-        r.chamfer_distance = get_chamfer_distance(r.obj, target_obj)
-        rotation_errors.append(r.pose_error)
-        chamfer_distances.append(r.chamfer_distance)
-
-    # Create figure with gridspec
-    fig = plt.figure(figsize=(6, 6), constrained_layout=True)
-    gs = fig.add_gridspec(nrows=3, ncols=5)
-    object_axes = []
-    pose_axes = []
-    labels = ["target", "min", "MLH", "sym", "rand"]
-    # plot objects and poses
-    for i, lbl in enumerate(labels):
-        r = rotations[lbl]
-        ax = fig.add_subplot(gs[0, i], projection="3d")
-        object_axes.append(ax)
-        ax.scatter(
-            r.obj.x,
-            r.obj.y,
-            r.obj.z,
-            color=r.obj.rgba,
-            alpha=0.5,
-            s=1,
-        )
-        axes3d_set_aspect_equal(ax)
-        ax.grid(False)
-        ax.axis("off")
-        ax.view_init(**view_init)
-        ax = fig.add_subplot(gs[1, i], projection="3d")
-        pose_axes.append(ax)
-        draw_basis_vectors(ax, r.rot)
-        axes3d_set_aspect_equal(ax)
-        ax.view_init(**view_init)
-
-    ax1 = fig.add_subplot(gs[2, :2])
-    ax2 = ax1.twinx()
-    labels = ["min", "MLH", "sym", "rand"]
-    xticks = np.arange(len(labels))
-    width = 0.4
-    gap = 0.02
-    left_positions = xticks - width / 2 - gap / 2
-    right_positions = xticks + width / 2 + gap / 2
-    rotation_errors, chamfer_distances = [], []
-    for lbl in labels:
-        r = rotations[lbl]
-        rotation_errors.append(r.pose_error)
-        chamfer_distances.append(r.chamfer_distance)
-    ax1.bar(left_positions, rotation_errors, width, color=TBP_COLORS["blue"])
-    ax2.bar(right_positions, chamfer_distances, width, color=TBP_COLORS["purple"])
-    ax1.set_ylabel("Rotation Error (deg)")
-
-    ax1.set_xticks(xticks)
-    ax1.set_xticklabels(labels)
-    ax1.set_ylim(0, 180)
-    ax1.set_yticks([0, 45, 90, 135, 180])
-    ax1.spines["right"].set_visible(True)
-
-    ax2.set_ylabel("Chamfer Distance (m)")
-    ax2.set_ylim(0, 0.04)
-    ax2.set_yticks([0, 0.01, 0.02, 0.03, 0.04])
-    ax2.spines["right"].set_visible(True)
-
-    title = f"Episode {episode} - {row.primary_target_object} - {sym_id}"
-    fig.suptitle(title)
-
-    fig.tight_layout()
-    fig.savefig(out_dir / "icup_symmetry_episode.png")
-    fig.savefig(out_dir / "icup_symmetry_episode.svg")
-    plt.show()
-
-
 """
 --------------------------------------------------------------------------------
 Panels C and D: Symmetry Stats
@@ -847,8 +715,7 @@ def plot_symmetry_stats():
 
 
 if __name__ == "__main__":
-    # plot_dendrogram()
-    # plot_similar_object_models()
-    # plot_icup_symmetry_episode()
-    # plot_symmetry_stats()
-    plot_all_symmetry_episodes()
+    plot_dendrogram()
+    plot_similar_object_models()
+    plot_symmetry_episodes()
+    plot_symmetry_stats()
