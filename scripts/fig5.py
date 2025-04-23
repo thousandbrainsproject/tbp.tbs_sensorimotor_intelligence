@@ -516,7 +516,7 @@ def plot_steps():
             color=one_lm_color,
             width=2 * half_bar_width,
             showmedians=True,
-            median_style=dict(color="lightgray"),
+            median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
             ax=ax,
         )
