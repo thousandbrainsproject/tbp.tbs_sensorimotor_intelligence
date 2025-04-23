@@ -109,59 +109,87 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
 
         perf_counts = {key: 0 for key in performance_options}
         perf_counts.update(df.primary_performance.value_counts())
-        found = []
+        # found = []
         for name in performance_options:
             row[f"n_{name}"] = perf_counts[name]
-            if perf_counts[name] > 0:
-                found.append(name)
-        performance = found[0]
+        #     if perf_counts[name] > 0:
+        #         found.append(name)
+        # performance = found[0]
+        # if performance not in ("correct", "confused", "correct_mlh", "confused_mlh"):
+        #     raise ValueError(f"Invalid performance: {performance}")
 
         # Decide performance based on the number of correct/confused LM and
-        # correct_mlh/confused_mlh LMs. The rule is as follow:
+        # correct_mlh/confused_mlh LMs. The rules are as follows:
         #
-        # If there are any correct or confused LMs (i.e., the episode did not time-out,
-        # then we apply the following rules.
-        #   1. |correct LMs| > |confused-LMs| : correct
-        #   2. |correct LMs| < |confused-LMs| : confused
-        #   3. |correct LMs| = |confused-LMs| : we break the tie by comparing LMs
+        # 1. If there are any correct or confused LMs (i.e., the episode did not time-out,
+        #    then we apply the following rules.
+        #   1.1 |correct LMs| > |confused-LMs| : correct
+        #   2.1 |correct LMs| < |confused-LMs| : confused
+        #   3.1 |correct LMs| = |confused-LMs| : we break the tie by comparing LMs
         #      that timed out.
-        #      3.1. |correct_mlh LMs| > |confused_mlh LMs| : correct_mlh
-        #      3.2. |correct_mlh LMs| < |confused_mlh LMs| : confused_mlh
-        #      3.3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
-        #           flipping a coin.
+        #      3.1.1 |correct_mlh LMs| > |confused_mlh LMs| : correct
+        #      3.2.1 |correct_mlh LMs| < |confused_mlh LMs| : confused
+        #      3.3.1 |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #           randomly choosing correct or confused.
         #
-        # If the episode timed out, then we apply the following rules:
-        #   1. |correct_mlh LMs| > |confused_mlh LMs| : correct_mlh
-        #   2. |correct_mlh LMs| < |confused_mlh LMs| : confused_mlh
-        #   3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
-        #      flipping a coin
+        # 2. If the episode timed out, then we apply the following rules:
+        #   2.1. |correct_mlh LMs| > |confused_mlh LMs| : correct
+        #   2.2. |correct_mlh LMs| < |confused_mlh LMs| : confused
+        #   2.3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #        randomly choosing correct_mlh or confused_mlh.
+        #
+        # 3. In the highly unusual case where no LMs terminated with
+        #    correct[_mlh] or confused[_mlh], then we assign performance based on
+        #    precedence rules of the remaining options. The following is a list
+        #    of remaining options in order of precedence (highest to lowest):
+        #     - time_out
+        #     - pose_time_out
+        #     - no_label
+        #     - patch_off_object
+        #
 
-        if performance == "correct":
-            if row["n_confused"] > row["n_correct"]:
-                performance = "confused"
-            elif row["n_confused"] < row["n_correct"]:
+        # Case 1: There are some correct or confused LMs.
+        if row["n_correct"] > 0 or row["n_confused"] > 0:
+            if row["n_correct"] > row["n_confused"]:
                 performance = "correct"
+            elif row["n_correct"] < row["n_confused"]:
+                performance = "confused"
             else:
-                if row["n_confused_mlh"] > row["n_correct_mlh"]:
-                    performance = "confused"
-                elif row["n_confused_mlh"] < row["n_correct_mlh"]:
+                # Break the tie by comparing timed-out LMs.
+                if row["n_correct_mlh"] > row["n_confused_mlh"]:
                     performance = "correct"
+                elif row["n_correct_mlh"] < row["n_confused_mlh"]:
+                    performance = "confused"
                 else:
+                    # Break the tie by flipping a coin.
                     if np.random.rand() < 0.5:
                         performance = "correct"
                     else:
                         performance = "confused"
 
-        elif performance == "correct_mlh":
-            if row["n_confused_mlh"] > row["n_correct_mlh"]:
-                performance = "confused_mlh"
-            elif row["n_confused_mlh"] < row["n_correct_mlh"]:
+        # Case 2: The episode timed out.
+        elif row["n_correct_mlh"] > 0 or row["n_confused_mlh"] > 0:
+            if row["n_correct_mlh"] > row["n_confused_mlh"]:
                 performance = "correct_mlh"
+            elif row["n_correct_mlh"] < row["n_confused_mlh"]:
+                performance = "confused_mlh"
             else:
+                # Break the tie by flipping a coin.
                 if np.random.rand() < 0.5:
                     performance = "correct_mlh"
                 else:
                     performance = "confused_mlh"
+
+        # Case 3: No LMs terminated with correct[_mlh] or confused[_mlh].
+        else:
+            # Apply precedence rules.
+            performance = None
+            for name in ("time_out", "pose_time_out", "no_label", "patch_off_object"):
+                if row[f"n_{name}"] > 0:
+                    performance = name
+                    break
+            if performance is None:
+                raise ValueError("No valid performance value found")
 
         row["primary_performance"] = performance
 
@@ -445,6 +473,24 @@ def plot_accuracy():
     fig.savefig(out_dir / "accuracy.png")
     fig.savefig(out_dir / "accuracy.svg")
     plt.show()
+    all_experiments = [ONE_LM_EXPERIMENT] + list(MULTI_LM_EXPERIMENTS)
+    for exp in all_experiments:
+        eval_stats = load_eval_stats(exp)
+        reduced_stats = reduce_eval_stats(eval_stats)
+        info = {}
+        perf_options = [
+            "correct",
+            "confused",
+            "correct_mlh",
+            "confused_mlh",
+            "tied",
+            "tied_mlh",
+        ]
+        for name in perf_options:
+            info[name] = 100 * get_frequency(reduced_stats["primary_performance"], name)
+        print(f"\n{exp}:")
+        for key, val in info.items():
+            print(f" - {key}: {val:0.1f}%")
 
 
 """
