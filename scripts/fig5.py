@@ -473,24 +473,7 @@ def plot_accuracy():
     fig.savefig(out_dir / "accuracy.png")
     fig.savefig(out_dir / "accuracy.svg")
     plt.show()
-    all_experiments = [ONE_LM_EXPERIMENT] + list(MULTI_LM_EXPERIMENTS)
-    for exp in all_experiments:
-        eval_stats = load_eval_stats(exp)
-        reduced_stats = reduce_eval_stats(eval_stats)
-        info = {}
-        perf_options = [
-            "correct",
-            "confused",
-            "correct_mlh",
-            "confused_mlh",
-            "tied",
-            "tied_mlh",
-        ]
-        for name in perf_options:
-            info[name] = 100 * get_frequency(reduced_stats["primary_performance"], name)
-        print(f"\n{exp}:")
-        for key, val in info.items():
-            print(f" - {key}: {val:0.1f}%")
+
 
 
 """
@@ -527,9 +510,6 @@ def plot_steps():
     # Create the two subplots with shared x-axis
     top_ax = fig.add_subplot(gs[0, 0])  # Top subplot takes 1/3
     bottom_ax = fig.add_subplot(gs[1:, 0], sharex=top_ax)  # Bottom subplot takes 2/3
-
-    # fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
-    # top_ax, bottom_ax = axes
     fig.subplots_adjust(hspace=0.05)
 
     # Plot params.
@@ -541,7 +521,8 @@ def plot_steps():
     bar_width = 0.8
     xticks = np.arange(5)
     bw_method = 0.1
-    # 1-LM
+
+    # 1-LM violin plot and mean marker.
     n_steps_1lm = get_n_steps(ONE_LM_EXPERIMENT)
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         violinplot(
@@ -550,56 +531,40 @@ def plot_steps():
             color=one_lm_color,
             width=bar_width,
             showmedians=True,
-            median_style=dict(color="lightgray"),
+            median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
             ax=ax,
         )
-        ax.scatter(
-            xticks[0],
-            np.mean(n_steps_1lm),
-            color=one_lm_color,
-            marker="o",
-            edgecolor="black",
-            facecolor="black",
-            s=20,
-        )
 
-    # Multi-LM
+    # Multi-LM violin plot and mean marker.
     n_steps = [get_n_steps(exp) for exp in multi_lm_group]
-
+    means = [np.mean(arr) for arr in n_steps]
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
-        # Plot percent correct.
         violinplot(
             n_steps,
             xticks[1:],
             color=multi_lm_color,
             width=bar_width,
             showmedians=True,
-            median_style=dict(color="lightgray"),
+            median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
             ax=ax,
         )
 
-        means = [np.mean(arr) for arr in n_steps]
+    # Plot a line connecting the means across all conditions.
+    means = [np.mean(n_steps_1lm)] + [np.mean(arr) for arr in n_steps]
+    for ax in [bottom_ax, top_ax]:
         ax.scatter(
-            xticks[1:],
+            xticks,
             means,
-            color=multi_lm_color,
+            color="black",
             marker="o",
-            edgecolor="black",
-            facecolor="black",
+            # facecolor="black",
             s=20,
         )
-        ax.plot(xticks[1:], means, color="k", linestyle="-", linewidth=2, zorder=10)
-        ax.plot(
-            xticks[1:],
-            means,
-            color=multi_lm_color,
-            linestyle="-",
-            linewidth=1,
-            zorder=15,
-        )
+        ax.plot(xticks, means, color="black", linestyle="-", linewidth=2, zorder=10)
 
+    # Set y-limits and ticks.
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.set_ylim(ylims[ax_num])
         ax.set_yticks(yticks[ax_num])
