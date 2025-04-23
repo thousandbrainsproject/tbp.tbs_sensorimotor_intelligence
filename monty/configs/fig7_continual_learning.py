@@ -61,12 +61,11 @@ class PretrainContinualLearningExperimentWithCheckpointing(
 
     NOTE: Experiments using this class cannot be run in parallel.
     """
-    def run_epoch(self):
+    def run_epoch(self): 
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(TRAIN_ROTATIONS)):
-                logging.info(f"Current object: {self.dataloader.current_object}")
-                logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
+                logging.info(f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}")
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
@@ -180,7 +179,7 @@ CONFIGS = {
 }
 
 # Add all per-task eval configs
-for task_id in range(77):
-    eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
-    CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
+# for task_id in range(77):
+#     eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
+#     CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
 
