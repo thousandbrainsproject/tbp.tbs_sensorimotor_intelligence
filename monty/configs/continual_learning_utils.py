@@ -9,6 +9,7 @@ from tbp.monty.frameworks.actions.actions import (
     SetAgentPose,
     SetSensorRotation,
 )
+import numpy as np
 
 
 class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
@@ -43,20 +44,30 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     def post_episode(self):
         super().post_episode()
         self.object_init_sampler.post_episode()
-        self.object_params = self.object_init_sampler()
+        self.cycle_rotation()
         self.episodes += 1
-        self.set_primary_target(self.current_object, self.object_params)
-
+    
     def pre_epoch(self):
-        self.change_object_by_idx(self.current_object)
-        self.set_primary_target(self.current_object, self.object_params)
+        current_rotation = self.object_params["euler_rotation"]
+        if not np.array_equal(current_rotation, np.array([0, 0, 0])):
+            raise ValueError("Euler rotation should be [0, 0, 0] at the start of each epoch")
+        self.change_object_by_idx(self.current_object, self.object_params)
 
     def post_epoch(self):
         self.epochs += 1
+        self.current_object += 1
         self.object_init_sampler.post_epoch()
         self.object_params = self.object_init_sampler()
-        self.cycle_object()
-        self.set_primary_target(self.current_object, self.object_params)
+        self.reset_agent()
+
+    def cycle_rotation(self):
+        current_rotation = self.object_params["euler_rotation"]
+        self.object_params = self.object_init_sampler()
+        next_rotation = self.object_params["euler_rotation"]
+        logging.info(
+            f"\n\nGoing from rotation: {current_rotation} to rotation: {next_rotation}"
+        )
+        self.change_object_by_idx(self.current_object, self.object_params)
 
     def create_semantic_mapping(self):
         """Create a unique semantic ID (positive integer) for each object.
@@ -80,19 +91,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
             label: i + starting_integer
             for i, label in enumerate(self.source_object_list)
         }
-
-    def cycle_object(self):
-        """Remove the previous object(s) from the scene and add a new primary target.
-
-        Also add any potential distractor objects.
-        """
-        next_object = (self.current_object + 1) % self.n_objects
-        logging.info(
-            f"\n\nGoing from {self.current_object} to {next_object} of {self.n_objects}"
-        )
-        self.change_object_by_idx(next_object)
     
-    def change_object_by_idx(self, idx):
+    def change_object_by_idx(self, idx, object_params):
         """Update the primary target object in the scene based on the given index.
 
         The given `idx` is the index of the object in the `self.object_names` list,
@@ -108,7 +108,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.dataset.env.remove_all_objects()
 
         # Specify config for the primary target object and then add it
-        init_params = self.object_params.copy()
+        init_params = object_params.copy()
         init_params.pop("euler_rotation")
         if "quat_rotation" in init_params.keys():
             init_params.pop("quat_rotation")
@@ -118,11 +118,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         primary_target_obj = self.dataset.env.add_object(
             name=self.object_names[idx], **init_params
         )
-
-        self.current_object = idx
-
-    def set_primary_target(self, idx, object_params):
-        self.current_object = idx
+        
         self.primary_target = {
             "object": self.object_names[idx],
             "semantic_id": self.semantic_label_to_id[self.object_names[idx]],
@@ -233,7 +229,11 @@ class InformedEnvironmentDataLoader(EnvironmentDataLoaderPerRotation):
 
     def pre_episode(self):
         super().pre_episode()
-        if not self.dataset.env._agents[0].action_space_type == "surface_agent":
+
+    def pre_epoch(self):
+        super().pre_epoch()
+        # Do not need to do get_good_view since we are not changing object between episodes
+        if not self.dataset.env._agents[0].action_space_type == "surface_agent": 
             on_target_object = self.get_good_view_with_patch_refinement()
 
     def first_step(self):
