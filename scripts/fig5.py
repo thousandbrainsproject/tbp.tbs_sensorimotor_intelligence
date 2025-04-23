@@ -559,7 +559,6 @@ def plot_steps():
             means,
             color="black",
             marker="o",
-            # facecolor="black",
             s=20,
         )
         ax.plot(xticks, means, color="black", linestyle="-", linewidth=2, zorder=10)
