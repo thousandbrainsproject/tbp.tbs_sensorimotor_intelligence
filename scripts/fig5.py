@@ -116,7 +116,26 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
                 found.append(name)
         performance = found[0]
 
-        # Require a majority of correct performances for 'correct' classification.
+        # Decide performance based on the number of correct/confused LM and
+        # correct_mlh/confused_mlh LMs. The rule is as follow:
+        #
+        # If there are any correct or confused LMs (i.e., the episode did not time-out,
+        # then we apply the following rules.
+        #   1. |correct LMs| > |confused-LMs| : correct
+        #   2. |correct LMs| < |confused-LMs| : confused
+        #   3. |correct LMs| = |confused-LMs| : we break the tie by comparing LMs
+        #      that timed out.
+        #      3.1. |correct_mlh LMs| > |confused_mlh LMs| : correct_mlh
+        #      3.2. |correct_mlh LMs| < |confused_mlh LMs| : confused_mlh
+        #      3.3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #           flipping a coin.
+        #
+        # If the episode timed out, then we apply the following rules:
+        #   1. |correct_mlh LMs| > |confused_mlh LMs| : correct_mlh
+        #   2. |correct_mlh LMs| < |confused_mlh LMs| : confused_mlh
+        #   3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #      flipping a coin
+
         if performance == "correct":
             if row["n_confused"] > row["n_correct"]:
                 performance = "confused"
