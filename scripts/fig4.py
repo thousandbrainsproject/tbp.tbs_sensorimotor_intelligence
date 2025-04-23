@@ -55,13 +55,12 @@ from tbp.monty.frameworks.environments.ycb import SIMILAR_OBJECTS
 from tbp.monty.frameworks.utils.logging_utils import get_pose_error
 
 init_matplotlib_style()
+np.random.seed(0)
 
 # Directories to save plots and tables to.
 OUT_DIR = DMC_ANALYSIS_DIR / "fig4"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Set numpy seed for reproducibility
-np.random.seed(0)
 
 
 """
@@ -572,7 +571,7 @@ def plot_all_symmetry_episodes():
         mlh = sorted(sym_rotations, key=lambda x: x.evidence)[-1]
 
         # - Compute chamfer distances, and store the stats.
-        rotations = dict(target=target, min=min_, MLH=mlh, sym=sym, rand=rand)
+        rotations = dict(ground_truth=target, min=min_, MLH=mlh, sym=sym, rand=rand)
         model = models[row.primary_target_object] - [0, 1.5, 0]
         target_obj = model.rotated(target.rot)
         rotation_errors = []
@@ -588,9 +587,10 @@ def plot_all_symmetry_episodes():
         gs = fig.add_gridspec(nrows=3, ncols=5)
         object_axes = []
         pose_axes = []
-        labels = ["target", "min", "MLH", "sym", "rand"]
+        labels = ["ground_truth", "min", "MLH", "sym", "rand"]
         # plot objects and poses
         for i, lbl in enumerate(labels):
+            # Draw object model at given rotation.
             r = rotations[lbl]
             ax = fig.add_subplot(gs[0, i], projection="3d")
             object_axes.append(ax)
@@ -600,16 +600,21 @@ def plot_all_symmetry_episodes():
                 r.obj.z,
                 color=r.obj.rgba,
                 alpha=0.5,
+                s=1,
             )
             axes3d_set_aspect_equal(ax)
             ax.grid(False)
             ax.axis("off")
             ax.view_init(**view_init)
+            ax.set_title(lbl)
+
+            # Draw object rotation.
             ax = fig.add_subplot(gs[1, i], projection="3d")
             pose_axes.append(ax)
             draw_basis_vectors(ax, r.rot)
             axes3d_set_aspect_equal(ax)
             ax.view_init(**view_init)
+            ax.set_title(lbl)
 
         ax1 = fig.add_subplot(gs[2, :2])
         ax2 = ax1.twinx()
@@ -643,9 +648,9 @@ def plot_all_symmetry_episodes():
         fig.suptitle(title)
 
         fig.tight_layout()
-        plt.show()
         fig.savefig(png_dir / f"{episode}_{row.primary_target_object}.png")
         fig.savefig(svg_dir / f"{episode}_{row.primary_target_object}.svg")
+        plt.close(fig)
 
 
 def plot_icup_symmetry_episode():
@@ -842,7 +847,8 @@ def plot_symmetry_stats():
 
 
 if __name__ == "__main__":
-    plot_dendrogram()
-    plot_similar_object_models()
-    plot_icup_symmetry_episode()
-    plot_symmetry_stats()
+    # plot_dendrogram()
+    # plot_similar_object_models()
+    # plot_icup_symmetry_episode()
+    # plot_symmetry_stats()
+    plot_all_symmetry_episodes()
