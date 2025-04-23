@@ -220,10 +220,9 @@ def plot_performance():
 
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_xlabel("Motor Policy")
     ax.set_ylabel("% Correct")
     ax.set_ylim(0, 100)
-    ax.legend(["Correct", "Correct MLH"], loc="lower right", framealpha=1)
+    ax.legend(["Converged", "Timed-Out"], loc="lower right", framealpha=1)
 
     ax = axes[1]
     n_steps = []
@@ -235,14 +234,13 @@ def plot_performance():
         xticks,
         color=TBP_COLORS["blue"],
         showmedians=True,
-        median_style=dict(color="lightgray"),
+        median_style=dict(color="lightgray", lw=2),
         bw_method=0.1,
         ax=ax,
     )
 
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_xlabel("Motor Policy")
     ax.set_ylabel("Steps")
     ax.set_ylim(0, 500)
     fig.tight_layout()
