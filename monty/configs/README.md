@@ -32,14 +32,6 @@ Here we are showing the performance of the "standard" version of Monty, using:
 
 The main output measures are accuracy, rotation error (degrees), and Chamfer distance for each condition.
 
-## Default Parameters for Figures 5+
-Unless specified otherwise, the following figures/experiments use:
-- 77 objects
-- 5 predefined "random" rotations. These rotations were randomly generated but are kept constant across experiments. 
-- Sensor noise
-
-This captures core model performance in a realistic setting.
-
 ## Figure 4: Structured Object Representations
 
 Consists of 1 experiment:
@@ -58,24 +50,27 @@ The main output measure is a dendrogram showing evidence score clustering for th
 - Although evaluating on 10 objects, the model is trained on 77 objects.
 - We need to run this experiment with SELECTIVE logging on so we get the evidence values to analyze.
   
+## Default Parameters for Figures 5+
+Unless specified otherwise, the following figures/experiments use:
+- 77 objects
+- 5 predefined "random" rotations. These rotations were randomly generated but are kept constant across experiments. 
+- Sensor noise
+
+This captures core model performance in a realistic setting.
+
 ## Figure 5: Rapid Inference with Voting
 
-Consists of 9 experiments:
+Consists of 5 experiments:
 - `dist_agent_1lm_randrot_noise`
-- `dist_agent_2lm_half_lms_match_randrot_noise`
-- `dist_agent_4lm_half_lms_match_randrot_noise`
-- `dist_agent_8lm_half_lms_match_randrot_noise`
-- `dist_agent_16lm_half_lms_match_randrot_noise`
-- `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
-- `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
-- `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
-- `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+- `dist_agent_2lm_randrot_noise`
+- `dist_agent_4lm_noise`
+- `dist_agent_8lm_randrot_noise`
+- `dist_agent_16lm_randrot_noise`
 
-There are two variations, either
-- `half_lms_match`: At least half of the available LMs must match. This tends to improve accuracy but results in a slower increase in convergence speed as a function of matching steps.
-  - Defined as: `min_lms_match=int(num_lms/2)`
-- `fixed_min_lms_match`: A minimum of two LMs must match, regardless of the total number of LMs. This tends to increase convergence speed significantly but provides only a small improvement in accuracy.
-  - Defined as: `min_lms_match=min(num_lms, 2)`
+For single-LM experiments, an episode terminates when the LM has converged onto a
+object/pose estimate. For the multi-LM experiments in this paper, a minimum of two LMs
+must converge before termination regardless of the number of LMs. (Note that episodes
+time-out after 500 steps for all experiments if the convergence criteria is not met.)
 
 Performance is evaluated on:
 - 77 objects
@@ -83,7 +78,7 @@ Performance is evaluated on:
 - Sensor noise and 5 random rotations
 - Voting over 2, 4, 8, or 16 LMs
 
-The main output measure is accuracy and rotation error as a function of number of LMs. The two variations show that accuracy and convergence speed can be traded off against each other.
+The main output measure is accuracy and rotation error as a function of the number of LMs.
 
 ## Figure 6: Rapid Inference with Model-Free and Model-Based Policies
 
