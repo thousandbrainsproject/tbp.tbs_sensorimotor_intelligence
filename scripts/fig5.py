@@ -121,7 +121,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
         # Decide performance based on the number of correct/confused LM and
         # correct_mlh/confused_mlh LMs. The rules are as follows:
         #
-        # 1. If there are any correct or confused LMs (i.e., the episode did not time-out,
+        # 1. If there are any correct or confused LMs (i.e., the episode did not time-out),
         #    then we apply the following rules.
         #   1.1 |correct LMs| > |confused-LMs| : correct
         #   2.1 |correct LMs| < |confused-LMs| : confused
