@@ -49,6 +49,7 @@ from plot_utils import (
     axes3d_clean,
     axes3d_set_aspect_equal,
     init_matplotlib_style,
+    violinplot,
 )
 from scipy.cluster.hierarchy import dendrogram, linkage, set_link_color_palette
 from scipy.spatial.transform import Rotation
@@ -393,7 +394,7 @@ def plot_dendrogram():
     )
     xticklabels = ax.get_xticklabels()
     ax.set_xticklabels(xticklabels, rotation=0, fontsize=8, ha="center")
-    ax.set_ylabel("Cluster Distance", fontsize=10)
+    ax.set_ylabel("Cluster Distance (m)", fontsize=10)
     ax.set_yticks([0, 0.05, 0.1, 0.15, 0.2])
 
     plt.tight_layout()
@@ -674,20 +675,24 @@ def plot_symmetry_stats():
     stat_arrays = get_symmetry_stats()
 
     # Create figure.
-    fig, axes = plt.subplots(1, 2, figsize=(5.5, 2.5))
+    fig, axes = plt.subplots(1, 2, figsize=(5, 2))
     rotation_types = ["min", "MLH", "sym", "rand"]
-    colors = [TBP_COLORS["blue"]] * len(rotation_types)
     xticks = list(range(1, len(rotation_types) + 1))
     xticklabels = ["min", "MLH", "sym", "rand"]
-
+    median_style = dict(color="lightgray", lw=2)
     # Pose Error
     ax = axes[0]
     arrays = [stat_arrays["pose_error"][name] for name in rotation_types]
-    vp = ax.violinplot(arrays, showextrema=False, showmedians=True)
-    for j, body in enumerate(vp["bodies"]):
-        body.set_facecolor(colors[j])
-        body.set_alpha(1.0)
-    vp["cmedians"].set_color("black")
+
+    violinplot(
+        arrays,
+        xticks,
+        color=TBP_COLORS["blue"],
+        width=0.8,
+        median_style=median_style,
+        showmedians=True,
+        ax=ax,
+    )
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
     ax.set_yticks([0, 45, 90, 135, 180])
@@ -697,11 +702,15 @@ def plot_symmetry_stats():
     # Chamfer Distance
     ax = axes[1]
     arrays = [stat_arrays["Chamfer"][name] for name in rotation_types]
-    vp = ax.violinplot(arrays, showextrema=False, showmedians=True)
-    for j, body in enumerate(vp["bodies"]):
-        body.set_facecolor(colors[j])
-        body.set_alpha(1.0)
-    vp["cmedians"].set_color("black")
+    violinplot(
+        arrays,
+        xticks,
+        color=TBP_COLORS["blue"],
+        width=0.8,
+        median_style=median_style,
+        showmedians=True,
+        ax=ax,
+    )
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
     ax.set_ylabel("Chamfer Distance (m)")
@@ -712,6 +721,7 @@ def plot_symmetry_stats():
     fig.savefig(out_dir / "symmetry_stats.png")
     fig.savefig(out_dir / "symmetry_stats.svg")
     plt.show()
+
 
 
 if __name__ == "__main__":
