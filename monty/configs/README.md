@@ -70,7 +70,7 @@ Consists of 5 experiments:
 For single-LM experiments, an episode terminates when the LM has converged onto a
 object/pose estimate. For the multi-LM experiments in this paper, a minimum of two LMs
 must converge before termination regardless of the number of LMs. (Note that episodes
-time-out after 500 steps for all experiments if convergence criteria is not met.)
+time-out after 500 steps for all experiments if the convergence criteria is not met.)
 
 Performance is evaluated on:
 - 77 objects
