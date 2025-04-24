@@ -257,10 +257,12 @@ def add_sensor_noise(config: Dict[str, Any]) -> None:
         config: Experiment config to add sensor noise to.
     """
     noise_params = {
-        "pose_vectors": 2.0,
-        "hsv": 0.1,
-        "principal_curvatures_log": 0.1,
-        "pose_fully_defined": 0.01,
+        "features": {
+            "pose_vectors": 2.0,
+            "hsv": 0.1,
+            "principal_curvatures_log": 0.1,
+            "pose_fully_defined": 0.01,
+        },
         "location": 0.002,
     }
 
