@@ -204,7 +204,7 @@ def plot_performance():
     for exp in experiments:
         eval_stats.append(load_eval_stats(exp))
 
-    fig, axes = plt.subplots(1, 2, figsize=(4, 3))
+    fig, axes = plt.subplots(1, 2, figsize=(3.65, 2.55))
 
     ax = axes[0]
     accuracies, accuracies_mlh = [], []
@@ -621,9 +621,9 @@ def plot_object_hypotheses_visualization():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses/visualization`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses`.
     """
-    out_dir = OUT_DIR / "object_hypotheses/visualization"
+    out_dir = OUT_DIR / "object_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     style = STYLE.copy()
@@ -670,8 +670,8 @@ def plot_object_hypotheses_visualization():
         bbox_to_anchor=(0.1, 0.8),
     )
 
-    fig.savefig(out_dir / "object_hypothesis.png", bbox_inches="tight")
-    fig.savefig(out_dir / "object_hypothesis.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_visualization.png", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_visualization.svg", bbox_inches="tight")
     plt.show()
 
     return fig, axes
@@ -682,9 +682,9 @@ def plot_pose_hypotheses_visualization():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses/visualization`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses`.
     """
-    out_dir = OUT_DIR / "pose_hypotheses/visualization"
+    out_dir = OUT_DIR / "pose_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     style = update_style(STYLE, {"target.s": 4, "top_mlh.s": 4, "second_mlh.s": 4})
@@ -734,8 +734,8 @@ def plot_pose_hypotheses_visualization():
         fontsize=8,
     )
 
-    fig.savefig(out_dir / "pose_hypothesis.png", bbox_inches="tight")
-    fig.savefig(out_dir / "pose_hypothesis.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_visualization.png", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_visualization.svg", bbox_inches="tight")
     plt.show()
 
     return fig, axes
@@ -957,10 +957,10 @@ def plot_object_hypotheses_evidence():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses/evidence`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses`.
     """
     # Initialize ouput directory.
-    out_dir = OUT_DIR / "object_hypotheses/evidence"
+    out_dir = OUT_DIR / "object_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize stats.
@@ -1006,8 +1006,8 @@ def plot_object_hypotheses_evidence():
         ylabel="Evidence",
     )
 
-    fig.savefig(out_dir / "evidence.png", bbox_inches="tight")
-    fig.savefig(out_dir / "evidence.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_evidence.png", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_evidence.svg", bbox_inches="tight")
     plt.show()
 
 
@@ -1016,10 +1016,10 @@ def plot_pose_hypotheses_evidence():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses/evidence`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses`.
     """
     # Initialize ouput directory.
-    out_dir = OUT_DIR / "pose_hypotheses/evidence"
+    out_dir = OUT_DIR / "pose_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize stats.
@@ -1066,8 +1066,8 @@ def plot_pose_hypotheses_evidence():
         xlabel="Step",
         ylabel="Evidence",
     )
-    fig.savefig(out_dir / "evidence.png", bbox_inches="tight")
-    fig.savefig(out_dir / "evidence.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_evidence.png", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_evidence.svg", bbox_inches="tight")
     plt.show()
 
 
