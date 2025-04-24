@@ -13,7 +13,7 @@ This module defines the following single-LM config:
  This is distinct from `dist_agent_1lm_randrot_all_noise` used in figure 3 in that it
  uses 5 random rotations instead of 14.
 
-This module also defines defines the following multi-LM configs:
+This module also defines the following multi-LM configs:
  - `dist_agent_2lm_randrot_noise`
  - `dist_agent_4lm_randrot_noise`
  - `dist_agent_8lm_randrot_noise`
