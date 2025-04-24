@@ -27,7 +27,6 @@ All of these experiments use:
 
 """
 
-from copy import deepcopy
 from typing import Any, Mapping
 
 from tbp.monty.frameworks.config_utils.config_args import make_multi_lm_monty_config
