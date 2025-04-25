@@ -64,6 +64,8 @@ logger = logging.getLogger(__name__)
 Pretraining Configs
 --------------------------------------------------------------------------------
 """
+
+
 class PretrainingContinualLearningExperimentWithCheckpointing(
     PretrainingExperimentWithCheckpointing
 ):
@@ -71,6 +73,7 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
 
     NOTE: Experiments using this class cannot be run in parallel.
     """
+
     def run_epoch(self):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
@@ -79,35 +82,35 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
                     "Current object: %(object)s at rotation: %(rotation)s",
                     extra={
                         "object": self.dataloader.current_object,
-                        "rotation": self.dataloader.object_params['euler_rotation']
-                    }
+                        "rotation": self.dataloader.object_params["euler_rotation"],
+                    },
                 )
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
         self.post_epoch()
 
+
 class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
     """Continual learning evaluation experiment."""
 
     def run_epoch(self) -> None:
-        """Run a single epoch of continual learning evaluation.
-        
-
-        """
+        """Run a single epoch of continual learning evaluation."""
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(RANDOM_ROTATIONS_5)):
                 logger.info(
                     "Current object: %(object)s",
-                    extra={"object": self.dataloader.current_object}
+                    extra={"object": self.dataloader.current_object},
                 )
                 logger.info(
                     "Running a simulation to model object: %(object_name)s at with params: %(params)s",
                     extra={
-                        "object_name": self.dataloader.object_names[self.dataloader.current_object],
-                        "params": self.dataloader.object_params
-                    }
+                        "object_name": self.dataloader.object_names[
+                            self.dataloader.current_object
+                        ],
+                        "params": self.dataloader.object_params,
+                    },
                 )
                 self.run_episode()
         else:
@@ -128,7 +131,10 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
             args.update(target=self.dataloader.primary_target)
         return args
 
-pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(pretrain_dist_agent_1lm)
+
+pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(
+    pretrain_dist_agent_1lm
+)
 pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
     dict(
         experiment_class=PretrainingContinualLearningExperimentWithCheckpointing,
@@ -136,17 +142,19 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
             do_eval=False,
         ),
-        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints"),
+        logging_config=DMCPretrainLoggingConfig(
+            run_name="continual_learning_dist_agent_1lm_checkpoints"
+        ),
         train_dataloader_class=InformedEnvironmentDataLoader,
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
             object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(
-                change_every_episode=True,
-                rotations=TRAIN_ROTATIONS
+                change_every_episode=True, rotations=TRAIN_ROTATIONS
             ),
         ),
     )
 )
+
 
 def make_continual_learning_eval_config(task_id: int) -> dict:
     """Make an eval config that loads a pretrained model checkpoint.
@@ -182,10 +190,9 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
 
     config["eval_dataloader_class"] = InformedEnvironmentDataLoader
     config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
-        object_names=sorted(SHUFFLED_YCB_OBJECTS)[:task_id + 1],
+        object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
         object_init_sampler=PredefinedObjectInitializer(
-            change_every_episode=True,
-            rotations=RANDOM_ROTATIONS_5
+            change_every_episode=True, rotations=RANDOM_ROTATIONS_5
         ),
     )
 
@@ -213,4 +220,3 @@ CONFIGS = {
 for task_id in range(77):
     eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
     CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
-
