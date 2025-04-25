@@ -75,7 +75,13 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(TRAIN_ROTATIONS)):
-                logger.info(f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}")
+                logger.info(
+                    "Current object: %(object)s at rotation: %(rotation)s",
+                    extra={
+                        "object": self.dataloader.current_object,
+                        "rotation": self.dataloader.object_params['euler_rotation']
+                    }
+                )
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
@@ -92,8 +98,17 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(RANDOM_ROTATIONS_5)):
-                logger.info(f"Current object: {self.dataloader.current_object}")
-                logger.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
+                logger.info(
+                    "Current object: %(object)s",
+                    extra={"object": self.dataloader.current_object}
+                )
+                logger.info(
+                    "Running a simulation to model object: %(object_name)s at with params: %(params)s",
+                    extra={
+                        "object_name": self.dataloader.object_names[self.dataloader.current_object],
+                        "params": self.dataloader.object_params
+                    }
+                )
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
