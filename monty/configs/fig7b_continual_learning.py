@@ -57,6 +57,9 @@ from .pretraining_experiments import (
     pretrain_dist_agent_1lm,
 )
 
+# Create a logger for this module
+logger = logging.getLogger(__name__)
+
 """
 Pretraining Configs
 --------------------------------------------------------------------------------
@@ -72,7 +75,7 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(TRAIN_ROTATIONS)):
-                logging.info(f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}")
+                logger.info(f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}")
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
@@ -89,8 +92,8 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(RANDOM_ROTATIONS_5)):
-                logging.info(f"Current object: {self.dataloader.current_object}")
-                logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
+                logger.info(f"Current object: {self.dataloader.current_object}")
+                logger.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
                 self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
