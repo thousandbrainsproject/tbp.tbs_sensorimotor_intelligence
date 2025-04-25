@@ -1,5 +1,6 @@
 import logging
-
+from dataclasses import dataclass
+from typing import Callable, List
 
 from tbp.monty.frameworks.environments import embodied_data as ED
 from tbp.monty.frameworks.models.motor_policies import SurfacePolicy, SurfacePolicyCurvatureInformed
@@ -11,6 +12,10 @@ from tbp.monty.frameworks.actions.actions import (
 )
 import numpy as np
 
+@dataclass
+class EnvironmentDataloaderPerRotationArgs:
+    object_names: List
+    object_init_sampler: Callable
 
 class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     """Dataloader for continual learning with one object across all rotations.
@@ -49,8 +54,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     
     def pre_epoch(self):
         current_rotation = self.object_params["euler_rotation"]
-        if not np.array_equal(current_rotation, np.array([0, 0, 0])):
-            raise ValueError("Euler rotation should be [0, 0, 0] at the start of each epoch")
+        # if not np.array_equal(current_rotation, np.array([0, 0, 0])):
+        #     raise ValueError("Euler rotation should be [0, 0, 0] at the start of each epoch")
         self.change_object_by_idx(self.current_object, self.object_params)
 
     def post_epoch(self):
@@ -229,12 +234,13 @@ class InformedEnvironmentDataLoader(EnvironmentDataLoaderPerRotation):
 
     def pre_episode(self):
         super().pre_episode()
-
-    def pre_epoch(self):
-        super().pre_epoch()
         # Do not need to do get_good_view since we are not changing object between episodes
         if not self.dataset.env._agents[0].action_space_type == "surface_agent": 
             on_target_object = self.get_good_view_with_patch_refinement()
+
+    def pre_epoch(self):
+        super().pre_epoch()
+
 
     def first_step(self):
         """Carry out particular motor-system state updates required on the first step.

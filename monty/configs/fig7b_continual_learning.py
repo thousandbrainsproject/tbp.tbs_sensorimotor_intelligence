@@ -35,7 +35,6 @@ import logging
 from copy import deepcopy
 
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
-    EnvironmentDataloaderPerObjectArgs,
     ExperimentArgs,
     PredefinedObjectInitializer,
 )
@@ -46,6 +45,7 @@ from tbp.monty.frameworks.experiments.object_recognition_experiments import (
 
 from .common import DMC_PRETRAIN_DIR, RANDOM_ROTATIONS_5
 from .continual_learning_utils import (
+    EnvironmentDataloaderPerRotationArgs,
     EnvironmentDataLoaderPerRotation,
     InformedEnvironmentDataLoader,
 )
@@ -183,11 +183,11 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     config["experiment_args"].model_name_or_path = model_path
 
     config["eval_dataloader_class"] = InformedEnvironmentDataLoader
-    config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
-        object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
-        object_init_sampler=PredefinedObjectInitializer(
-            change_every_episode=True, rotations=RANDOM_ROTATIONS_5
-        ),
+    config["eval_dataloader_args"] = EnvironmentDataloaderPerRotationArgs(
+    object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
+    object_init_sampler=PredefinedObjectInitializer(
+        change_every_episode=True, rotations=RANDOM_ROTATIONS_5
+    ),
     )
 
     # Rename the experiment
@@ -220,7 +220,7 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             run_name="continual_learning_dist_agent_1lm_checkpoints"
         ),
         train_dataloader_class=InformedEnvironmentDataLoader,
-        train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
+        train_dataloader_args=EnvironmentDataloaderPerRotationArgs(
             object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(
                 change_every_episode=True, rotations=TRAIN_ROTATIONS
