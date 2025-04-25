@@ -69,7 +69,7 @@ Pretraining Configs
 class PretrainingContinualLearningExperimentWithCheckpointing(
     PretrainingExperimentWithCheckpointing
 ):
-    """Extends the PretrainingExperimentWithCheckpointing to run continual learning pretraining.
+    """Extends parent class for continual learning pretraining with checkpointing.
 
     NOTE: Experiments using this class cannot be run in parallel.
     """
@@ -115,7 +115,7 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
                     extra={"object": self.dataloader.current_object},
                 )
                 logger.info(
-                    "Running a simulation to model object: %(object_name)s at with params: %(params)s",
+                    "Simulating object: %(object_name)s with params: %(params)s",
                     extra={
                         "object_name": self.dataloader.object_names[
                             self.dataloader.current_object
@@ -231,7 +231,9 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
 
 
 CONFIGS = {
-    "pretrain_continual_learning_dist_agent_1lm_checkpoints": pretrain_continual_learning_dist_agent_1lm_checkpoints,
+    "pretrain_continual_learning_dist_agent_1lm_checkpoints": (
+        pretrain_continual_learning_dist_agent_1lm_checkpoints
+    ),
 }
 
 # Add all per-task eval configs
