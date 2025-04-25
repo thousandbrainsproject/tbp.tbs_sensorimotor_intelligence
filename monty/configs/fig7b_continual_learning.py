@@ -61,7 +61,7 @@ from .pretraining_experiments import (
 Pretraining Configs
 --------------------------------------------------------------------------------
 """
-class PretrainContinualLearningExperimentWithCheckpointing(
+class PretrainingContinualLearningExperimentWithCheckpointing(
     PretrainingExperimentWithCheckpointing
 ):
     """Supervised pretraining class that saves the model after every epoch.
@@ -81,7 +81,11 @@ class PretrainContinualLearningExperimentWithCheckpointing(
 class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
     """Continual learning evaluation experiment."""
 
-    def run_epoch(self):
+    def run_epoch(self) -> None:
+        """Run a single epoch of continual learning evaluation.
+        
+
+        """
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(RANDOM_ROTATIONS_5)):
@@ -109,7 +113,7 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
 pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(pretrain_dist_agent_1lm)
 pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
     dict(
-        experiment_class=PretrainContinualLearningExperimentWithCheckpointing,
+        experiment_class=PretrainingContinualLearningExperimentWithCheckpointing,
         experiment_args=ExperimentArgs(
             n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
             do_eval=False,
@@ -148,11 +152,12 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     # Change model loading path
     model_path = str(
         DMC_PRETRAIN_DIR
-        / f"continual_learning_dist_agent_1lm_checkpoints/pretrained/checkpoints/{task_id + 1}/model.pt"
+        / "continual_learning_dist_agent_1lm_checkpoints"
+        / "pretrained"
+        / "checkpoints"
+        / f"{task_id + 1}"
+        / "model.pt"
     )
-    # Check if the model path exists
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model path {model_path} does not exist")
 
     config["experiment_class"] = EvalContinualLearningExperiment
     config["experiment_args"].model_name_or_path = model_path
