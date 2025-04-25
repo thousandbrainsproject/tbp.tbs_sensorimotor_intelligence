@@ -9,16 +9,17 @@
 
 """Figure 7b: Continual Learning.
 
-Consists of one pretraining experiments with checkpointing after each epoch
-and evaluation experiment after each epoch. 
+Consists of one pretraining experiment with checkpointing after each epoch
+and evaluation experiments after each epoch.
 
-The dataloader is customized such that after each epoch contains one object across all rotations.
+The dataloader is customized such that each epoch contains one object across all rotations.
 
-- pretrain_dist_agent_1lm_checkpoints
-- dist_agent_1lm_task0
-- dist_agent_1lm_task1
+Experiment configs:
+- pretrain_continual_learning_dist_agent_1lm_checkpoints
+- continual_learning_dist_agent_1lm_task0
+- continual_learning_dist_agent_1lm_task1
 ...
-- dist_agent_1lm_task76
+- continual_learning_dist_agent_1lm_task76
 
 This means performance is evaluated with:
 - 77 objects
@@ -107,7 +108,7 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
             do_eval=False,
         ),
-        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints", python_log_level="INFO"),
+        logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints"),
         train_dataloader_class=InformedEnvironmentDataLoader, 
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs( 
             object_names=SHUFFLED_YCB_OBJECTS, 
@@ -179,7 +180,7 @@ CONFIGS = {
 }
 
 # Add all per-task eval configs
-# for task_id in range(77):
-#     eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
-#     CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
+for task_id in range(77):
+    eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
+    CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
 
