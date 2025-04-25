@@ -132,30 +132,6 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
         return args
 
 
-pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(
-    pretrain_dist_agent_1lm
-)
-pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
-    dict(
-        experiment_class=PretrainingContinualLearningExperimentWithCheckpointing,
-        experiment_args=ExperimentArgs(
-            n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
-            do_eval=False,
-        ),
-        logging_config=DMCPretrainLoggingConfig(
-            run_name="continual_learning_dist_agent_1lm_checkpoints"
-        ),
-        train_dataloader_class=InformedEnvironmentDataLoader,
-        train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-            object_names=SHUFFLED_YCB_OBJECTS,
-            object_init_sampler=PredefinedObjectInitializer(
-                change_every_episode=True, rotations=TRAIN_ROTATIONS
-            ),
-        ),
-    )
-)
-
-
 def make_continual_learning_eval_config(task_id: int) -> dict:
     """Make an eval config that loads a pretrained model checkpoint.
 
@@ -210,6 +186,30 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     ].motor_system_config.motor_system_args.use_goal_state_driven_actions = False
 
     return config
+
+
+pretrain_continual_learning_dist_agent_1lm_checkpoints = deepcopy(
+    pretrain_dist_agent_1lm
+)
+pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
+    dict(
+        experiment_class=PretrainingContinualLearningExperimentWithCheckpointing,
+        experiment_args=ExperimentArgs(
+            n_train_epochs=len(SHUFFLED_YCB_OBJECTS),
+            do_eval=False,
+        ),
+        logging_config=DMCPretrainLoggingConfig(
+            run_name="continual_learning_dist_agent_1lm_checkpoints"
+        ),
+        train_dataloader_class=InformedEnvironmentDataLoader,
+        train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
+            object_names=SHUFFLED_YCB_OBJECTS,
+            object_init_sampler=PredefinedObjectInitializer(
+                change_every_episode=True, rotations=TRAIN_ROTATIONS
+            ),
+        ),
+    )
+)
 
 
 CONFIGS = {
