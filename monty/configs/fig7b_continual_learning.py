@@ -30,26 +30,32 @@ This means performance is evaluated with:
 - Each evaluation observes all objects up to that point
 """
 
-import os
 import logging
+import os
 from copy import deepcopy
-from pathlib import Path
 
-import numpy as np
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
     EnvironmentDataloaderPerObjectArgs,
     ExperimentArgs,
     PredefinedObjectInitializer,
 )
-from tbp.monty.frameworks.environments import embodied_data as ED
 from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
-from tbp.monty.frameworks.experiments.object_recognition_experiments import MontyObjectRecognitionExperiment
+from tbp.monty.frameworks.experiments.object_recognition_experiments import (
+    MontyObjectRecognitionExperiment,
+)
+
 from .common import DMC_PRETRAIN_DIR, RANDOM_ROTATIONS_5
+from .continual_learning_utils import (
+    EnvironmentDataLoaderPerRotation,
+    InformedEnvironmentDataLoader,
+)
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
-from .pretraining_experiments import DMCPretrainLoggingConfig, pretrain_dist_agent_1lm
 from .fig7_rapid_learning import PretrainingExperimentWithCheckpointing
-from .pretraining_experiments import TRAIN_ROTATIONS
-from .continual_learning_utils import EnvironmentDataLoaderPerRotation, InformedEnvironmentDataLoader
+from .pretraining_experiments import (
+    TRAIN_ROTATIONS,
+    DMCPretrainLoggingConfig,
+    pretrain_dist_agent_1lm,
+)
 
 """
 Pretraining Configs
@@ -62,7 +68,7 @@ class PretrainContinualLearningExperimentWithCheckpointing(
 
     NOTE: Experiments using this class cannot be run in parallel.
     """
-    def run_epoch(self): 
+    def run_epoch(self):
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(TRAIN_ROTATIONS)):
@@ -81,7 +87,7 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
             for _ in range(len(RANDOM_ROTATIONS_5)):
                 logging.info(f"Current object: {self.dataloader.current_object}")
                 logging.info(f"Running a simulation to model object: {self.dataloader.object_names[self.dataloader.current_object]} at with params: {self.dataloader.object_params}")
-                self.run_episode()  
+                self.run_episode()
         else:
             raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
         self.post_epoch()
@@ -109,9 +115,9 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             do_eval=False,
         ),
         logging_config=DMCPretrainLoggingConfig(run_name="continual_learning_dist_agent_1lm_checkpoints"),
-        train_dataloader_class=InformedEnvironmentDataLoader, 
-        train_dataloader_args=EnvironmentDataloaderPerObjectArgs( 
-            object_names=SHUFFLED_YCB_OBJECTS, 
+        train_dataloader_class=InformedEnvironmentDataLoader,
+        train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
+            object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(
                 change_every_episode=True,
                 rotations=TRAIN_ROTATIONS
@@ -132,6 +138,7 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
 
     Args:
         task_id (int): The ID of the task to evaluate on.
+
     Returns:
         dict: Config for a partially trained model.
     """
@@ -146,7 +153,7 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     # Check if the model path exists
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model path {model_path} does not exist")
-    
+
     config["experiment_class"] = EvalContinualLearningExperiment
     config["experiment_args"].model_name_or_path = model_path
 
