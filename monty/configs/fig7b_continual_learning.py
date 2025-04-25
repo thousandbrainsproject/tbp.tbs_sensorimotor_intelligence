@@ -237,6 +237,6 @@ CONFIGS = {
 }
 
 # Add all per-task eval configs
-for task_id in range(77):
+for task_id in range(len(SHUFFLED_YCB_OBJECTS)):
     eval_config_name = f"continual_learning_dist_agent_1lm_task{task_id}"
     CONFIGS[eval_config_name] = make_continual_learning_eval_config(task_id)
