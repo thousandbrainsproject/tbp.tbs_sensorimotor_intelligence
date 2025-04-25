@@ -12,7 +12,8 @@
 Consists of one pretraining experiment with checkpointing after each epoch
 and evaluation experiments after each epoch.
 
-The dataloader is customized such that each epoch contains one object across all rotations.
+The dataloader is customized such that each epoch contains one object
+across all rotations.
 
 Experiment configs:
 - pretrain_continual_learning_dist_agent_1lm_checkpoints
@@ -31,7 +32,6 @@ This means performance is evaluated with:
 """
 
 import logging
-import os
 from copy import deepcopy
 
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
@@ -69,12 +69,17 @@ Pretraining Configs
 class PretrainingContinualLearningExperimentWithCheckpointing(
     PretrainingExperimentWithCheckpointing
 ):
-    """Supervised pretraining class that saves the model after every epoch.
+    """Extends the PretrainingExperimentWithCheckpointing to run continual learning pretraining.
 
     NOTE: Experiments using this class cannot be run in parallel.
     """
 
-    def run_epoch(self):
+    def run_epoch(self) -> None:
+        """Run a single epoch of continual learning pretraining.
+
+        Raises:
+            TypeError: If the dataloader is not EnvironmentDataLoaderPerRotation.
+        """
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(TRAIN_ROTATIONS)):
@@ -87,7 +92,9 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
                 )
                 self.run_episode()
         else:
-            raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
+            error_msg = "Dataloader should be EnvironmentDataLoaderPerRotation"
+            logger.error(error_msg)
+            raise TypeError(error_msg)
         self.post_epoch()
 
 
@@ -95,7 +102,11 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
     """Continual learning evaluation experiment."""
 
     def run_epoch(self) -> None:
-        """Run a single epoch of continual learning evaluation."""
+        """Run a single epoch of continual learning evaluation.
+
+        Raises:
+            TypeError: If the dataloader is not EnvironmentDataLoaderPerRotation.
+        """
         self.pre_epoch()
         if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
             for _ in range(len(RANDOM_ROTATIONS_5)):
@@ -114,11 +125,18 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
                 )
                 self.run_episode()
         else:
-            raise ValueError("Dataloader should be EnvironmentDataLoaderPerRotation")
+            error_msg = "Dataloader should be EnvironmentDataLoaderPerRotation"
+            logger.error(error_msg)
+            raise TypeError(error_msg)
         self.post_epoch()
 
     @property
-    def logger_args(self):
+    def logger_args(self) -> dict:
+        """Get the arguments for the logger.
+
+        Returns:
+            dict: The arguments for the logger.
+        """
         args = dict(
             total_train_steps=self.total_train_steps,
             train_episodes=self.train_episodes,
