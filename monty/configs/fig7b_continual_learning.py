@@ -184,10 +184,10 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
 
     config["eval_dataloader_class"] = InformedEnvironmentDataLoaderPerRotation
     config["eval_dataloader_args"] = EnvironmentDataloaderPerRotationArgs(
-    object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
-    object_init_sampler=PredefinedObjectInitializer(
-        change_every_episode=True, rotations=RANDOM_ROTATIONS_5
-    ),
+        object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
+        object_init_sampler=PredefinedObjectInitializer(
+            change_every_episode=True, rotations=RANDOM_ROTATIONS_5
+        ),
     )
 
     # Rename the experiment

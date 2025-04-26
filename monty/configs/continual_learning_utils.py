@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from tbp.monty.frameworks.environments.embodied_data import EnvironmentDataLoader
 
 logger = logging.getLogger(__name__)
+
+
 @dataclass
 class EnvironmentDataloaderPerRotationArgs:
     """Arguments for the EnvironmentDataloaderPerRotation class.
@@ -33,8 +35,10 @@ class EnvironmentDataloaderPerRotationArgs:
     Note:
         This class is copied after EnvironmentDataLoaderPerObjectArgs in tbp.monty v0.1.0.
     """
+
     object_names: list[str]
     object_init_sampler: Callable
+
 
 class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
     """Dataloader for continual learning with rotation-based variation.
@@ -54,7 +58,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         object_init_sampler: Callable,
         dataset: ED.EnvironmentDataset,
         motor_system: MotorSystem,
-        rng: np.random.RandomState
+        rng: np.random.RandomState,
     ) -> None:
         """Initialize the EnvironmentDataLoaderPerRotation.
 
@@ -157,17 +161,17 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
             init_params.pop("quat_rotation")
         init_params["semantic_id"] = self.semantic_label_to_id[self.object_names[idx]]
 
-        _ = self.dataset.env.add_object(
-            name=self.object_names[idx], **init_params
-        )
+        _ = self.dataset.env.add_object(name=self.object_names[idx], **init_params)
 
         self.primary_target = {
             "object": self.object_names[idx],
             "semantic_id": self.semantic_label_to_id[self.object_names[idx]],
             **object_params,
         }
-        logger.info("New primary target: %(primary_target)", 
-                    extra={"primary_target": self.primary_target})
+        logger.info(
+            "New primary target: %(primary_target)",
+            extra={"primary_target": self.primary_target},
+        )
 
     def create_semantic_mapping(self) -> None:
         """Create a unique semantic ID for each object.
@@ -175,9 +179,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         Raises:
             ValueError: If the object names are not a subset of the source object list.
         """
-        if not set(self.object_names).issubset(
-            set(self.source_object_list)
-        ):
+        if not set(self.object_names).issubset(set(self.source_object_list)):
             error_msg = "Semantic mapping requires primary targets \
                 sampled from source list"
             logger.error(error_msg)
@@ -209,6 +211,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.motor_system.state[self.motor_system.agent_id]["motor_only_step"] = False
 
         return self._observation
+
+
 class InformedEnvironmentDataLoaderPerRotation(EnvironmentDataLoaderPerRotation):
     """Adapter class for InformedEnvironmentDataLoader.
 
@@ -217,13 +221,15 @@ class InformedEnvironmentDataLoaderPerRotation(EnvironmentDataLoaderPerRotation)
     to InformedEnvironmentDastaLoader in tbp.monty v.0.1.0 is that it inherits
     from EnvironmentDataLoaderPerRotation instead of EnvironmentDataLoaderPerObject.
     """
-    def __init__(self,
-                 object_names: list[str],
-                 object_init_sampler: Callable,
-                 dataset: ED.EnvironmentDataset,
-                 motor_system: MotorSystem,
-                 rng: np.random.RandomState
-        ) -> None:
+
+    def __init__(
+        self,
+        object_names: list[str],
+        object_init_sampler: Callable,
+        dataset: ED.EnvironmentDataset,
+        motor_system: MotorSystem,
+        rng: np.random.RandomState,
+    ) -> None:
         """Initialize the InformedEnvironmentDataLoaderPerRotation.
 
         Args:
