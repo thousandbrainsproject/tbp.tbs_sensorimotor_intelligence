@@ -20,17 +20,11 @@ Panel C: Steps
 Running the above functions requires that the following experiments have been run:
  - `fig5_visualize_8lm_patches`
  - `dist_agent_1lm_randrot_noise`
- - `dist_agent_2lm_half_lms_match_randrot_noise`
- - `dist_agent_4lm_half_lms_match_randrot_noise`
- - `dist_agent_8lm_half_lms_match_randrot_noise`
- - `dist_agent_16lm_half_lms_match_randrot_noise`
- - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
- - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+ - `dist_agent_2lm_randrot_noise`
+ - `dist_agent_4lm_randrot_noise`
+ - `dist_agent_8lm_randrot_noise`
+ - `dist_agent_16lm_randrot_noise`
 """
-
-from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,24 +45,18 @@ from plot_utils import (
 )
 
 init_matplotlib_style()
+np.random.seed(0)
 
 OUT_DIR = DMC_ANALYSIS_DIR / "fig5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Experiment names
 ONE_LM_EXPERIMENT = "dist_agent_1lm_randrot_noise"
-HALF_LMS_MATCH_EXPERIMENTS = (
-    "dist_agent_2lm_half_lms_match_randrot_noise",
-    "dist_agent_4lm_half_lms_match_randrot_noise",
-    "dist_agent_8lm_half_lms_match_randrot_noise",
-    "dist_agent_16lm_half_lms_match_randrot_noise",
-)
-
-FIXED_MIN_LMS_MATCH_EXPERIMENTS = (
-    "dist_agent_2lm_fixed_min_lms_match_randrot_noise",
-    "dist_agent_4lm_fixed_min_lms_match_randrot_noise",
-    "dist_agent_8lm_fixed_min_lms_match_randrot_noise",
-    "dist_agent_16lm_fixed_min_lms_match_randrot_noise",
+MULTI_LM_EXPERIMENTS = (
+    "dist_agent_2lm_randrot_noise",
+    "dist_agent_4lm_randrot_noise",
+    "dist_agent_8lm_randrot_noise",
+    "dist_agent_16lm_randrot_noise",
 )
 
 """
@@ -91,7 +79,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A dataframe with a single row per episode.
     """
-    PERFORMANCE_OPTIONS = (
+    performance_options = (
         "correct",
         "confused",
         "no_match",
@@ -111,7 +99,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     output_data = {
         "primary_performance": np.zeros(n_episodes, dtype=object),
     }
-    for name in PERFORMANCE_OPTIONS:
+    for name in performance_options:
         output_data[f"n_{name}"] = np.zeros(n_episodes, dtype=int)
 
     episode_groups = eval_stats.groupby("episode")
@@ -119,32 +107,89 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
         # Find one result given many LM results.
         row = {}
 
-        perf_counts = {key: 0 for key in PERFORMANCE_OPTIONS}
+        perf_counts = {key: 0 for key in performance_options}
         perf_counts.update(df.primary_performance.value_counts())
-        found = []
-        for name in PERFORMANCE_OPTIONS:
+        # found = []
+        for name in performance_options:
             row[f"n_{name}"] = perf_counts[name]
-            if perf_counts[name] > 0:
-                found.append(name)
-        performance = found[0]
+        #     if perf_counts[name] > 0:
+        #         found.append(name)
+        # performance = found[0]
+        # if performance not in ("correct", "confused", "correct_mlh", "confused_mlh"):
+        #     raise ValueError(f"Invalid performance: {performance}")
 
-        # Require a majority of correct performances for 'correct' classification.
-        if performance == "correct":
-            if row["n_confused"] > row["n_correct"]:
-                performance = "confused"
-            elif row["n_confused"] < row["n_correct"]:
+        # Decide performance based on the number of correct/confused LM and
+        # correct_mlh/confused_mlh LMs. The rules are as follows:
+        #
+        # 1. If there are any correct or confused LMs (i.e., the episode did not time-out),
+        #    then we apply the following rules.
+        #   1.1 |correct LMs| > |confused-LMs| : correct
+        #   2.1 |correct LMs| < |confused-LMs| : confused
+        #   3.1 |correct LMs| = |confused-LMs| : we break the tie by comparing LMs
+        #      that timed out.
+        #      3.1.1 |correct_mlh LMs| > |confused_mlh LMs| : correct
+        #      3.2.1 |correct_mlh LMs| < |confused_mlh LMs| : confused
+        #      3.3.1 |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #           randomly choosing correct or confused.
+        #
+        # 2. If the episode timed out, then we apply the following rules:
+        #   2.1. |correct_mlh LMs| > |confused_mlh LMs| : correct
+        #   2.2. |correct_mlh LMs| < |confused_mlh LMs| : confused
+        #   2.3. |correct_mlh LMs| = |confused_mlh LMs| : we break the tie by
+        #        randomly choosing correct_mlh or confused_mlh.
+        #
+        # 3. In the highly unusual case where no LMs terminated with
+        #    correct[_mlh] or confused[_mlh], then we assign performance based on
+        #    precedence rules of the remaining options. The following is a list
+        #    of remaining options in order of precedence (highest to lowest):
+        #     - time_out
+        #     - pose_time_out
+        #     - no_label
+        #     - patch_off_object
+        #
+
+        # Case 1: There are some correct or confused LMs.
+        if row["n_correct"] > 0 or row["n_confused"] > 0:
+            if row["n_correct"] > row["n_confused"]:
                 performance = "correct"
-            else:
-                # Ties go to "confused" by default, but the tie can be broken
-                # in favor of "correct" if the number of LMs with "correct_mlh"
-                # exceeds the number of LMs with "confused_mlh".
+            elif row["n_correct"] < row["n_confused"]:
                 performance = "confused"
+            else:
+                # Break the tie by comparing timed-out LMs.
                 if row["n_correct_mlh"] > row["n_confused_mlh"]:
                     performance = "correct"
+                elif row["n_correct_mlh"] < row["n_confused_mlh"]:
+                    performance = "confused"
+                else:
+                    # Break the tie by flipping a coin.
+                    if np.random.rand() < 0.5:
+                        performance = "correct"
+                    else:
+                        performance = "confused"
 
-        elif performance == "correct_mlh":
-            if row["n_confused_mlh"] >= row["n_correct_mlh"]:
+        # Case 2: The episode timed out.
+        elif row["n_correct_mlh"] > 0 or row["n_confused_mlh"] > 0:
+            if row["n_correct_mlh"] > row["n_confused_mlh"]:
+                performance = "correct_mlh"
+            elif row["n_correct_mlh"] < row["n_confused_mlh"]:
                 performance = "confused_mlh"
+            else:
+                # Break the tie by flipping a coin.
+                if np.random.rand() < 0.5:
+                    performance = "correct_mlh"
+                else:
+                    performance = "confused_mlh"
+
+        # Case 3: No LMs terminated with correct[_mlh] or confused[_mlh].
+        else:
+            # Apply precedence rules.
+            performance = None
+            for name in ("time_out", "pose_time_out", "no_label", "patch_off_object"):
+                if row[f"n_{name}"] > 0:
+                    performance = name
+                    break
+            if performance is None:
+                raise ValueError("No valid performance value found")
 
         row["primary_performance"] = performance
 
@@ -168,17 +213,14 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def get_accuracy(experiment: str) -> Tuple[float, float]:
+def get_accuracy(experiment: str) -> float:
     """Get the percent correct and percent LMS tied for an experiment."""
     eval_stats = load_eval_stats(experiment)
     reduced_stats = reduce_eval_stats(eval_stats)
     percent_correct = 100 * get_frequency(
         reduced_stats["primary_performance"], ("correct", "correct_mlh")
     )
-    is_confused = reduced_stats.primary_performance == "confused"
-    is_tied = is_confused & (reduced_stats.n_correct == reduced_stats.n_confused)
-    percent_tied = 100 * is_tied.sum() / len(is_tied)
-    return percent_correct, percent_tied
+    return percent_correct
 
 
 def get_n_steps(experiment: str) -> np.ndarray:
@@ -353,14 +395,10 @@ def plot_accuracy():
 
     Requires the following experiments to have been run:
     - `dist_agent_1lm_randrot_noise`
-    - `dist_agent_2lm_half_lms_match_randrot_noise`
-    - `dist_agent_4lm_half_lms_match_randrot_noise`
-    - `dist_agent_8lm_half_lms_match_randrot_noise`
-    - `dist_agent_16lm_half_lms_match_randrot_noise`
-    - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_2lm_randrot_noise`
+    - `dist_agent_4lm_randrot_noise`
+    - `dist_agent_8lm_randrot_noise`
+    - `dist_agent_16lm_randrot_noise`
 
     Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
 
@@ -369,9 +407,9 @@ def plot_accuracy():
     out_dir = OUT_DIR / "performance"
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    groups = [HALF_LMS_MATCH_EXPERIMENTS, FIXED_MIN_LMS_MATCH_EXPERIMENTS]
-    one_lm_color = TBP_COLORS["green"]
-    group_colors = [TBP_COLORS["blue"], TBP_COLORS["purple"]]
+    one_lm_color = TBP_COLORS["blue"]
+    multi_lm_group = MULTI_LM_EXPERIMENTS
+    multi_lm_color = TBP_COLORS["purple"]
 
     fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
     top_ax, bottom_ax = axes
@@ -379,47 +417,30 @@ def plot_accuracy():
 
     # Plot params.
     ylims = [(0, 25), (75, 100)]
-    half_bar_width = 0.4
-    gap = 0.02
+    bar_width = 0.8
     xticks = np.arange(5)
-    left_positions = xticks[1:] - half_bar_width / 2 - gap / 2
-    right_positions = xticks[1:] + half_bar_width / 2 + gap / 2
-    positions = [left_positions, right_positions]
 
-    # 1-LM first.
-    percent_correct_1lm, _ = get_accuracy(ONE_LM_EXPERIMENT)
+    # 1-LM
+    percent_correct_1lm = get_accuracy(ONE_LM_EXPERIMENT)
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.bar(
             xticks[0],
             [percent_correct_1lm],
             color=one_lm_color,
-            width=2 * half_bar_width,
+            width=bar_width,
+            label="no voting",
         )
 
-    # Multi-LM.
-    for i, g in enumerate(groups):
-        # Plot percent correct.
-        accuracies = [get_accuracy(exp) for exp in g]
-        percent_correct = [acc[0] for acc in accuracies]
-        percent_tied = [acc[1] for acc in accuracies]
-
-        for ax_num, ax in enumerate([bottom_ax, top_ax]):
-            # Plot percent correct.
-            ax.bar(
-                positions[i],
-                percent_correct,
-                color=group_colors[i],
-                width=half_bar_width,
-            )
-            # Plot percent confused but confused and correct were tied.
-            ax.bar(
-                positions[i],
-                percent_tied,
-                bottom=percent_correct,
-                color=group_colors[i],
-                alpha=0.3,
-                width=half_bar_width,
-            )
+    # Multi-LM
+    percent_correct = np.array([get_accuracy(exp) for exp in multi_lm_group])
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.bar(
+            xticks[1:],
+            percent_correct,
+            color=multi_lm_color,
+            width=bar_width,
+            label="voting",
+        )
 
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.set_ylim(ylims[ax_num])
@@ -429,6 +450,7 @@ def plot_accuracy():
     bottom_ax.set_xlabel("Num. LMs")
     bottom_ax.set_xticks(xticks)
     bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
+    bottom_ax.legend(loc="lower right")
 
     bottom_ax.set_ylabel("% Correct")
     bottom_ax.set_yticks([0, 10, 20])
@@ -453,6 +475,7 @@ def plot_accuracy():
     plt.show()
 
 
+
 """
 --------------------------------------------------------------------------------
 Panel C: Steps
@@ -465,14 +488,10 @@ def plot_steps():
 
     Requires the following experiments to have been run:
     - `dist_agent_1lm_randrot_noise`
-    - `dist_agent_2lm_half_lms_match_randrot_noise`
-    - `dist_agent_4lm_half_lms_match_randrot_noise`
-    - `dist_agent_8lm_half_lms_match_randrot_noise`
-    - `dist_agent_16lm_half_lms_match_randrot_noise`
-    - `dist_agent_2lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_4lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_8lm_fixed_min_lms_match_randrot_noise`
-    - `dist_agent_16lm_fixed_min_lms_match_randrot_noise`
+    - `dist_agent_2lm_randrot_noise`
+    - `dist_agent_4lm_randrot_noise`
+    - `dist_agent_8lm_randrot_noise`
+    - `dist_agent_16lm_randrot_noise`
 
     Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
 
@@ -481,9 +500,9 @@ def plot_steps():
     out_dir = OUT_DIR / "performance"
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    groups = [HALF_LMS_MATCH_EXPERIMENTS, FIXED_MIN_LMS_MATCH_EXPERIMENTS]
-    one_lm_color = TBP_COLORS["green"]
-    group_colors = [TBP_COLORS["blue"], TBP_COLORS["purple"]]
+    one_lm_color = TBP_COLORS["blue"]
+    multi_lm_group = MULTI_LM_EXPERIMENTS
+    multi_lm_color = TBP_COLORS["purple"]
 
     fig = plt.figure(figsize=(3.4, 3))
     gs = fig.add_gridspec(3, 1)  # 3 rows, bottom plot will take 2 rows
@@ -491,9 +510,6 @@ def plot_steps():
     # Create the two subplots with shared x-axis
     top_ax = fig.add_subplot(gs[0, 0])  # Top subplot takes 1/3
     bottom_ax = fig.add_subplot(gs[1:, 0], sharex=top_ax)  # Bottom subplot takes 2/3
-
-    # fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
-    # top_ax, bottom_ax = axes
     fig.subplots_adjust(hspace=0.05)
 
     # Plot params.
@@ -502,74 +518,52 @@ def plot_steps():
         [0, 25, 50, 75, 100],
         [450, 475, 500],
     ]
-    half_bar_width = 0.4
+    bar_width = 0.8
     xticks = np.arange(5)
-    sides = ["left", "right"]
     bw_method = 0.1
 
-    # 1-LM
+    # 1-LM violin plot and mean marker.
     n_steps_1lm = get_n_steps(ONE_LM_EXPERIMENT)
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         violinplot(
             [n_steps_1lm],
             [xticks[0]],
             color=one_lm_color,
-            width=2 * half_bar_width,
+            width=bar_width,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
             ax=ax,
         )
-        ax.scatter(
-            xticks[0],
-            np.mean(n_steps_1lm),
-            color=one_lm_color,
-            marker="o",
-            edgecolor="black",
-            facecolor="black",
-            s=20,
+
+    # Multi-LM violin plot and mean marker.
+    n_steps = [get_n_steps(exp) for exp in multi_lm_group]
+    means = [np.mean(arr) for arr in n_steps]
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        violinplot(
+            n_steps,
+            xticks[1:],
+            color=multi_lm_color,
+            width=bar_width,
+            showmedians=True,
+            median_style=dict(color="lightgray", lw=2),
+            bw_method=bw_method,
+            ax=ax,
         )
 
-    # Multi-LM
-    for i, g in enumerate(groups):
-        # Plot percent correct.
-        n_steps = [get_n_steps(exp) for exp in g]
+    # Plot a line connecting the means across all conditions.
+    means = [np.mean(n_steps_1lm)] + [np.mean(arr) for arr in n_steps]
+    for ax in [bottom_ax, top_ax]:
+        ax.scatter(
+            xticks,
+            means,
+            color="black",
+            marker="o",
+            s=20,
+        )
+        ax.plot(xticks, means, color="black", linestyle="-", linewidth=2, zorder=10)
 
-        for ax_num, ax in enumerate([bottom_ax, top_ax]):
-            # Plot percent correct.
-            violinplot(
-                n_steps,
-                xticks[1:],
-                color=group_colors[i],
-                width=half_bar_width,
-                gap=0.02,
-                side=sides[i],
-                showmedians=True,
-                median_style=dict(color="lightgray"),
-                bw_method=bw_method,
-                ax=ax,
-            )
-
-            means = [np.mean(arr) for arr in n_steps]
-            ax.scatter(
-                xticks[1:],
-                means,
-                color=group_colors[i],
-                marker="o",
-                edgecolor="black",
-                facecolor="black",
-                s=20,
-            )
-            ax.plot(xticks[1:], means, color="k", linestyle="-", linewidth=2, zorder=10)
-            ax.plot(
-                xticks[1:],
-                means,
-                color=group_colors[i],
-                linestyle="-",
-                linewidth=1,
-                zorder=15,
-            )
-
+    # Set y-limits and ticks.
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.set_ylim(ylims[ax_num])
         ax.set_yticks(yticks[ax_num])
