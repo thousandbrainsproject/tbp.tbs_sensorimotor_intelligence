@@ -441,8 +441,8 @@ def plot_similar_object_models():
             s=10,
         )
         ax.set_proj_type("persp", focal_length=1)
-        axes3d_clean(ax, grid=False)
         axes3d_set_aspect_equal(ax)
+        ax.axis("off")
         params = plot_params[object_name]
         ax.set_title(object_name)
         ax.view_init(elev=params["elev"], azim=params["azim"], roll=params["roll"])
