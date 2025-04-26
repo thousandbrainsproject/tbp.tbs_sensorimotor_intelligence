@@ -47,7 +47,7 @@ from .common import DMC_PRETRAIN_DIR, RANDOM_ROTATIONS_5
 from .continual_learning_utils import (
     EnvironmentDataloaderPerRotationArgs,
     EnvironmentDataLoaderPerRotation,
-    InformedEnvironmentDataLoader,
+    InformedEnvironmentDataLoaderPerRotation,
 )
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
 from .fig7_rapid_learning import PretrainingExperimentWithCheckpointing
@@ -182,7 +182,7 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     config["experiment_class"] = EvalContinualLearningExperiment
     config["experiment_args"].model_name_or_path = model_path
 
-    config["eval_dataloader_class"] = InformedEnvironmentDataLoader
+    config["eval_dataloader_class"] = InformedEnvironmentDataLoaderPerRotation
     config["eval_dataloader_args"] = EnvironmentDataloaderPerRotationArgs(
     object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
     object_init_sampler=PredefinedObjectInitializer(
@@ -219,7 +219,7 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
         logging_config=DMCPretrainLoggingConfig(
             run_name="continual_learning_dist_agent_1lm_checkpoints"
         ),
-        train_dataloader_class=InformedEnvironmentDataLoader,
+        train_dataloader_class=InformedEnvironmentDataLoaderPerRotation,
         train_dataloader_args=EnvironmentDataloaderPerRotationArgs(
             object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(
