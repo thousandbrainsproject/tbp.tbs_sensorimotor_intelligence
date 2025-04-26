@@ -348,14 +348,11 @@ def plot_dendrogram():
 
     Output is saved to `DMC_ANALYSIS_DIR/fig4/dendrogram`.
 
-    NOTE: Also plots a confusion matrix, which is not used in the paper.
     """
     out_dir = OUT_DIR / "dendrogram"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     all_objects = SIMILAR_OBJECTS
-    id_to_object = {i: obj for i, obj in enumerate(all_objects)}
-    object_to_id = {obj: i for i, obj in id_to_object.items()}
 
     rel_evidence_matrices = get_relative_evidence_matrices()
     rel_evidence_matrix = rel_evidence_matrices.mean(axis=0)
@@ -375,7 +372,12 @@ def plot_dendrogram():
     rel_evidence_matrix_normed = 1 - rel_evidence_matrix_normed
 
     # Plot dendrogram.
-    fig, ax = plt.subplots(figsize=(7, 3))
+    axes_width, axes_height = 6.2, 1.45
+    axes_frac = 0.7
+    axes_loc = (1 - axes_frac) / 2
+    fig = plt.figure(figsize=(axes_width / axes_frac, axes_height / axes_frac))
+    ax = fig.add_axes([axes_loc, axes_loc, axes_frac, axes_frac])
+
     Z = linkage(rel_evidence_matrix_normed, optimal_ordering=True)
     link_color_palette = [
         TBP_COLORS["blue"],
