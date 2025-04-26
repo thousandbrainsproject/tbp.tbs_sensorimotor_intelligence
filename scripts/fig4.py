@@ -32,9 +32,7 @@ from typing import List, Mapping, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import scipy
-import seaborn as sns
 from data_utils import (
     DMC_ANALYSIS_DIR,
     DMC_RESULTS_DIR,
@@ -402,45 +400,6 @@ def plot_dendrogram():
     fig.savefig(out_dir / "dendrogram.png")
     fig.savefig(out_dir / "dendrogram.svg")
 
-    # Plot confusion matrix.
-    fig, ax = plt.subplots(figsize=(3.5, 3))
-    permuted_names = [
-        "knife",
-        "fork",
-        "spoon",
-        "pudding_box",
-        "sugar_box",
-        "cracker_box",
-        "mug",
-        "e_cups",
-        "d_cups",
-        "c_cups",
-    ]
-    # Rearrange the evidence matrix to match the dendrogram. We want to
-    # keep clustered objects close to each other.
-    permuted_inds = [object_to_id[obj] for obj in permuted_names]
-    permuted_matrix = rel_evidence_matrix_normed[np.ix_(permuted_inds, permuted_inds)]
-    rel_evidence_df = pd.DataFrame(permuted_matrix, columns=permuted_names)
-    sns.heatmap(rel_evidence_df, cmap="inferno", ax=ax)
-    ax.set_xticks(np.arange(permuted_matrix.shape[0]) + 0.5)
-    ax.set_yticks(np.arange(permuted_matrix.shape[1]) + 0.5)
-    ax.set_yticklabels(permuted_names, rotation=0)
-    ax.set_xticklabels(permuted_names, rotation=45, ha="right")
-    ax.tick_params(axis="x", which="both", bottom=False, top=False)
-    ax.tick_params(axis="y", which="both", left=False, right=False)
-    ax.set_aspect("equal")
-    cbar = ax.collections[0].colorbar
-    cbar.ax.tick_params(labelsize=8)
-    cbar.set_label(
-        "Evidence Similarity (1 - cluster dist.)",
-        rotation=270,
-        labelpad=20,
-        fontsize=10,
-    )
-    fig.savefig(out_dir / "confusion_matrix.png")
-    fig.savefig(out_dir / "confusion_matrix.svg")
-    plt.show()
-
 
 def plot_similar_object_models():
     """Plot the object models for the 10 similar objects used in panel A.
@@ -727,5 +686,5 @@ def plot_symmetry_stats():
 if __name__ == "__main__":
     plot_dendrogram()
     plot_similar_object_models()
-    plot_symmetry_episodes()
-    plot_symmetry_stats()
+    # plot_symmetry_episodes()
+    # plot_symmetry_stats()
