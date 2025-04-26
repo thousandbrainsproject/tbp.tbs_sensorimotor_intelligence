@@ -56,8 +56,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self,
         object_names: list[str],
         object_init_sampler: Callable,
-        *args: Any,  # noqa: ANN401
-        **kwargs: Any,  # noqa: ANN401
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize the EnvironmentDataLoaderPerRotation.
 
@@ -220,14 +220,14 @@ class InformedEnvironmentDataLoaderPerRotation(EnvironmentDataLoaderPerRotation)
 
     def __init__(
         self,
-        *args: Any,  # noqa: ANN401
-        **kwargs: Any,  # noqa: ANN401
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize the InformedEnvironmentDataLoaderPerRotation."""
         super().__init__(*args, **kwargs)
         self._original = ED.InformedEnvironmentDataLoader(*args, **kwargs)
 
-    def __getattr__(self, name: str) -> Any:  # noqa: ANN401
+    def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to InformedEnvironmentDataLoader instance.
 
         Args:

@@ -103,6 +103,7 @@ ignore = [
     "ISC001", # Implicitly concatenated string literals on one line; conflicts with ruff format
     "FA100", 
     "ANN003",
+    "ANN401",
     "TRY003",
     "EM102",
     "N812",
