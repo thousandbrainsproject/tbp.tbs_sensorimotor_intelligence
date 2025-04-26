@@ -376,7 +376,13 @@ def plot_performance() -> None:
         rotation_error.append(np.degrees(sub_df.rotation_error))
 
     # Initialize the plot.
-    fig, ax1 = plt.subplots(1, 1, figsize=(3.5, 3))
+    axes_width, axes_height = 2.55, 1.85
+    axes_frac = 0.7
+    axes_loc = (1 - axes_frac) / 2
+    fig = plt.figure(figsize=(axes_width / axes_frac, axes_height / axes_frac))
+    ax1 = fig.add_axes([axes_loc, axes_loc, axes_frac, axes_frac])
+
+    # fig, ax1 = plt.subplots(1, 1, figsize=(3.5, 3))
     ax2 = ax1.twinx()
 
     # Params
