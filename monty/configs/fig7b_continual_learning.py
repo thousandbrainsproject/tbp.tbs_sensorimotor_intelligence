@@ -37,6 +37,7 @@ from copy import deepcopy
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
     ExperimentArgs,
     PredefinedObjectInitializer,
+    EnvironmentDataloaderPerObjectArgs,
 )
 from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
 from tbp.monty.frameworks.experiments.object_recognition_experiments import (
@@ -45,9 +46,7 @@ from tbp.monty.frameworks.experiments.object_recognition_experiments import (
 
 from .common import DMC_PRETRAIN_DIR, RANDOM_ROTATIONS_5
 from .continual_learning_utils import (
-    EnvironmentDataloaderPerRotationArgs,
-    EnvironmentDataLoaderPerRotation,
-    InformedEnvironmentDataLoaderPerRotation,
+    InformedEnvironmentDataLoaderForContinualLearning,
 )
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
 from .fig7_rapid_learning import PretrainingExperimentWithCheckpointing
@@ -56,9 +55,6 @@ from .pretraining_experiments import (
     DMCPretrainLoggingConfig,
     pretrain_dist_agent_1lm,
 )
-
-# Create a logger for this module
-logger = logging.getLogger(__name__)
 
 """
 Pretraining Configs
@@ -69,10 +65,7 @@ Pretraining Configs
 class PretrainingContinualLearningExperimentWithCheckpointing(
     PretrainingExperimentWithCheckpointing
 ):
-    """Extends parent class for continual learning pretraining with checkpointing.
-
-    NOTE: Experiments using this class cannot be run in parallel.
-    """
+    """Extends parent class for continual learning pretraining with checkpointing."""
 
     def run_epoch(self) -> None:
         """Run a single epoch of continual learning pretraining.
@@ -81,19 +74,19 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
             TypeError: If the dataloader is not EnvironmentDataLoaderPerRotation.
         """
         self.pre_epoch()
-        if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
+        if isinstance(
+            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+        ):
             for _ in range(len(TRAIN_ROTATIONS)):
-                logger.info(
-                    "Current object: %(object)s at rotation: %(rotation)s",
-                    extra={
-                        "object": self.dataloader.current_object,
-                        "rotation": self.dataloader.object_params["euler_rotation"],
-                    },
+                logging.info(
+                    f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}",
                 )
                 self.run_episode()
         else:
-            error_msg = "Dataloader should be EnvironmentDataLoaderPerRotation"
-            logger.error(error_msg)
+            error_msg = (
+                "Dataloader should be InformedEnvironmentDataLoaderForContinualLearning"
+            )
+            logging.error(error_msg)
             raise TypeError(error_msg)
         self.post_epoch()
 
@@ -108,25 +101,22 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
             TypeError: If the dataloader is not EnvironmentDataLoaderPerRotation.
         """
         self.pre_epoch()
-        if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
+        if isinstance(
+            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+        ):
             for _ in range(len(RANDOM_ROTATIONS_5)):
-                logger.info(
-                    "Current object: %(object)s",
-                    extra={"object": self.dataloader.current_object},
+                logging.info(
+                    f"Current object: {self.dataloader.current_object}",
                 )
-                logger.info(
-                    "Simulating object: %(object_name)s with params: %(params)s",
-                    extra={
-                        "object_name": self.dataloader.object_names[
-                            self.dataloader.current_object
-                        ],
-                        "params": self.dataloader.object_params,
-                    },
+                logging.info(
+                    f"Simulating object: {self.dataloader.object_names[self.dataloader.current_object]} with params: {self.dataloader.object_params}",
                 )
                 self.run_episode()
         else:
-            error_msg = "Dataloader should be EnvironmentDataLoaderPerRotation"
-            logger.error(error_msg)
+            error_msg = (
+                "Dataloader should be InformedEnvironmentDataLoaderForContinualLearning"
+            )
+            logging.error(error_msg)
             raise TypeError(error_msg)
         self.post_epoch()
 
@@ -145,7 +135,9 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
             eval_episodes=self.eval_episodes,
             eval_epochs=self.eval_epochs,
         )
-        if isinstance(self.dataloader, EnvironmentDataLoaderPerRotation):
+        if isinstance(
+            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+        ):
             args.update(target=self.dataloader.primary_target)
         return args
 
@@ -182,8 +174,8 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     config["experiment_class"] = EvalContinualLearningExperiment
     config["experiment_args"].model_name_or_path = model_path
 
-    config["eval_dataloader_class"] = InformedEnvironmentDataLoaderPerRotation
-    config["eval_dataloader_args"] = EnvironmentDataloaderPerRotationArgs(
+    config["eval_dataloader_class"] = InformedEnvironmentDataLoaderForContinualLearning
+    config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
         object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
         object_init_sampler=PredefinedObjectInitializer(
             change_every_episode=True, rotations=RANDOM_ROTATIONS_5
@@ -217,10 +209,11 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             do_eval=False,
         ),
         logging_config=DMCPretrainLoggingConfig(
-            run_name="continual_learning_dist_agent_1lm_checkpoints"
+            run_name="continual_learning_dist_agent_1lm_checkpoints",
+            python_log_level="INFO",
         ),
-        train_dataloader_class=InformedEnvironmentDataLoaderPerRotation,
-        train_dataloader_args=EnvironmentDataloaderPerRotationArgs(
+        train_dataloader_class=InformedEnvironmentDataLoaderForContinualLearning,
+        train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
             object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(
                 change_every_episode=True, rotations=TRAIN_ROTATIONS
