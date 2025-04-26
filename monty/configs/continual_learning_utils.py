@@ -56,9 +56,8 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self,
         object_names: list[str],
         object_init_sampler: Callable,
-        dataset: ED.EnvironmentDataset,
-        motor_system: MotorSystem,
-        rng: np.random.RandomState,
+        *args: Any,  # noqa: ANN401
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         """Initialize the EnvironmentDataLoaderPerRotation.
 
@@ -73,7 +72,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         Raises:
             TypeError: If object names is not a list.
         """
-        super().__init__(dataset=dataset, motor_system=motor_system, rng=rng)
+        super().__init__(*args, **kwargs)
 
         if not isinstance(object_names, list):
             error_msg = "Object names should be a list"
@@ -84,10 +83,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.object_names = sorted(object_names)
         self.source_object_list = sorted(list(dict.fromkeys(object_names)))
 
-        self.dataloader_utils = EnvironmentDataLoaderUtils(self)
-        self.semantic_id_to_label, self.semantic_label_to_id = (
-            self.dataloader_utils.create_semantic_mapping()
-        )
+        self.create_semantic_mapping()
         self.object_init_sampler = object_init_sampler
         self.object_init_sampler.rng = self.rng
         self.object_params = self.object_init_sampler()
@@ -224,24 +220,12 @@ class InformedEnvironmentDataLoaderPerRotation(EnvironmentDataLoaderPerRotation)
 
     def __init__(
         self,
-        object_names: list[str],
-        object_init_sampler: Callable,
-        dataset: ED.EnvironmentDataset,
-        motor_system: MotorSystem,
-        rng: np.random.RandomState,
+        *args: Any,  # noqa: ANN401
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
-        """Initialize the InformedEnvironmentDataLoaderPerRotation.
-
-        Args:
-            object_names: List of object names to be used in the dataloader.
-            object_init_sampler: Callable that returns the initial parameters for
-                the object.
-            dataset: The dataset to be used.
-            motor_system: The motor system to be used.
-            rng: The random number generator to be used.
-        """
-        super().__init__(object_names, object_init_sampler, dataset, motor_system, rng)
-        self._original = ED.InformedEnvironmentDataLoader(dataset, motor_system, rng)
+        """Initialize the InformedEnvironmentDataLoaderPerRotation."""
+        super().__init__(*args, **kwargs)
+        self._original = ED.InformedEnvironmentDataLoader(*args, **kwargs)
 
     def __getattr__(self, name: str) -> Any:  # noqa: ANN401
         """Delegate attribute access to InformedEnvironmentDataLoader instance.
