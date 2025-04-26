@@ -8,19 +8,17 @@
 # https://opensource.org/licenses/MIT.
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Any, Callable, TYPE_CHECKING
 
-import numpy as np
-import quaternion
-
-from tbp.monty.frameworks.actions.actions import (
-    MoveTangentially,
-    SetAgentPose,
-    SetSensorRotation,
-)
 from tbp.monty.frameworks.environments import embodied_data as ED
+
+if TYPE_CHECKING:
+    import numpy as np
+    from tbp.monty.frameworks.models.motor_policies import MotorSystem
+    from tbp.monty.frameworks.environments.embodied_data import EnvironmentDataLoader
 
 logger = logging.getLogger(__name__)
 @dataclass
@@ -39,44 +37,53 @@ class EnvironmentDataloaderPerRotationArgs:
     object_init_sampler: Callable
 
 class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
-    """Dataloader specialized for continual learning that focuses on presenting a single object 
-    with varying rotations across episodes.
-    
-    This dataloader cycles through different rotations of the same object within episodes,
-    then switches to a new object after completing an epoch. This approach enables
-    learning across different viewpoints of the same object before moving to another object,
-    facilitating continual learning scenarios where view-invariant representations are desired.
-    
-    Key workflow:
-    - Within an epoch: maintain the same object but cycle through different rotations for each episode
-    - Between epochs: switch to the next object in the list with initial rotation
-    
-    Unlike EnvironmentDataLoaderPerObject, this class:
-    - Prioritizes rotation variations over object variations
-    - Handles rotation cycling within episodes via cycle_rotation()
-    - Tracks episode and epoch counts for continual learning procedures
-    
+    """Dataloader for continual learning with rotation-based variation.
+
+    This dataloader cycles through different rotations of the same object within
+    episodes, then switches to a new object after completing an epoch.
+
     Note:
-        The implementation has been simplified by removing distractor object functionality
-        for readability and focus on the continual learning task, but otherwise nearly identical 
-        to EnvironmentDataLoaderPerObject class.
+        The implementation has been simplified by removing code related to distractor
+        objectsfor readability and focus on the continual learning task,
+        but otherwise nearly identical to EnvironmentDataLoaderPerObject class.
     """
 
     def __init__(
         self,
-        object_names: List[str],
+        object_names: list[str],
         object_init_sampler: Callable,
-        *args,
-        **kwargs,
+        dataset: ED.EnvironmentDataset,
+        motor_system: MotorSystem,
+        rng: np.random.RandomState
     ) -> None:
-        super().__init__(*args, **kwargs)
-        if isinstance(object_names, list):
-            self.object_names = sorted(object_names)  # Sort to match the order of ViT Continual Learning
-            self.source_object_list = sorted(list(dict.fromkeys(object_names)))
-        else:
-            raise ValueError("Object names should be a list")
-    
-        self.create_semantic_mapping()
+        """Initialize the EnvironmentDataLoaderPerRotation.
+
+        Args:
+            object_names: List of object names to be used in the dataloader.
+            object_init_sampler: Callable that returns the initial parameters for
+                the object.
+            dataset: The dataset to be used.
+            motor_system: The motor system to be used.
+            rng: The random number generator to be used.
+
+        Raises:
+            TypeError: If object names is not a list.
+        """
+        super().__init__(dataset=dataset, motor_system=motor_system, rng=rng)
+
+        if not isinstance(object_names, list):
+            error_msg = "Object names should be a list"
+            logger.error(error_msg)
+            raise TypeError(error_msg)
+
+        # Sort to match the order of classes in ViT Continual Learning
+        self.object_names = sorted(object_names)
+        self.source_object_list = sorted(list(dict.fromkeys(object_names)))
+
+        self.dataloader_utils = EnvironmentDataLoaderUtils(self)
+        self.semantic_id_to_label, self.semantic_label_to_id = (
+            self.dataloader_utils.create_semantic_mapping()
+        )
         self.object_init_sampler = object_init_sampler
         self.object_init_sampler.rng = self.rng
         self.object_params = self.object_init_sampler()
@@ -87,46 +94,23 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.primary_target = None
 
     def pre_episode(self) -> None:
-        """Pre-episode setup for continual learning dataloader.
-
-        This method performs the following actions:
-        1. Calls the superclass's pre_episode method to perform the default pre-episode setup.
-        2. Resets the agent to the initial state.
-        """
+        """Pre-episode setup for continual learning dataloader."""
         super().pre_episode()
         self.reset_agent()
 
     def post_episode(self) -> None:
-        """Post-episode setup for continual learning dataloader.
-
-        This method performs the following actions:
-        1. Calls the superclass's post_episode method to perform the default post-episode setup.
-        2. Calls the object_init_sampler's post_episode method to perform any necessary post-episode setup.
-        3. Cycles the rotation of the object.
-        4. Increments the episode count.
-        """
+        """Post-episode setup for continual learning dataloader."""
         super().post_episode()
         self.object_init_sampler.post_episode()
         self.cycle_rotation()
         self.episodes += 1
-    
-    def pre_epoch(self) -> None:
-        """Pre-epoch setup for continual learning dataloader.
 
-        This method performs the following actions:
-        1. Calls the superclass's pre_epoch method to perform the default pre-epoch setup.
-        2. Changes the object to the next object in the list.
-        """
-        self.change_object_by_idx(self.current_object, self.object_params)
+    def pre_epoch(self) -> None:
+        """Pre-epoch setup for continual learning dataloader."""
+        self.update_primary_target_object(self.current_object, self.object_params)
 
     def post_epoch(self) -> None:
-        """Post-epoch setup for continual learning dataloader.
-
-        This method performs the following actions:
-        1. Increments the epoch count.
-        2. Cycles the rotation of the object.
-        3. Resets the agent to the initial state.
-        """
+        """Post-epoch setup for continual learning dataloader."""
         self.epochs += 1
         self.current_object += 1
         self.object_init_sampler.post_epoch()
@@ -134,12 +118,7 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.reset_agent()
 
     def cycle_rotation(self) -> None:
-        """Cycle the rotation of the object.
-
-        This method performs the following actions:
-        1. Gets the current rotation of the object.
-        2. Cycles the rotation of the object.
-        """
+        """Cycle the rotation of the object."""
         current_rotation = self.object_params["euler_rotation"]
         self.object_params = self.object_init_sampler()
         next_rotation = self.object_params["euler_rotation"]
@@ -150,39 +129,10 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
                 "next_rotation": next_rotation,
             },
         )
-        self.change_object_by_idx(self.current_object, self.object_params)
+        self.update_primary_target_object(self.current_object, self.object_params)
 
-    def create_semantic_mapping(self) -> None:
-        """Create a unique semantic ID (positive integer) for each object.
-
-        Used by Habitat for the semantic sensor.
-
-        In addition, create a dictionary mapping back and forth between these IDs and
-        the corresponding name of the object
-        """
-        assert set(self.object_names).issubset(
-            set(self.source_object_list)
-        ), "Semantic mapping requires primary targets sampled from source list"
-
-        starting_integer = 1  # Start at 1 so that we can distinguish on-object semantic
-        # IDs (>0) from being off object (semantic_id == 0 in Habitat by default)
-        self.semantic_id_to_label = {
-            i + starting_integer: label
-            for i, label in enumerate(self.source_object_list)
-        }
-        self.semantic_label_to_id = {
-            label: i + starting_integer
-            for i, label in enumerate(self.source_object_list)
-        }
-    
-    def change_object_by_idx(self, idx: int, object_params: dict) -> None:
+    def update_primary_target_object(self, idx: int, object_params: dict) -> None:
         """Update the primary target object in the scene based on the given index.
-
-        The given `idx` is the index of the object in the `self.object_names` list,
-        which should correspond to the index of the object in the `self.object_params`
-        list.
-
-        Also add any distractor objects if required.
 
         Args:
             idx: Index of the new object and ints parameters in object_params
@@ -190,6 +140,9 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
 
         Raises:
             ValueError: If the index is greater than the number of objects.
+
+        Note:
+            Analogous to EnvironmentDataLoaderPerObject.change_object_by_idx.
         """
         if idx > self.n_objects:
             error_msg = f"idx must be <= self.n_objects: {self.n_objects}"
@@ -216,12 +169,36 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         logger.info("New primary target: %(primary_target)", 
                     extra={"primary_target": self.primary_target})
 
-    def reset_agent(self) -> None: 
+    def create_semantic_mapping(self) -> None:
+        """Create a unique semantic ID for each object.
+
+        Raises:
+            ValueError: If the object names are not a subset of the source object list.
+        """
+        if not set(self.object_names).issubset(
+            set(self.source_object_list)
+        ):
+            error_msg = "Semantic mapping requires primary targets \
+                sampled from source list"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        starting_integer = 1  # Start at 1 so that we can distinguish on-object semantic
+        # IDs (>0) from being off object (semantic_id == 0 in Habitat by default)
+        self.semantic_id_to_label = {
+            i + starting_integer: label
+            for i, label in enumerate(self.source_object_list)
+        }
+        self.semantic_label_to_id = {
+            label: i + starting_integer
+            for i, label in enumerate(self.source_object_list)
+        }
+
+    def reset_agent(self) -> dict:
         """Reset the agent to the initial state.
 
-        This method performs the following actions:
-        1. Resets the dataset.
-        2. Resets the counter.
+        Returns:
+            The observation from the reset.
         """
         logger.debug("resetting agent------")
         self._observation, self.motor_system.state = self.dataset.reset()
@@ -232,28 +209,36 @@ class EnvironmentDataLoaderPerRotation(ED.EnvironmentDataLoader):
         self.motor_system.state[self.motor_system.agent_id]["motor_only_step"] = False
 
         return self._observation
-
 class InformedEnvironmentDataLoaderPerRotation(EnvironmentDataLoaderPerRotation):
+    """Adapter class for InformedEnvironmentDataLoader.
+
+    This class wraps an instance of the original InformedEnvironmentDataLoader and
+    delegates all attribute access to it to avoid code duplication. The only difference
+    to InformedEnvironmentDastaLoader in tbp.monty v.0.1.0 is that it inherits
+    from EnvironmentDataLoaderPerRotation instead of EnvironmentDataLoaderPerObject.
     """
-    Adapter class for InformedEnvironmentDataLoader that inherits from
-    EnvironmentDataLoaderPerRotation instead of EnvironmentDataLoaderPerObject.
+    def __init__(self,
+                 object_names: list[str],
+                 object_init_sampler: Callable,
+                 dataset: ED.EnvironmentDataset,
+                 motor_system: MotorSystem,
+                 rng: np.random.RandomState
+        ) -> None:
+        """Initialize the InformedEnvironmentDataLoaderPerRotation.
 
-    This class wraps an instance of the original InformedEnvironmentDataLoader and delegates
-    all attribute access to it. It inherits from EnvironmentDataLoaderPerRotation
-    in order to change the data-loading semantics for use cases where rotation-based
-    logic is required.
-
-    Args:
-        *args: Positional arguments to be passed to both the parent and the original dataloader.
-        **kwargs: Keyword arguments to be passed to both the parent and the original dataloader.
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._original = ED.InformedEnvironmentDataLoader(*args, **kwargs)
-
-    def __getattr__(self, name):
+        Args:
+            object_names: List of object names to be used in the dataloader.
+            object_init_sampler: Callable that returns the initial parameters for
+                the object.
+            dataset: The dataset to be used.
+            motor_system: The motor system to be used.
+            rng: The random number generator to be used.
         """
-        Delegate attribute access to the wrapped InformedEnvironmentDataLoader instance.
+        super().__init__(object_names, object_init_sampler, dataset, motor_system, rng)
+        self._original = ED.InformedEnvironmentDataLoader(dataset, motor_system, rng)
+
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401
+        """Delegate attribute access to InformedEnvironmentDataLoader instance.
 
         Args:
             name (str): The attribute name to access.
