@@ -29,6 +29,7 @@ Running the above functions requires that the following experiments have been ru
 
 """
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from data_utils import (
@@ -442,69 +443,77 @@ def draw_icons():
     out_dir = OUT_DIR / "icons"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load the model.
+    rng = np.random.RandomState(0)
+    standard_noise_params = {"location": 0.002, "features": {"hsv": 0.1}}
+    all_params = [
+        {
+            "label": "base",
+            "noise": {},
+            "rotation": (0, 0, 0),
+            "view_init": (100, -90),
+        },
+        {
+            "label": "noise",
+            "noise": standard_noise_params,
+            "rotation": (0, 0, 0),
+            "view_init": (100, -90),
+        },
+        {
+            "label": "RR",
+            "noise": {},
+            "rotation": [45, 10, 30],
+            "view_init": (100, -90),
+        },
+        {
+            "label": "RR + noise",
+            "noise": standard_noise_params,
+            "rotation": (25, 30, -135),
+            "view_init": (100, -90),
+        },
+    ]
+
+    # Load the pretrained model.
     model = load_object_model("dist_agent_1lm", "mug")
     model = model - [0, 1.5, 0]
+
+    # Plot the icons.
     fig, axes = plt.subplots(1, 4, figsize=(8, 4), subplot_kw={"projection": "3d"})
+    for i, params in enumerate(all_params):
+        ax = axes[i]
+        noise_params = params["noise"]
 
-    # Params
-    params = {
-        "alpha": 0.45,
-        "edgecolors": "none",
-        "s": 2,
-    }
-    loc_std = 0.002  # same parameter as in configs
+        obj = model.copy()
+        obj = obj.rotated(params["rotation"], degrees=True)
+        if "location" in noise_params:
+            noise = rng.normal(0, noise_params["location"], obj.pos.shape)
+            obj.pos = obj.pos + noise
 
-    # Use bluementa as base color.
-    hex = TBP_COLORS["blue"].lstrip("#")
-    rgba = np.array([int(hex[i : i + 2], 16) / 255 for i in (0, 2, 4)] + [1.0])
-    rgba = np.tile(rgba, (len(model.x), 1))
+        if "features" in noise_params:
+            if "hsv" in noise_params["features"]:
+                hsv_std = noise_params["features"]["hsv"]
 
-    # Make noisy color.
-    rgba_noise = rgba.copy()
-    rgba_noise = rgba_noise + 0.3 * np.random.randn(len(rgba_noise), 4)
-    rgba_noise = np.clip(rgba_noise, 0, 1)
-    rgba_noise[:, 3] = 1
-    loc_noise = loc_std * np.random.randn(*model.pos.shape)
+                # Convert RGB to HSV
+                rgb = model.rgba[:, :3]
+                hsv = np.zeros_like(rgb)
+                for j in range(len(rgb)):
+                    hsv[j] = matplotlib.colors.rgb_to_hsv(rgb[j])
 
-    # - draw base model
-    ax = axes[0]
-    ax.scatter(model.x, model.y, model.z, color=rgba, **params)
+                # Add HSV noise
+                noise = rng.normal(0, hsv_std, hsv.shape)
+                hsv = hsv + noise
+                hsv = np.clip(hsv, 0, 1)
 
-    # - draw noise
-    ax = axes[1]
-    noise_model = model.copy()
-    noise_model.pos += loc_noise
-    ax.scatter(
-        noise_model.x,
-        noise_model.y,
-        noise_model.z,
-        color=rgba_noise,
-        **params,
-    )
+                # Convert back to RGB
+                rgba = np.ones((len(hsv), 4))
+                for j in range(len(hsv)):
+                    rgba[j, :3] = matplotlib.colors.hsv_to_rgb(hsv[j])
+                obj.rgba = rgba
 
-    # - draw random rotation
-    ax = axes[2]
-    randrot_model = model.rotated([45, 10, 30], degrees=True)
-    ax.scatter(
-        randrot_model.x,
-        randrot_model.y,
-        randrot_model.z,
-        color=rgba,
-        **params,
-    )
-
-    # - draw radom rotation + noise
-    ax = axes[3]
-    randrot_noise_model = model.rotated([25, 30, -135], degrees=True)
-    randrot_noise_model.pos += loc_noise
-    ax.scatter(
-        randrot_noise_model.x,
-        randrot_noise_model.y,
-        randrot_noise_model.z,
-        color=rgba_noise,
-        **params,
-    )
+        ax.scatter(obj.x, obj.y, obj.z, c=obj.rgba, alpha=0.45, edgecolors="none", s=2)
+        ax.set_title(params["label"])
+        axes3d_set_aspect_equal(ax)
+        ax.axis("off")
+        ax.view_init(100, -90)
 
     # Clean up
     for ax in axes:
