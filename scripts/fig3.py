@@ -176,16 +176,14 @@ def plot_evidence_graphs_and_patches():
             mug.y,
             mug.z,
             color="gray",
-            alpha=0.1,
+            alpha=0.6,
             s=1,
             linewidths=0,
         )
         center = centers[step]
         ax.scatter(center[0], center[1], center[2], color="red", s=50)
+        ax.axis("off")
         ax.view_init(100, -100, -10)
-        axes3d_clean(ax, grid=False)
-        axes3d_set_aspect_equal(ax)
-        ax.set_title(f"step {step}")
         ax.set_xlim(-0.119, 0.119)
         ax.set_ylim(1.5 - 0.119, 1.5 + 0.119)
         ax.set_zlim(-0.119, 0.119)
@@ -250,11 +248,11 @@ def plot_evidence_graphs_and_patches():
             ax.view_init(100, -100, -10)
             axes3d_clean(ax, grid=False)
             axes3d_set_aspect_equal(ax)
-            ax.set_title(f"step {step}")
             ax.set_xlim(-0.119, 0.119)
             ax.set_ylim(1.5 - 0.119, 1.5 + 0.119)
             ax.set_zlim(-0.119, 0.119)
         fig.subplots_adjust(left=0.05, right=0.95, bottom=0.1, top=0.9, wspace=0.2)
+        fig.suptitle(f"step {step}")
         fig.savefig(png_dir / f"evidence_graphs_{step}.png")
         fig.savefig(svg_dir / f"evidence_graphs_{step}.svg")
         plt.close(fig)
