@@ -364,9 +364,10 @@ def plot_performance() -> None:
     # Load the stats.
     dataframes = [
         load_eval_stats("dist_agent_1lm"),
-        load_eval_stats("dist_agent_1lm_noise"),
-        load_eval_stats("dist_agent_1lm_randrot_all"),
-        load_eval_stats("dist_agent_1lm_randrot_all_noise"),
+        load_eval_stats("dist_agent_1lm_noise_all"),
+        load_eval_stats("dist_agent_1lm_randrot_14"),
+        load_eval_stats("dist_agent_1lm_randrot_14_noise_all"),
+        load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped"),
     ]
     accuracy, rotation_error = [], []
     for i, df in enumerate(dataframes):
@@ -375,7 +376,7 @@ def plot_performance() -> None:
         rotation_error.append(np.degrees(sub_df.rotation_error))
 
     # Initialize the plot.
-    axes_width, axes_height = 2.55, 1.85
+    axes_width, axes_height = 2.81, 1.75
     axes_frac = 0.7
     axes_loc = (1 - axes_frac) / 2
     fig = plt.figure(figsize=(axes_width / axes_frac, axes_height / axes_frac))
@@ -387,8 +388,8 @@ def plot_performance() -> None:
     # Params
     bar_width = 0.4
     violin_width = 0.4
-    gap = 0.02
-    xticks = np.arange(4) * 1.3
+    gap = 0.04
+    xticks = np.arange(len(dataframes)) * 1.3
     bar_positions = xticks - bar_width / 2 - gap / 2
     violin_positions = xticks + violin_width / 2 + gap / 2
     median_style = dict(color="lightgray", lw=1, ls="-")
@@ -420,7 +421,7 @@ def plot_performance() -> None:
     ax2.set_ylabel("Rotation Error (deg)")
 
     ax1.set_xticks(xticks)
-    xticklabels = ["base", "noise", "RR", "noise + RR"]
+    xticklabels = ["base", "noise", "RR", "noise+RR", "noise+RR\n(color clamped)"]
     ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
     ax1.spines["right"].set_visible(True)
@@ -450,25 +451,26 @@ def draw_icons():
             "label": "base",
             "noise": {},
             "rotation": (0, 0, 0),
-            "view_init": (100, -90),
         },
         {
             "label": "noise",
             "noise": standard_noise_params,
             "rotation": (0, 0, 0),
-            "view_init": (100, -90),
         },
         {
             "label": "RR",
             "noise": {},
             "rotation": [45, 10, 30],
-            "view_init": (100, -90),
         },
         {
             "label": "RR + noise",
             "noise": standard_noise_params,
-            "rotation": (25, 30, -135),
-            "view_init": (100, -90),
+            "rotation": [45, 10, 30],
+        },
+        {
+            "label": "noise+RR\n(color clamped)",
+            "noise": standard_noise_params,
+            "rotation": [45, 10, 30],
         },
     ]
 
@@ -477,7 +479,9 @@ def draw_icons():
     model = model - [0, 1.5, 0]
 
     # Plot the icons.
-    fig, axes = plt.subplots(1, 4, figsize=(8, 4), subplot_kw={"projection": "3d"})
+    fig, axes = plt.subplots(
+        1, len(all_params), figsize=(8, 4), subplot_kw={"projection": "3d"}
+    )
     for i, params in enumerate(all_params):
         ax = axes[i]
         noise_params = params["noise"]
@@ -489,7 +493,12 @@ def draw_icons():
             obj.pos = obj.pos + noise
 
         if "features" in noise_params:
-            if "hsv" in noise_params["features"]:
+            if params["label"] == "RR + noise\n(color clamped)":
+                clamped_color = matplotlib.colors.hsv_to_rgb([0.667, 1.0, 1.0])
+                rgb = np.broadcast_to(clamped_color, obj.rgba[:, :3].shape)
+                obj.rgba[:, :3] = rgb
+
+            elif "hsv" in noise_params["features"]:
                 hsv_std = noise_params["features"]["hsv"]
 
                 # Convert RGB to HSV
@@ -513,14 +522,7 @@ def draw_icons():
         ax.set_title(params["label"])
         axes3d_set_aspect_equal(ax)
         ax.axis("off")
-        ax.view_init(100, -90)
-
-    # Clean up
-    for ax in axes:
-        axes3d_set_aspect_equal(ax)
-        ax.axis("off")
         ax.view_init(90, -90)
-        ax.axis("off")
 
     fig.savefig(out_dir / "icons.png")
     fig.savefig(out_dir / "icons.svg")
