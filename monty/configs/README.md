@@ -125,6 +125,27 @@ The main output measure is accuracy and rotation error as a function of training
   2. Next 8 rotations = cube corners
   3. Remaining = random rotations (as otherwise introduces redundancy)
 
+## Figure 7B: Continual Learning
+
+Consists of 78 experiments:
+- `pretrain_continual_learning_dist_agent_1lm_checkpoints`
+- `continual_learning_dist_agent_1lm_task0`
+- `continual_learning_dist_agent_1lm_task2`
+- ...
+- `continual_learning_dist_agent_1lm_task76`
+
+As with [Figure 7: Rapid Learning](#figure-7-rapid-learning), performance is evaluated with:
+- 77 objects
+- 5 random rotations
+- NO sensor noise*
+- NO hypothesis-testing*
+- No voting
+- Varying the number of objects trained on 
+
+*No hypothesis-testing as the ViT model comparison only receives one view and cannot move around object, and no noise since Sensor-Module noise does not have a clear analogue for the ViT model.
+
+The main output measure is accuracy as a function of number of objects seen so far.
+
 ## Figure 8: Computationally Efficient Learning and Inference
 
 ### Inference (2 experiments)
