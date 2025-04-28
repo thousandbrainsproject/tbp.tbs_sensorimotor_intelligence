@@ -248,7 +248,7 @@ Functions for generating variations of existing configs.
 """
 
 
-def add_sensor_noise(config: Dict[str, Any]) -> None:
+def add_sensor_noise(config: Dict[str, Any], noise_params: Dict[str, Any]) -> None:
     """Add sensor noise to an experiment config. Modifies the config in-place.
 
     Applies noise parameters to all sensor modules except the view finder.
@@ -256,25 +256,16 @@ def add_sensor_noise(config: Dict[str, Any]) -> None:
     Args:
         config: Experiment config to add sensor noise to.
     """
-    noise_params = {
-        "features": {
-            "pose_vectors": 2.0,
-            "hsv": 0.1,
-            "principal_curvatures_log": 0.1,
-            "pose_fully_defined": 0.01,
-        },
-        "location": 0.002,
-    }
-
     for sm_dict in config["monty_config"].sensor_module_configs.values():
         sm_args = sm_dict["sensor_module_args"]
         if sm_args["sensor_module_id"] == "view_finder":
             continue
-        sm_args["noise_params"] = noise_params
+        sm_args["noise_params"] = deepcopy(noise_params)
 
 
 def make_noise_variant(
     template: Dict[str, Any],
+    noise_params: Dict[str, Any],
     run_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Create a copy of an experiment config with added sensor noise.
@@ -300,7 +291,7 @@ def make_noise_variant(
             config["logging_config"].run_name = f"{template_name}_noise"
 
     # Add sensor noise. Modifies `config` in-place.
-    add_sensor_noise(config)
+    add_sensor_noise(config, noise_params)
 
     return config
 
@@ -342,6 +333,7 @@ def make_randrot_variant(
 
 def make_randrot_noise_variant(
     template: Dict[str, Any],
+    noise_params: Dict[str, Any],
     run_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Create a copy of an experiment config w/ sensor noise and  5 random rotations.
@@ -357,7 +349,7 @@ def make_randrot_noise_variant(
         added sensor noise.
     """
     config = make_randrot_variant(template)
-    config = make_noise_variant(config, run_name=run_name)
+    config = make_noise_variant(config, noise_params, run_name=run_name)
     return config
 
 

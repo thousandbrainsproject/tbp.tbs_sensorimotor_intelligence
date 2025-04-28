@@ -114,13 +114,17 @@ def make_multi_lm_eval_config(num_lms: int) -> Mapping[str, Any]:
     )
 
     # Finally, add sensor noise.
-    add_sensor_noise(config)
+    add_sensor_noise(config, noise_params={"location": 0.002})
 
     return config
 
 
 # ==== The single-LM config ====
-dist_agent_1lm_randrot_noise = make_randrot_noise_variant(dist_agent_1lm)
+dist_agent_1lm_randrot_noise = make_randrot_noise_variant(
+    dist_agent_1lm,
+    noise_params={"location": 0.002},
+    run_name="dist_agent_1lm_randrot_noise",
+)
 
 # ==== Multi-LM configs ====
 

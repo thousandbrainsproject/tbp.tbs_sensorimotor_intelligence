@@ -100,8 +100,22 @@ dist_agent_1lm = dict(
 # Noisy/random rotation variants
 # ------------------------------------------------------------------------------
 
+heavy_noise_params = {
+    "location": 0.002,
+    "features": {
+        "pose_vectors": 2.0,
+        "hsv": 0.1,
+        "principal_curvatures_log": 0.1,
+        "pose_fully_defined": 0.01,
+    },
+}
+
 # - Noisy sensor variant
-dist_agent_1lm_noise = make_noise_variant(dist_agent_1lm)
+dist_agent_1lm_heavy_noise = make_noise_variant(
+    dist_agent_1lm,
+    heavy_noise_params,
+    run_name="dist_agent_1lm_heavy_noise",
+)
 
 # - Random rotation variant (14 random rotations)
 dist_agent_1lm_randrot_all = deepcopy(dist_agent_1lm)
@@ -111,13 +125,16 @@ dist_agent_1lm_randrot_all[
 ].object_init_sampler = RandomRotationObjectInitializer()
 
 # - Random rotation variant (14 random rotations) and sensor noise
-dist_agent_1lm_randrot_all_noise = make_noise_variant(
-    dist_agent_1lm_randrot_all, run_name="dist_agent_1lm_randrot_all_noise"
+dist_agent_1lm_randrot_all_heavy_noise = make_noise_variant(
+    dist_agent_1lm_randrot_all,
+    heavy_noise_params,
+    run_name="dist_agent_1lm_randrot_all_heavy_noise",
 )
+
 
 CONFIGS = {
     "dist_agent_1lm": dist_agent_1lm,
-    "dist_agent_1lm_noise": dist_agent_1lm_noise,
+    "dist_agent_1lm_heavy_noise": dist_agent_1lm_heavy_noise,
     "dist_agent_1lm_randrot_all": dist_agent_1lm_randrot_all,
-    "dist_agent_1lm_randrot_all_noise": dist_agent_1lm_randrot_all_noise,
+    "dist_agent_1lm_randrot_all_heavy_noise": dist_agent_1lm_randrot_all_heavy_noise,
 }
