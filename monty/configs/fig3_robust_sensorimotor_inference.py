@@ -28,6 +28,7 @@ is defined in `fig5_rapid_inference_with_voting.py`.
 
 from copy import deepcopy
 
+import numpy as np
 from tbp.monty.frameworks.config_utils.config_args import (
     MontyArgs,
     PatchAndViewMontyConfig,
@@ -45,6 +46,7 @@ from tbp.monty.frameworks.experiments import MontyObjectRecognitionExperiment
 from tbp.monty.frameworks.models.evidence_matching import (
     MontyForEvidenceGraphMatching,
 )
+from tbp.monty.frameworks.models.sensor_modules import FeatureChangeSM
 from tbp.monty.simulators.habitat.configs import (
     PatchViewFinderMountHabitatDatasetArgs,
 )
@@ -131,10 +133,34 @@ dist_agent_1lm_randrot_all_heavy_noise = make_noise_variant(
     run_name="dist_agent_1lm_randrot_all_heavy_noise",
 )
 
+class ClampedColorSM(FeatureChangeSM):
+    """Sensor module that clamps the hsv feature to blue."""
+
+    def step(self, data):
+        """Return Features if they changed significantly."""
+        patch_observation = super().step(data)  # get extracted features
+        patch_observation.non_morphological_features["hsv"] = np.array(
+            [0.667, 1.0, 1.0]
+        )
+        return patch_observation
+
+
+dist_agent_1lm_randrot_all_heavy_noise_color_clamped = deepcopy(
+    dist_agent_1lm_randrot_all_heavy_noise
+)
+dist_agent_1lm_randrot_all_heavy_noise_color_clamped[
+    "logging_config"
+].run_name = "dist_agent_1lm_randrot_all_heavy_noise_color_clamped"
+
+dist_agent_1lm_randrot_all_heavy_noise_color_clamped[
+    "monty_config"
+].sensor_module_configs["sensor_module_0"]["sensor_module_class"] = ClampedColorSM
+
 
 CONFIGS = {
     "dist_agent_1lm": dist_agent_1lm,
     "dist_agent_1lm_heavy_noise": dist_agent_1lm_heavy_noise,
     "dist_agent_1lm_randrot_all": dist_agent_1lm_randrot_all,
     "dist_agent_1lm_randrot_all_heavy_noise": dist_agent_1lm_randrot_all_heavy_noise,
+    "dist_agent_1lm_randrot_all_heavy_noise_color_clamped": dist_agent_1lm_randrot_all_heavy_noise_color_clamped,
 }
