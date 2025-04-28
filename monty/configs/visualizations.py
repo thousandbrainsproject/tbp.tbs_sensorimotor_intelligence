@@ -54,7 +54,7 @@ from .common import (
     SelectiveEvidenceHandler,
     SelectiveEvidenceLoggingConfig,
 )
-from .fig3_robust_sensorimotor_inference import dist_agent_1lm_heavy_noise
+from .fig3_robust_sensorimotor_inference import dist_agent_1lm_noise_all
 from .fig5_rapid_inference_with_voting import (
     dist_agent_1lm_randrot_noise,
     dist_agent_8lm_randrot_noise,
@@ -97,7 +97,7 @@ Figure 3
 # `fig3_evidence_run`: Experiment for collecting detailed evidence values and sensor
 # data for one episode only. Used in `scripts/fig3.py` to generate evidence graphs
 # and visualize the path taken by the sensor/agent.
-fig3_evidence_run = deepcopy(dist_agent_1lm_heavy_noise)
+fig3_evidence_run = deepcopy(dist_agent_1lm_noise_all)
 fig3_evidence_run.update(
     dict(
         experiment_args=EvalExperimentArgs(

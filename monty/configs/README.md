@@ -20,17 +20,19 @@ to run an experiment in parallel.
 This figure presents results from four inference experiments testing Monty's robustness under different conditions. Monty was pre-trained on 14 standard rotations derived from cube face and corner views (see full configuration details in `pretraining_experiments/dist_agent_1lm`).
 
 - `dist_agent_1lm`: Standard inference with no sensor noise or random rotations
-- `dist_agent_1lm_noise`: Tests robustness to sensor noise
-- `dist_agent_1lm_randrot_all`: Tests performance across 14 random rotations, not seen during training
-- `dist_agent_1lm_randrot_all_noise`: Tests performance with both random rotations and sensor noise
-
+- `dist_agent_1lm_noise_all`: Tests robustness to heavy sensor noise
+- `dist_agent_1lm_randrot_14`: Tests performance across 14 random rotations, not seen during training
+- `dist_agent_1lm_randrot_14_noise_all`: Tests performance with both random rotations and heavy sensor noise
+- `dist_agent_1lm_randrot_14_noise_all_color_clamped`: Tests performance with random rotations, heavy sensor noise, and with the color feature for each observation clamped
+to blue.
+  
 Here we are showing the performance of the "standard" version of Monty, using:
 - 77 objects
 - 14 rotations
 - Goal-state-driven/hypothesis-testing policy active
 - A single LM (no voting)
 
-The main output measures are accuracy, rotation error (degrees), and Chamfer distance for each condition.
+The main output measures are accuracy and rotation error (degrees) for each condition.
 
 ## Figure 4: Structured Object Representations
 
