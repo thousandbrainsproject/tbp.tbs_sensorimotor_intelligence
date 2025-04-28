@@ -79,7 +79,8 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
         ):
             for _ in range(len(TRAIN_ROTATIONS)):
                 logging.info(
-                    f"Current object: {self.dataloader.current_object} at rotation: {self.dataloader.object_params['euler_rotation']}",
+                    f"Current object: {self.dataloader.current_object} at rotation: \
+                    {self.dataloader.object_params['euler_rotation']}",
                 )
                 self.run_episode()
         else:
@@ -109,7 +110,10 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
                     f"Current object: {self.dataloader.current_object}",
                 )
                 logging.info(
-                    f"Simulating object: {self.dataloader.object_names[self.dataloader.current_object]} with params: {self.dataloader.object_params}",
+                    f"Simulating object: \
+                    {self.dataloader.object_names[self.dataloader.current_object]} \
+                    with params: \
+                    {self.dataloader.object_params}",
                 )
                 self.run_episode()
         else:
@@ -187,7 +191,8 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
         "logging_config"
     ].run_name = f"continual_learning_dist_agent_1lm_checkpoints_task{task_id}"
     config["logging_config"].python_log_level = "INFO"
-    # Disable wandb logging to save WandB space and time
+
+    # Disable wandb logging to save WandB space
     config["logging_config"].wandb_handlers = []
 
     # Disable hypothesis-testing

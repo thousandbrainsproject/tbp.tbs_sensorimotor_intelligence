@@ -10,15 +10,16 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any
 
 from tbp.monty.frameworks.environments import embodied_data as ED
+
 
 class InformedEnvironmentDataLoaderForContinualLearning(
     ED.InformedEnvironmentDataLoader
 ):
     """InformedEnvironmentDataLoader for continual learning."""
+
     def __init__(
         self,
         *args: Any,
@@ -94,4 +95,3 @@ class InformedEnvironmentDataLoaderForContinualLearning(
         logging.info(
             f"New primary target: {self.primary_target}",
         )
-
