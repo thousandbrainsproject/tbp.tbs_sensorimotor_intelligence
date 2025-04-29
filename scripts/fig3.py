@@ -367,6 +367,7 @@ def plot_performance() -> None:
         load_eval_stats("dist_agent_1lm_noise_all"),
         load_eval_stats("dist_agent_1lm_randrot_14"),
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all"),
+        load_eval_stats("dist_agent_1lm_randrot_14_color_clamped"),
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped"),
     ]
     accuracy, rotation_error = [], []
@@ -421,7 +422,14 @@ def plot_performance() -> None:
     ax2.set_ylabel("Rotation Error (deg)")
 
     ax1.set_xticks(xticks)
-    xticklabels = ["base", "noise", "RR", "noise+RR", "noise+RR\n(color clamped)"]
+    xticklabels = [
+        "base",
+        "noise",
+        "RR",
+        "noise+RR",
+        "RR\n(clamped)",
+        "noise+RR\n(clamped)",
+    ]
     ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
     ax1.spines["right"].set_visible(True)
@@ -530,8 +538,8 @@ def draw_icons():
 
 
 if __name__ == "__main__":
-    plot_known_objects()
-    plot_evidence_graphs_and_patches()
-    plot_sensor_path()
+    # plot_known_objects()
+    # plot_evidence_graphs_and_patches()
+    # plot_sensor_path()
     plot_performance()
-    draw_icons()
+    # draw_icons()
