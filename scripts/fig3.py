@@ -549,8 +549,8 @@ def draw_icons():
 
 
 if __name__ == "__main__":
-    # plot_known_objects()
-    # plot_evidence_graphs_and_patches()
-    # plot_sensor_path()
-    # plot_performance()
+    plot_known_objects()
+    plot_evidence_graphs_and_patches()
+    plot_sensor_path()
+    plot_performance()
     draw_icons()
