@@ -157,6 +157,15 @@ dist_agent_1lm_randrot_14_noise_all_color_clamped["monty_config"].sensor_module_
     "sensor_module_0"
 ]["sensor_module_class"] = ClampedColorSM
 
+# no noise - temp
+dist_agent_1lm_randrot_14_color_clamped = deepcopy(dist_agent_1lm_randrot_14)
+dist_agent_1lm_randrot_14_color_clamped[
+    "logging_config"
+].run_name = "dist_agent_1lm_randrot_14_color_clamped"
+
+dist_agent_1lm_randrot_14_color_clamped["monty_config"].sensor_module_configs[
+    "sensor_module_0"
+]["sensor_module_class"] = ClampedColorSM
 
 CONFIGS = {
     "dist_agent_1lm": dist_agent_1lm,
@@ -164,4 +173,5 @@ CONFIGS = {
     "dist_agent_1lm_randrot_14": dist_agent_1lm_randrot_14,
     "dist_agent_1lm_randrot_14_noise_all": dist_agent_1lm_randrot_14_noise_all,
     "dist_agent_1lm_randrot_14_noise_all_color_clamped": dist_agent_1lm_randrot_14_noise_all_color_clamped,
+    "dist_agent_1lm_randrot_14_color_clamped": dist_agent_1lm_randrot_14_color_clamped,
 }
