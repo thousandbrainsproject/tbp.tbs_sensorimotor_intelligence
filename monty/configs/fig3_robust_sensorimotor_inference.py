@@ -103,7 +103,7 @@ dist_agent_1lm = dict(
 # Noisy/random rotation variants
 # ------------------------------------------------------------------------------
 
-all_noise_params = {
+noise_all_params = {
     "location": 0.002,
     "features": {
         "pose_vectors": 2.0,
@@ -116,7 +116,7 @@ all_noise_params = {
 # - Noisy sensor variant
 dist_agent_1lm_noise_all = make_noise_variant(
     dist_agent_1lm,
-    all_noise_params,
+    noise_all_params,
     run_name="dist_agent_1lm_noise_all",
 )
 
@@ -130,7 +130,7 @@ dist_agent_1lm_randrot_14[
 # - Random rotation variant (14 random rotations) and sensor noise
 dist_agent_1lm_randrot_14_noise_all = make_noise_variant(
     dist_agent_1lm_randrot_14,
-    all_noise_params,
+    noise_all_params,
     run_name="dist_agent_1lm_randrot_14_noise_all",
 )
 
