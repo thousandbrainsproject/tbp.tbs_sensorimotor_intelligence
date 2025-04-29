@@ -112,11 +112,6 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
         # found = []
         for name in performance_options:
             row[f"n_{name}"] = perf_counts[name]
-        #     if perf_counts[name] > 0:
-        #         found.append(name)
-        # performance = found[0]
-        # if performance not in ("correct", "confused", "correct_mlh", "confused_mlh"):
-        #     raise ValueError(f"Invalid performance: {performance}")
 
         # Decide performance based on the number of correct/confused LM and
         # correct_mlh/confused_mlh LMs. The rules are as follows:
