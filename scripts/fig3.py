@@ -369,6 +369,7 @@ def plot_performance() -> None:
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all"),
         load_eval_stats("dist_agent_1lm_randrot_14_color_clamped"),
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped"),
+        load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped_hsv"),
     ]
     accuracy, rotation_error = [], []
     for i, df in enumerate(dataframes):
@@ -427,10 +428,11 @@ def plot_performance() -> None:
         "noise",
         "RR",
         "noise+RR",
-        "RR\n(clamped)",
-        "noise+RR\n(clamped)",
+        "RR\n(hsv clamped)",
+        "noise+RR\n(hue clamped)",
+        "noise+RR\n(hsv clamped)",
     ]
-    ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
+    ax1.set_xticklabels(xticklabels, rotation=45, ha="center")
 
     ax1.spines["right"].set_visible(True)
     ax2.spines["right"].set_visible(True)
@@ -476,7 +478,12 @@ def draw_icons():
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR\n(color clamped)",
+            "label": "noise+RR\n(hsv clamped)",
+            "noise": standard_noise_params,
+            "rotation": [45, 10, 30],
+        },
+        {
+            "label": "noise+RR\n(hue clamped)",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
@@ -500,33 +507,37 @@ def draw_icons():
             noise = rng.normal(0, noise_params["location"], obj.pos.shape)
             obj.pos = obj.pos + noise
 
-        if "features" in noise_params:
-            if params["label"] == "RR + noise\n(color clamped)":
-                clamped_color = matplotlib.colors.hsv_to_rgb([0.667, 1.0, 1.0])
-                rgb = np.broadcast_to(clamped_color, obj.rgba[:, :3].shape)
-                obj.rgba[:, :3] = rgb
+        if "features" in noise_params and "hsv" in noise_params["features"]:
+            hsv_std = noise_params["features"]["hsv"]
 
-            elif "hsv" in noise_params["features"]:
-                hsv_std = noise_params["features"]["hsv"]
+            # Convert RGB to HSV
+            rgb = model.rgba[:, :3]
+            hsv = np.zeros_like(rgb)
+            for j in range(len(rgb)):
+                hsv[j] = matplotlib.colors.rgb_to_hsv(rgb[j])
 
-                # Convert RGB to HSV
-                rgb = model.rgba[:, :3]
-                hsv = np.zeros_like(rgb)
-                for j in range(len(rgb)):
-                    hsv[j] = matplotlib.colors.rgb_to_hsv(rgb[j])
+            # Add HSV noise
+            noise = rng.normal(0, hsv_std, hsv.shape)
+            hsv = hsv + noise
+            hsv = np.clip(hsv, 0, 1)
 
-                # Add HSV noise
-                noise = rng.normal(0, hsv_std, hsv.shape)
-                hsv = hsv + noise
-                hsv = np.clip(hsv, 0, 1)
+            # Convert back to RGB
+            rgba = np.ones((len(hsv), 4))
+            for j in range(len(hsv)):
+                rgba[j, :3] = matplotlib.colors.hsv_to_rgb(hsv[j])
+            obj.rgba = rgba
 
-                # Convert back to RGB
-                rgba = np.ones((len(hsv), 4))
-                for j in range(len(hsv)):
-                    rgba[j, :3] = matplotlib.colors.hsv_to_rgb(hsv[j])
-                obj.rgba = rgba
+        if params["label"] == "noise+RR\n(hue clamped)":
+            model_hsv = matplotlib.colors.rgb_to_hsv(model.rgba[:, :3])
+            model_hsv[:, 0] = 0.667
+            obj.rgba[:, :3] = matplotlib.colors.hsv_to_rgb(model_hsv)
 
-        ax.scatter(obj.x, obj.y, obj.z, c=obj.rgba, alpha=0.45, edgecolors="none", s=2)
+        elif params["label"] == "noise+RR\n(hsv clamped)":
+            clamped_color = matplotlib.colors.hsv_to_rgb([0.667, 1.0, 1.0])
+            rgb = np.broadcast_to(clamped_color, obj.rgba[:, :3].shape)
+            obj.rgba[:, :3] = rgb
+
+        ax.scatter(obj.x, obj.y, obj.z, c=obj.rgba, alpha=0.5, edgecolors="none", s=2)
         ax.set_title(params["label"])
         axes3d_set_aspect_equal(ax)
         ax.axis("off")
@@ -541,5 +552,5 @@ if __name__ == "__main__":
     # plot_known_objects()
     # plot_evidence_graphs_and_patches()
     # plot_sensor_path()
-    plot_performance()
-    # draw_icons()
+    # plot_performance()
+    draw_icons()
