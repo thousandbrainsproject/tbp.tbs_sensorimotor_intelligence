@@ -17,7 +17,7 @@ to run an experiment in parallel.
 
 ## Figure 3: Robust Sensorimotor Inference
 
-This figure presents results from four inference experiments testing Monty's robustness under different conditions. Monty was pre-trained on 14 standard rotations derived from cube face and corner views (see full configuration details in `pretraining_experiments/dist_agent_1lm`).
+This figure presents results from five inference experiments testing Monty's robustness under different conditions. Monty was pre-trained on 14 standard rotations derived from cube face and corner views (see full configuration details in `pretraining_experiments/dist_agent_1lm`).
 
 - `dist_agent_1lm`: Standard inference with no sensor noise or random rotations
 - `dist_agent_1lm_noise_all`: Tests robustness to heavy sensor noise
@@ -50,7 +50,6 @@ The main output measure is a dendrogram showing evidence score clustering for th
 
 **Notes:**
 - Although evaluating on 10 objects, the model is trained on 77 objects.
-- We need to run this experiment with SELECTIVE logging on so we get the evidence values to analyze.
   
 ## Default Parameters for Figures 5+
 Unless specified otherwise, the following figures/experiments use:
