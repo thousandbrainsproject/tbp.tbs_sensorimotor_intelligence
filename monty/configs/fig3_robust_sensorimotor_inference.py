@@ -140,9 +140,8 @@ class ClampedColorSM(FeatureChangeSM):
     def step(self, data):
         """Return Features if they changed significantly."""
         patch_observation = super().step(data)  # get extracted features
-        patch_observation.non_morphological_features["hsv"] = np.array(
-            [0.667, 1.0, 1.0]
-        )
+        if "hsv" in patch_observation.non_morphological_features:
+            patch_observation.non_morphological_features["hsv"][0] = 0.667
         return patch_observation
 
 
