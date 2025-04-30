@@ -442,7 +442,6 @@ def plot_accuracy():
 
     # Plot params.
     ylims = [(0, 25), (75, 100)]
-    bar_width = 0.8
     xticks = np.arange(5)
 
     # 1-LM
@@ -451,7 +450,7 @@ def plot_accuracy():
             xticks[0],
             [performance.accuracy[0]],
             color=TBP_COLORS["blue"],
-            width=bar_width,
+            width=0.8,
             label="no voting",
         )
 
@@ -461,7 +460,7 @@ def plot_accuracy():
             xticks[1:],
             performance.accuracy[1:],
             color=TBP_COLORS["purple"],
-            width=bar_width,
+            width=0.8,
             label="voting",
         )
 
@@ -546,9 +545,7 @@ def plot_steps():
         [0, 25, 50, 75, 100],
         [450, 475, 500],
     ]
-    bar_width = 0.8
     xticks = np.arange(5)
-    bw_method = 0.1
 
     # Plot distribution of n_steps for 1-LM
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
@@ -556,10 +553,10 @@ def plot_steps():
             [performance.n_steps[0]],
             [xticks[0]],
             color=TBP_COLORS["blue"],
-            width=bar_width,
+            width=0.8,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
-            bw_method=bw_method,
+            bw_method=0.1,
             ax=ax,
         )
 
@@ -569,7 +566,7 @@ def plot_steps():
             performance.n_steps[1:],
             xticks[1:],
             color=TBP_COLORS["purple"],
-            width=bar_width,
+            width=0.8,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
