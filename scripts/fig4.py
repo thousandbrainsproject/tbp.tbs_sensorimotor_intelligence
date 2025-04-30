@@ -44,7 +44,6 @@ from data_utils import (
 )
 from plot_utils import (
     TBP_COLORS,
-    axes3d_clean,
     axes3d_set_aspect_equal,
     init_matplotlib_style,
     violinplot,

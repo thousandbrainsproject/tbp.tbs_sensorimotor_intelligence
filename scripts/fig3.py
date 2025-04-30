@@ -32,13 +32,11 @@ Running the above functions requires that the following experiments have been ru
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from data_utils import (
     DMC_ANALYSIS_DIR,
     VISUALIZATION_RESULTS_DIR,
     DetailedJSONStatsInterface,
     aggregate_1lm_performance_data,
-    load_eval_stats,
     load_object_model,
 )
 from plot_utils import (

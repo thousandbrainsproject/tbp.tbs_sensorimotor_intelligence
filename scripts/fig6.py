@@ -47,8 +47,6 @@ from data_utils import (
     DetailedJSONStatsInterface,
     ObjectModel,
     aggregate_1lm_performance_data,
-    get_frequency,
-    load_eval_stats,
     load_object_model,
 )
 from matplotlib.lines import Line2D
