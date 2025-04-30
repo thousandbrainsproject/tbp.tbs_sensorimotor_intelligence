@@ -64,7 +64,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     """Reduce the eval stats dataframe to a single row per episode.
 
     The main purpose of this function is to classify an episode as either "correct"
-    or "confused" based on the number of correct and confused performances (or
+    or "confused" based on the number of correct and confused LMs in an episode (or
     "correct_mlh" and "confused_mlh" for timed-out episodes).
 
     Args:
