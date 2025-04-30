@@ -422,7 +422,7 @@ def plot_performance() -> None:
         "noise",
         "RR",
         "noise+RR",
-        "noise+RR\n(hsv clamped)",
+        "noise+RR\n(uniform hsv)",
     ]
     ax1.set_xticklabels(xticklabels, rotation=45, ha="center")
 
@@ -474,7 +474,7 @@ def draw_icons():
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR\n(hsv clamped)",
+            "label": "noise+RR\n(uniform hsv)",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
@@ -518,12 +518,7 @@ def draw_icons():
                 rgba[j, :3] = matplotlib.colors.hsv_to_rgb(hsv[j])
             obj.rgba = rgba
 
-        if params["label"] == "noise+RR\n(hue clamped)":
-            model_hsv = matplotlib.colors.rgb_to_hsv(model.rgba[:, :3])
-            model_hsv[:, 0] = 0.667
-            obj.rgba[:, :3] = matplotlib.colors.hsv_to_rgb(model_hsv)
-
-        elif params["label"] == "noise+RR\n(hsv clamped)":
+        if params["label"] == "noise+RR\n(uniform hsv)":
             clamped_color = matplotlib.colors.hsv_to_rgb([0.667, 1.0, 1.0])
             rgb = np.broadcast_to(clamped_color, obj.rgba[:, :3].shape)
             obj.rgba[:, :3] = rgb
@@ -541,8 +536,8 @@ def draw_icons():
 
 
 if __name__ == "__main__":
-    plot_known_objects()
-    plot_evidence_graphs_and_patches()
-    plot_sensor_path()
+    # plot_known_objects()
+    # plot_evidence_graphs_and_patches()
+    # plot_sensor_path()
     plot_performance()
     draw_icons()
