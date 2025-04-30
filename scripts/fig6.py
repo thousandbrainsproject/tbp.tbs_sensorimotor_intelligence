@@ -46,6 +46,7 @@ from data_utils import (
     VISUALIZATION_RESULTS_DIR,
     DetailedJSONStatsInterface,
     ObjectModel,
+    aggregate_1lm_performance_data,
     get_frequency,
     load_eval_stats,
     load_object_model,
@@ -194,43 +195,36 @@ def plot_performance():
         "surf_agent_1lm_randrot_noise_nohyp",
         "surf_agent_1lm_randrot_noise",
     ]
+    performance = aggregate_1lm_performance_data(experiments)
+
+    fig, axes = plt.subplots(1, 2, figsize=(3.65, 2.55))
     xticks = np.arange(len(experiments))
     xticklabels = [
         "Random Walk",
         "Model-Free",
         "Model-Based",
     ]
-    eval_stats = []
-    for exp in experiments:
-        eval_stats.append(load_eval_stats(exp))
 
-    fig, axes = plt.subplots(1, 2, figsize=(3.65, 2.55))
-
+    # Plot accuracy.
     ax = axes[0]
-    accuracies, accuracies_mlh = [], []
-    for df in eval_stats:
-        accuracies.append(100 * get_frequency(df["primary_performance"], "correct"))
-        accuracies_mlh.append(
-            100 * get_frequency(df["primary_performance"], "correct_mlh")
-        )
-    ax.bar(xticks, accuracies, width=0.8, color=TBP_COLORS["blue"])
+    ax.bar(xticks, performance["percent.correct"], width=0.8, color=TBP_COLORS["blue"])
     ax.bar(
-        xticks, accuracies_mlh, bottom=accuracies, width=0.8, color=TBP_COLORS["yellow"]
+        xticks,
+        performance["percent.correct_mlh"],
+        bottom=performance["percent.correct"],
+        width=0.8,
+        color=TBP_COLORS["yellow"],
     )
-
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
     ax.set_ylabel("% Correct")
     ax.set_ylim(0, 100)
     ax.legend(["Converged", "Timed-Out"], loc="lower right", framealpha=1)
 
+    # Plot number of steps.
     ax = axes[1]
-    n_steps = []
-    for df in eval_stats:
-        n_steps.append(df["num_steps"])
-
     violinplot(
-        n_steps,
+        performance["n_steps"],
         xticks,
         color=TBP_COLORS["blue"],
         showmedians=True,
@@ -244,10 +238,13 @@ def plot_performance():
     ax.set_ylabel("Steps")
     ax.set_ylim(0, 500)
     fig.tight_layout()
-
     fig.savefig(out_dir / "performance.png", bbox_inches="tight")
     fig.savefig(out_dir / "performance.svg", bbox_inches="tight")
     plt.show()
+
+    # Save the performance table.
+    performance = performance.drop(columns=["n_steps", "rotation_error"])
+    performance.to_csv(out_dir / "performance.csv")
 
 
 """

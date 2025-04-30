@@ -32,10 +32,12 @@ Running the above functions requires that the following experiments have been ru
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from data_utils import (
     DMC_ANALYSIS_DIR,
     VISUALIZATION_RESULTS_DIR,
     DetailedJSONStatsInterface,
+    aggregate_1lm_performance_data,
     load_eval_stats,
     load_object_model,
 )
@@ -352,8 +354,8 @@ def plot_performance() -> None:
     """Plot core performance metrics.
 
     Requires the experiments `dist_agent_1lm`, `dist_agent_1lm_noise`,
-    `dist_agent_1lm_randrot_all`, and `dist_agent_1lm_randrot_all_noise` have been
-    run.
+    `dist_agent_1lm_randrot_all`, `dist_agent_1lm_randrot_all_noise`, and
+    `dist_agent_1lm_randrot_all_noise_color_clamped` have been run.
 
     Output is saved to `DMC_ANALYSIS_DIR/fig3/performance/`.
     """
@@ -362,18 +364,14 @@ def plot_performance() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Load the stats.
-    dataframes = [
-        load_eval_stats("dist_agent_1lm"),
-        load_eval_stats("dist_agent_1lm_noise_all"),
-        load_eval_stats("dist_agent_1lm_randrot_14"),
-        load_eval_stats("dist_agent_1lm_randrot_14_noise_all"),
-        load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped"),
+    experiments = [
+        "dist_agent_1lm",
+        "dist_agent_1lm_noise_all",
+        "dist_agent_1lm_randrot_14",
+        "dist_agent_1lm_randrot_14_noise_all",
+        "dist_agent_1lm_randrot_14_noise_all_color_clamped",
     ]
-    accuracy, rotation_error = [], []
-    for i, df in enumerate(dataframes):
-        sub_df = df[df.primary_performance.isin(["correct", "correct_mlh"])]
-        accuracy.append(100 * len(sub_df) / len(df))
-        rotation_error.append(np.degrees(sub_df.rotation_error))
+    performance = aggregate_1lm_performance_data(experiments)
 
     # Initialize the plot.
     axes_width, axes_height = 2.81, 1.75
@@ -389,15 +387,15 @@ def plot_performance() -> None:
     bar_width = 0.4
     violin_width = 0.4
     gap = 0.04
-    xticks = np.arange(len(dataframes)) * 1.3
+    xticks = np.arange(len(experiments)) * 1.3
     bar_positions = xticks - bar_width / 2 - gap / 2
     violin_positions = xticks + violin_width / 2 + gap / 2
     median_style = dict(color="lightgray", lw=1, ls="-")
 
-    # Plot accuracy bars
+    # Plot accuracy
     ax1.bar(
         bar_positions,
-        accuracy,
+        performance["accuracy"],
         color=TBP_COLORS["blue"],
         width=bar_width,
     )
@@ -406,7 +404,7 @@ def plot_performance() -> None:
 
     # Plot rotation error violins
     violinplot(
-        rotation_error,
+        performance["rotation_error"],
         violin_positions,
         width=violin_width,
         color=TBP_COLORS["purple"],
@@ -426,8 +424,6 @@ def plot_performance() -> None:
         "noise",
         "RR",
         "noise+RR",
-        "RR\n(hsv clamped)",
-        "noise+RR\n(hue clamped)",
         "noise+RR\n(hsv clamped)",
     ]
     ax1.set_xticklabels(xticklabels, rotation=45, ha="center")
@@ -439,6 +435,10 @@ def plot_performance() -> None:
     fig.savefig(out_dir / "performance.png")
     fig.savefig(out_dir / "performance.svg")
     plt.show()
+
+    # Save the performance table.
+    performance = performance.drop(columns=["n_steps", "rotation_error"])
+    performance.to_csv(out_dir / "performance.csv")
 
 
 def draw_icons():
@@ -539,6 +539,7 @@ def draw_icons():
     fig.savefig(out_dir / "icons.png")
     fig.savefig(out_dir / "icons.svg")
     plt.show()
+
 
 
 if __name__ == "__main__":
