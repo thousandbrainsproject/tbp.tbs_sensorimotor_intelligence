@@ -367,9 +367,7 @@ def plot_performance() -> None:
         load_eval_stats("dist_agent_1lm_noise_all"),
         load_eval_stats("dist_agent_1lm_randrot_14"),
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all"),
-        load_eval_stats("dist_agent_1lm_randrot_14_color_clamped"),
         load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped"),
-        load_eval_stats("dist_agent_1lm_randrot_14_noise_all_color_clamped_hsv"),
     ]
     accuracy, rotation_error = [], []
     for i, df in enumerate(dataframes):
@@ -479,11 +477,6 @@ def draw_icons():
         },
         {
             "label": "noise+RR\n(hsv clamped)",
-            "noise": standard_noise_params,
-            "rotation": [45, 10, 30],
-        },
-        {
-            "label": "noise+RR\n(hue clamped)",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
