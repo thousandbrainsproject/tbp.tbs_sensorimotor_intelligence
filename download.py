@@ -7,7 +7,7 @@ from pathlib import Path
 
 TESTING = False
 
-help_text = """
+description = """
 Download and extract datasets for `tbp.tbs_sensorimotor_intelligence`.
 
 This script may be used to download data needed to run experiments and/or analysis
@@ -44,9 +44,8 @@ Notes:
 
 """
 parser = argparse.ArgumentParser(
-    description=help_text,
+    description=description,
     formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog="",
 )
 parser.add_argument(
     "file_ids",
@@ -115,7 +114,7 @@ FILE_GROUPS = {
 
 
 def confirm_overwrite(path: Path) -> bool:
-    """Ask the user if it should overwrite a file.
+    """Ask the user if it should overwrite an existing file.
 
     Args:
         file_id: The id of the file to check (e.g. "monty.pretrained_models")
@@ -137,7 +136,11 @@ def confirm_overwrite(path: Path) -> bool:
 
 
 def download_file(file_id: str) -> None:
-    """Download a file."""
+    """Download and extract a dataset.
+
+    Args:
+        file_id: The id of the file to download (e.g. "monty.pretrained_models").
+    """
     info = FILE_INFO[file_id]
 
     # Check if the (uncompressed) destination already exists. If so, ask the user
@@ -180,7 +183,7 @@ def download_file(file_id: str) -> None:
 
 
 def download_habitat() -> None:
-    """Download the habitat data."""
+    """Download the YCB object dataset."""
     monty_data_dir = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
     habitat_data_dir = monty_data_dir / "habitat"
     if habitat_data_dir.exists():
@@ -203,7 +206,8 @@ def download_habitat() -> None:
     sp.run(command)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Download and extract datasets."""
     args = parser.parse_args()
 
     to_download = list(args.file_ids)
@@ -230,3 +234,7 @@ if __name__ == "__main__":
     # Download the files.
     for file_id in to_download:
         download_file(file_id)
+
+
+if __name__ == "__main__":
+    main()
