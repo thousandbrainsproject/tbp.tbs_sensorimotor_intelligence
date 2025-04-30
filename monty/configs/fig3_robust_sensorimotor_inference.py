@@ -139,17 +139,18 @@ class ClampedColorSM(FeatureChangeSM):
 
     def step(self, data):
         """Return Features if they changed significantly."""
-        patch_observation = super().step(data)  # get extracted features
+        # Extract features.
+        patch_observation = super().step(data)
+        # Force hsv to solid blue.
         if "hsv" in patch_observation.non_morphological_features:
-            # hsv clamping
             patch_observation.non_morphological_features["hsv"] = np.array(
                 [0.667, 1.0, 1.0]
             )
-            # hue clamping
-            # patch_observation.non_morphological_features["hsv"][0] = 0.667
         return patch_observation
 
 
+# - Random rotation variant (14 random rotations) and sensor noise with
+#   the 'hsv' feature clamped to solid blue.
 dist_agent_1lm_randrot_14_noise_all_color_clamped = deepcopy(
     dist_agent_1lm_randrot_14_noise_all
 )
@@ -161,15 +162,6 @@ dist_agent_1lm_randrot_14_noise_all_color_clamped["monty_config"].sensor_module_
     "sensor_module_0"
 ]["sensor_module_class"] = ClampedColorSM
 
-# no noise - temp
-dist_agent_1lm_randrot_14_color_clamped = deepcopy(dist_agent_1lm_randrot_14)
-dist_agent_1lm_randrot_14_color_clamped[
-    "logging_config"
-].run_name = "dist_agent_1lm_randrot_14_color_clamped"
-
-dist_agent_1lm_randrot_14_color_clamped["monty_config"].sensor_module_configs[
-    "sensor_module_0"
-]["sensor_module_class"] = ClampedColorSM
 
 CONFIGS = {
     "dist_agent_1lm": dist_agent_1lm,
@@ -177,5 +169,4 @@ CONFIGS = {
     "dist_agent_1lm_randrot_14": dist_agent_1lm_randrot_14,
     "dist_agent_1lm_randrot_14_noise_all": dist_agent_1lm_randrot_14_noise_all,
     "dist_agent_1lm_randrot_14_noise_all_color_clamped": dist_agent_1lm_randrot_14_noise_all_color_clamped,
-    "dist_agent_1lm_randrot_14_color_clamped": dist_agent_1lm_randrot_14_color_clamped,
 }
