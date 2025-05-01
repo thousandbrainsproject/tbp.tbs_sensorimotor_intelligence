@@ -79,6 +79,19 @@ Figure 2
 -------------------------------------------------------------------------------
 """
 
+# `fig2_object_views`: Captures high-resolution images from the view-finder
+# to demonstrate the rotations of the object during training.
+fig2_object_views = deepcopy(view_finder_base)
+fig2_object_views["logging_config"].run_name = "fig2_object_views"
+fig2_object_views["logging_config"].output_dir = str(VISUALIZATION_RESULTS_DIR)
+fig2_object_views["eval_dataloader_args"].object_names = ["potted_meat_can"]
+fig2_object_views["dataset_args"].env_init_args["agents"][0].agent_args[
+    "resolutions"
+] = [[64, 64], [512, 512]]
+fig2_object_views["dataset_args"].__post_init__()
+
+# `fig2_pretrain_surf_agent_1lm_checkpoints`: Saves checkpoints after each training
+# epoch. Used to visualize the training progress of the surface agent.
 fig2_pretrain_surf_agent_1lm_checkpoints = deepcopy(pretrain_surf_agent_1lm)
 fig2_pretrain_surf_agent_1lm_checkpoints.update(
     dict(
@@ -93,16 +106,6 @@ fig2_pretrain_surf_agent_1lm_checkpoints.update(
         ),
     )
 )
-
-fig2_object_views = deepcopy(view_finder_base)
-fig2_object_views["logging_config"].run_name = "fig2_object_views"
-fig2_object_views["logging_config"].output_dir = str(VISUALIZATION_RESULTS_DIR)
-fig2_object_views["eval_dataloader_args"].object_names = ["potted_meat_can"]
-fig2_object_views["dataset_args"].env_init_args["agents"][0].agent_args[
-    "resolutions"
-] = [[64, 64], [512, 512]]
-fig2_object_views["dataset_args"].__post_init__()
-
 
 """
 Figure 3
@@ -345,10 +348,10 @@ fig6_hypothesis_driven_policy["eval_dataloader_args"] = (
 )
 
 CONFIGS = {
+    "fig2_object_views": fig2_object_views,
     "fig2_pretrain_surf_agent_1lm_checkpoints": (
         fig2_pretrain_surf_agent_1lm_checkpoints
     ),
-    "fig2_object_views": fig2_object_views,
     "fig3_evidence_run": fig3_evidence_run,
     "fig4_symmetry_run": fig4_symmetry_run,
     "fig5_visualize_8lm_patches": fig5_visualize_8lm_patches,
