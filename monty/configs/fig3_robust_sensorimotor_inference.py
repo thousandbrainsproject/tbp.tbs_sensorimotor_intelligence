@@ -138,7 +138,7 @@ class ClampedColorSM(FeatureChangeSM):
     """Sensor module that clamps the hsv feature to blue."""
 
     def step(self, data):
-        """Return Features if they changed significantly."""
+        """Clamp hsv to solid blue if the observation is usable."""
         # Extract features.
         patch_observation = super().step(data)
         # Force hsv to solid blue.
