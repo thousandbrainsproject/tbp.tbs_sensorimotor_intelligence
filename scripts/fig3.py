@@ -424,7 +424,7 @@ def plot_performance() -> None:
         "noise+RR",
         "noise+RR\n(uniform hsv)",
     ]
-    ax1.set_xticklabels(xticklabels, rotation=45, ha="center")
+    ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
     ax1.spines["right"].set_visible(True)
     ax2.spines["right"].set_visible(True)
@@ -469,7 +469,7 @@ def draw_icons():
             "rotation": [45, 10, 30],
         },
         {
-            "label": "RR + noise",
+            "label": "noise+RR",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
@@ -536,8 +536,8 @@ def draw_icons():
 
 
 if __name__ == "__main__":
-    # plot_known_objects()
-    # plot_evidence_graphs_and_patches()
-    # plot_sensor_path()
+    plot_known_objects()
+    plot_evidence_graphs_and_patches()
+    plot_sensor_path()
     plot_performance()
     draw_icons()
