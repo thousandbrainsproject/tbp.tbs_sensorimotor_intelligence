@@ -13,25 +13,26 @@ paper figures. The configs defined are:
 - `fig2_pretrain_surf_agent_1lm_checkpoints`: A pretraining experiment that saves
   checkpoints for the 14 training rotations. The output is read and plotted by
   functions in `scripts/fig2.py`.
-- `fig2_potted_meat_can_views`: An experiment that saves high-resolution images
-  captured from the view-finder of the potted meat can at 14 standard training
-  rotations. The output is read and plotted by functions in `scripts/fig2.py`.
+- `fig2_object_views`: An experiment that saves high-resolution images (512x512)
+  captured from the view-finder at all 14 training resolutions. Data from this
+  experiment is used by `scripts/fig2.py` to show the potted meat can from
+  different angles.
 - `fig3_evidence_run`: A one-episode distant agent experiment used to collect evidence
   and sensor data for every step. The output is read and plotted by functions in
   `scripts/fig3.py`.
 - `fig4_symmetry_run`: Runs `dist_agent_1lm_randrot_noise` with storage of
-   evidence and symmetry including symmetry data for the MLH object only, and only
-   for the terminal step of each episode. The output is read and plotted by
-   functions in `scripts/fig4.py`.
+  evidence and symmetry including symmetry data for the MLH object only, and only
+  for the terminal step of each episode. The output is read and plotted by
+  functions in `scripts/fig4.py`.
 - `fig5_visualize_8lm_patches`: An one-episode, one-step experiment that is used to
-   collect one set of observations for the 8-LM model. The output is read and plotted
-   by functions in `scripts/fig5.py` to show how the sensors patches fall on the object.
+  collect one set of observations for the 8-LM model. The output is read and plotted
+  by functions in `scripts/fig5.py` to show how the sensors patches fall on the object.
 - `fig6_curvature_guided_policy`: A one-episode surface agent experiment with
-   no hypothesis-testing policy active. The output is read and plotted by
-   functions in `scripts/fig6.py`.
+  no hypothesis-testing policy active. The output is read and plotted by
+  functions in `scripts/fig6.py`.
 - `fig6_hypothesis_driven_policy`: A one-episode surface agent experiment with
-   hypothesis-testing policy active. The output is read and plotted by
-   functions in `scripts/fig6.py`.
+  hypothesis-testing policy active. The output is read and plotted by
+  functions in `scripts/fig6.py`.
 
 All of these experiments should be run in serial due to the memory needs of
 detailed logging (or checkpoint-saving in the case of
@@ -93,14 +94,14 @@ fig2_pretrain_surf_agent_1lm_checkpoints.update(
     )
 )
 
-fig2_potted_meat_can_views = deepcopy(view_finder_base)
-fig2_potted_meat_can_views["logging_config"].run_name = "fig2_potted_meat_can_views"
-fig2_potted_meat_can_views["logging_config"].output_dir = str(VISUALIZATION_RESULTS_DIR)
-fig2_potted_meat_can_views["eval_dataloader_args"].object_names = ["potted_meat_can"]
-fig2_potted_meat_can_views["dataset_args"].env_init_args["agents"][0].agent_args[
+fig2_object_views = deepcopy(view_finder_base)
+fig2_object_views["logging_config"].run_name = "fig2_object_views"
+fig2_object_views["logging_config"].output_dir = str(VISUALIZATION_RESULTS_DIR)
+fig2_object_views["eval_dataloader_args"].object_names = ["potted_meat_can"]
+fig2_object_views["dataset_args"].env_init_args["agents"][0].agent_args[
     "resolutions"
 ] = [[64, 64], [512, 512]]
-fig2_potted_meat_can_views["dataset_args"].__post_init__()
+fig2_object_views["dataset_args"].__post_init__()
 
 
 """
@@ -347,7 +348,7 @@ CONFIGS = {
     "fig2_pretrain_surf_agent_1lm_checkpoints": (
         fig2_pretrain_surf_agent_1lm_checkpoints
     ),
-    "fig2_potted_meat_can_views": fig2_potted_meat_can_views,
+    "fig2_object_views": fig2_object_views,
     "fig3_evidence_run": fig3_evidence_run,
     "fig4_symmetry_run": fig4_symmetry_run,
     "fig5_visualize_8lm_patches": fig5_visualize_8lm_patches,
