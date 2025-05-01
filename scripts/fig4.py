@@ -695,7 +695,7 @@ def plot_symmetry_stats():
 
 
 if __name__ == "__main__":
-    # plot_dendrogram()
-    # plot_similar_object_models()
-    # plot_symmetry_episodes()
+    plot_dendrogram()
+    plot_similar_object_models()
+    plot_symmetry_episodes()
     plot_symmetry_stats()
