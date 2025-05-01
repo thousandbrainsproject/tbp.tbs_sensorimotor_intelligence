@@ -10,13 +10,13 @@
 
 This file contains configs defined solely for making visualizations that go into
 paper figures. The configs defined are:
-- `fig2_pretrain_surf_agent_1lm_checkpoints`: A pretraining experiment that saves
-  checkpoints for the 14 training rotations. The output is read and plotted by
-  functions in `scripts/fig2.py`.
 - `fig2_object_views`: An experiment that saves high-resolution images (512x512)
   captured from the view-finder at all 14 training resolutions. Data from this
   experiment is used by `scripts/fig2.py` to show the potted meat can from
   different angles.
+- `fig2_pretrain_surf_agent_1lm_checkpoints`: A pretraining experiment that saves
+  checkpoints for the 14 training rotations. The output is read and plotted by
+  functions in `scripts/fig2.py`.
 - `fig3_evidence_run`: A one-episode distant agent experiment used to collect evidence
   and sensor data for every step. The output is read and plotted by functions in
   `scripts/fig3.py`.
