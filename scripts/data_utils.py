@@ -320,19 +320,6 @@ def get_frequency(items: Iterable, match: Union[Any, Container[Any]]) -> float:
     return n_matching / len(s)
 
 
-def get_percent_correct(df: pd.DataFrame) -> float:
-    """Get percent of correct object recognition for an `eval_stats` dataframe.
-
-    Uses the 'primary_performance' column. Values 'correct' or 'correct_mlh' count
-    as correct.
-
-    TODO: Update/replace to handle mult-LM cases.
-
-    """
-    n_correct = df.primary_performance.str.startswith("correct").sum()
-    return 100 * n_correct / len(df)
-
-
 def aggregate_1lm_performance_data(experiments: Iterable[str]) -> pd.DataFrame:
     """Save the performance table for the single LM experiments.
 
