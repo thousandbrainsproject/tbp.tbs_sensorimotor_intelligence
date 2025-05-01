@@ -634,16 +634,20 @@ def plot_symmetry_stats():
     # Load stats.
     stat_arrays = get_symmetry_stats()
 
-    # Create figure.
-    fig, axes = plt.subplots(1, 2, figsize=(5, 2))
+    # Plot params.
+    axes_width, axes_height = 1.4, 1.55
+    axes_frac = 0.7
+    axes_loc = (1 - axes_frac) / 2
     rotation_types = ["min", "MLH", "sym", "rand"]
     xticks = list(range(1, len(rotation_types) + 1))
     xticklabels = ["min", "MLH", "sym", "rand"]
     median_style = dict(color="lightgray", lw=2)
-    # Pose Error
-    ax = axes[0]
-    arrays = [stat_arrays["pose_error"][name] for name in rotation_types]
 
+    # Plot rotation error.
+    fig = plt.figure(figsize=(axes_width / axes_frac, axes_height / axes_frac))
+    ax = fig.add_axes([axes_loc, axes_loc, axes_frac, axes_frac])
+
+    arrays = [stat_arrays["pose_error"][name] for name in rotation_types]
     violinplot(
         arrays,
         xticks,
@@ -658,9 +662,15 @@ def plot_symmetry_stats():
     ax.set_yticks([0, 45, 90, 135, 180])
     ax.set_ylim(0, 180)
     ax.set_ylabel("Rotation Error (deg)")
+    fig.tight_layout()
+    fig.savefig(out_dir / "rotation_error.png")
+    fig.savefig(out_dir / "rotation_error.svg")
+    plt.show()
 
-    # Chamfer Distance
-    ax = axes[1]
+    # Plot chamfer distance.
+    fig = plt.figure(figsize=(axes_width / axes_frac, axes_height / axes_frac))
+    ax = fig.add_axes([axes_loc, axes_loc, axes_frac, axes_frac])
+
     arrays = [stat_arrays["Chamfer"][name] for name in rotation_types]
     violinplot(
         arrays,
@@ -678,14 +688,14 @@ def plot_symmetry_stats():
     ax.set_ylim(0, ymax)
 
     fig.tight_layout()
-    fig.savefig(out_dir / "symmetry_stats.png")
-    fig.savefig(out_dir / "symmetry_stats.svg")
+    fig.savefig(out_dir / "chamfer_distance.png")
+    fig.savefig(out_dir / "chamfer_distance.svg")
     plt.show()
 
 
 
 if __name__ == "__main__":
-    plot_dendrogram()
-    plot_similar_object_models()
-    plot_symmetry_episodes()
+    # plot_dendrogram()
+    # plot_similar_object_models()
+    # plot_symmetry_episodes()
     plot_symmetry_stats()
