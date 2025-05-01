@@ -142,10 +142,13 @@ class ClampedColorSM(FeatureChangeSM):
         # Extract features.
         patch_observation = super().step(data)
         # Force hsv to solid blue.
-        if "hsv" in patch_observation.non_morphological_features:
-            patch_observation.non_morphological_features["hsv"] = np.array(
-                [0.667, 1.0, 1.0]
-            )
+        if patch_observation.use_state:
+            if "hsv" in patch_observation.non_morphological_features:
+                patch_observation.non_morphological_features["hsv"] = np.array(
+                    [0.667, 1.0, 1.0]
+                )
+            else:
+                raise ValueError("hsv feature not found")
         return patch_observation
 
 
