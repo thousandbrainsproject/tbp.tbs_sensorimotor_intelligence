@@ -396,7 +396,6 @@ def plot_dendrogram():
     ax.set_ylabel("Cluster Distance (m)", fontsize=10)
     ax.set_yticks([0, 0.05, 0.1, 0.15, 0.2])
 
-    plt.tight_layout()
     plt.show()
     fig.savefig(out_dir / "dendrogram.png")
     fig.savefig(out_dir / "dendrogram.svg")
