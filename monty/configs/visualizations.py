@@ -10,16 +10,20 @@
 
 This file contains configs defined solely for making visualizations that go into
 paper figures. The configs defined are:
+- `fig2_object_views`: An experiment that saves high-resolution images (512x512)
+  captured from the view-finder at all 14 training resolutions. Data from this
+  experiment is used by `scripts/fig2.py` to show the potted meat can from
+  different angles.
 - `fig2_pretrain_surf_agent_1lm_checkpoints`: A pretraining experiment that saves
   checkpoints for the 14 training rotations. The output is read and plotted by
   functions in `scripts/fig2.py`.
 - `fig3_evidence_run`: A one-episode distant agent experiment used to collect evidence
-   and sensor data for every step. The output is read and plotted by functions in
-    `scripts/fig3.py`.
+  and sensor data for every step. The output is read and plotted by functions in
+  `scripts/fig3.py`.
 - `fig4_symmetry_run`: Runs `dist_agent_1lm_randrot_noise` with storage of
-   evidence and symmetry including symmetry data for the MLH object only, and only
-   for the terminal step of each episode. The output is read and plotted by
-   functions in `scripts/fig4.py`.
+  evidence and symmetry including symmetry data for the MLH object only, and only
+  for the terminal step of each episode. The output is read and plotted by
+  functions in `scripts/fig4.py`.
 - `fig5_visualize_8lm_patches`: An one-episode, one-step experiment that is used to
   collect one set of observations for the 8-LM model. The output is read and plotted
   by functions in `scripts/fig5.py` to show how the sensors patches fall on the object.
@@ -65,6 +69,7 @@ from .fig7_rapid_learning import (
     PretrainingExperimentWithCheckpointing,
 )
 from .pretraining_experiments import TRAIN_ROTATIONS, pretrain_surf_agent_1lm
+from .view_finder_images import view_finder_base
 
 # Main output directory for visualization experiment results.
 VISUALIZATION_RESULTS_DIR = DMC_ROOT_DIR / "visualizations"
@@ -74,6 +79,19 @@ Figure 2
 -------------------------------------------------------------------------------
 """
 
+# `fig2_object_views`: Captures high-resolution images from the view-finder
+# to demonstrate the rotations of the object during training.
+fig2_object_views = deepcopy(view_finder_base)
+fig2_object_views["logging_config"].run_name = "fig2_object_views"
+fig2_object_views["logging_config"].output_dir = str(VISUALIZATION_RESULTS_DIR)
+fig2_object_views["eval_dataloader_args"].object_names = ["potted_meat_can"]
+fig2_object_views["dataset_args"].env_init_args["agents"][0].agent_args[
+    "resolutions"
+] = [[64, 64], [512, 512]]
+fig2_object_views["dataset_args"].__post_init__()
+
+# `fig2_pretrain_surf_agent_1lm_checkpoints`: Saves checkpoints after each training
+# epoch. Used to visualize the training progress of the surface agent.
 fig2_pretrain_surf_agent_1lm_checkpoints = deepcopy(pretrain_surf_agent_1lm)
 fig2_pretrain_surf_agent_1lm_checkpoints.update(
     dict(
@@ -330,6 +348,7 @@ fig6_hypothesis_driven_policy["eval_dataloader_args"] = (
 )
 
 CONFIGS = {
+    "fig2_object_views": fig2_object_views,
     "fig2_pretrain_surf_agent_1lm_checkpoints": (
         fig2_pretrain_surf_agent_1lm_checkpoints
     ),

@@ -168,6 +168,8 @@ and corners).
 
 `visualizations.py` contains configs defined solely for making visualizations that go into
 paper figures. The configs defined are:
+- `fig2_object_views`: A one-object experiment that saves high-resolution images from
+  the view-finder. Used to create images of the `potted_meat_can` in figure 2.
 - `fig2_pretrain_surf_agent_1lm_checkpoints`: A pretraining experiment that saves
   checkpoints for the 14 training rotations. The output is read and plotted by
   functions in `scripts/fig2.py`.
@@ -199,6 +201,5 @@ All experiments save their results to subdirectories of `DMC_ROOT` / `visualizat
 - view_finder_base: 14 standard training rotations
 - view_finder_randrot: 5 pre-defined "random" rotations
 - view_finder_32: 32 training rotations for rapid learning experiments
-- view_finder_base_highres: 14 standard training rotations at 512x512 resolution.
   
-Note these experiments are not used for object recognition in Monty. Rather, they use Monty to capture and store images of objects in the YCB dataset. The first four experiments are used for generating training/testing data for the ViT-based model, and the last experiment (`view_finder_base_highres`) is used to capture higher resolution images used in some figures and illustrations. Arrays stored during these experiments can be rendered by `scripts/render_view_finder_images.py`.
+These experiments are not used for object recognition in Monty. Rather, they use Monty to capture and store images of objects in the YCB dataset. Arrays stored during these experiments can be rendered by `scripts/render_view_finder_images.py`.
