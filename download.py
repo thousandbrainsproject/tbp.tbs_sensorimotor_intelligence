@@ -130,7 +130,6 @@ def download_dmc_dataset(dataset: str) -> None:
             else:
                 dataset_info["destination.uncompressed"].unlink()
         else:
-            print(f"Skipping {dataset}.")
             return
 
     # Download the file.
@@ -167,7 +166,6 @@ def download_ycb_dataset() -> None:
         if overwrite:
             shutil.rmtree(habitat_data_dir)
         else:
-            print("Skipping habitat data download.")
             return
 
     command = [
@@ -193,7 +191,7 @@ def main() -> None:
 
     # Validate the arguments.
     for name in datasets:
-        if name not in DATASETS:
+        if not (name in DATASETS or name == "ycb"):
             print(f"Invalid dataset name '{name}'.")
             sys.exit(1)
 
