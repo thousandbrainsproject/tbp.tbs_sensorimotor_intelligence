@@ -26,6 +26,8 @@ Running the above functions requires that the following experiments have been ru
  - `dist_agent_16lm_randrot_noise`
 """
 
+from typing import Iterable
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -50,14 +52,6 @@ np.random.seed(0)
 OUT_DIR = DMC_ANALYSIS_DIR / "fig5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Experiment names
-ONE_LM_EXPERIMENT = "dist_agent_1lm_randrot_noise"
-MULTI_LM_EXPERIMENTS = (
-    "dist_agent_2lm_randrot_noise",
-    "dist_agent_4lm_randrot_noise",
-    "dist_agent_8lm_randrot_noise",
-    "dist_agent_16lm_randrot_noise",
-)
 
 """
 --------------------------------------------------------------------------------
@@ -70,7 +64,7 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     """Reduce the eval stats dataframe to a single row per episode.
 
     The main purpose of this function is to classify an episode as either "correct"
-    or "confused" based on the number of correct and confused performances (or
+    or "confused" based on the number of correct and confused LMs in an episode (or
     "correct_mlh" and "confused_mlh" for timed-out episodes).
 
     Args:
@@ -112,11 +106,6 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
         # found = []
         for name in performance_options:
             row[f"n_{name}"] = perf_counts[name]
-        #     if perf_counts[name] > 0:
-        #         found.append(name)
-        # performance = found[0]
-        # if performance not in ("correct", "confused", "correct_mlh", "confused_mlh"):
-        #     raise ValueError(f"Invalid performance: {performance}")
 
         # Decide performance based on the number of correct/confused LM and
         # correct_mlh/confused_mlh LMs. The rules are as follows:
@@ -213,20 +202,51 @@ def reduce_eval_stats(eval_stats: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def get_accuracy(experiment: str) -> float:
-    """Get the percent correct and percent LMS tied for an experiment."""
-    eval_stats = load_eval_stats(experiment)
-    reduced_stats = reduce_eval_stats(eval_stats)
-    percent_correct = 100 * get_frequency(
-        reduced_stats["primary_performance"], ("correct", "correct_mlh")
-    )
-    return percent_correct
+def aggregate_multilm_performance_data(experiments: Iterable[str]) -> pd.DataFrame:
+    """Save the performance table for the single LM experiments.
 
+    Output is saved to `DMC_ANALYSIS_DIR/fig3/performance/single_lm_performance.csv`.
+    """
 
-def get_n_steps(experiment: str) -> np.ndarray:
-    """Get the number of steps taken across all LMs for an experiment."""
-    eval_stats = load_eval_stats(experiment)
-    return eval_stats.num_steps.values
+    columns = {
+        "accuracy": [],
+        "percent.correct": [],
+        "percent.correct_mlh": [],
+        "n_steps": [],
+        "n_steps.mean": [],
+        "n_steps.median": [],
+        "rotation_error": [],
+        "rotation_error.mean": [],
+        "rotation_error.median": [],
+    }
+    for exp in experiments:
+        eval_stats = load_eval_stats(exp)
+        reduced_stats = reduce_eval_stats(eval_stats)
+        accuracy = 100 * get_frequency(
+            reduced_stats["primary_performance"], ("correct", "correct_mlh")
+        )
+        percent_correct = 100 * get_frequency(
+            reduced_stats["primary_performance"], "correct"
+        )
+        percent_correct_mlh = 100 * get_frequency(
+            reduced_stats["primary_performance"], "correct_mlh"
+        )
+        n_steps = eval_stats["num_steps"]
+        rotation_error = np.degrees(eval_stats.rotation_error.dropna())
+
+        columns["accuracy"].append(accuracy)
+        columns["percent.correct"].append(percent_correct)
+        columns["percent.correct_mlh"].append(percent_correct_mlh)
+
+        columns["n_steps"].append(n_steps)
+        columns["n_steps.mean"].append(n_steps.mean())
+        columns["n_steps.median"].append(n_steps.median())
+
+        columns["rotation_error"].append(rotation_error)
+        columns["rotation_error.mean"].append(rotation_error.mean())
+        columns["rotation_error.median"].append(rotation_error.median())
+
+    return pd.DataFrame(columns, index=experiments)
 
 
 """
@@ -407,9 +427,14 @@ def plot_accuracy():
     out_dir = OUT_DIR / "performance"
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    one_lm_color = TBP_COLORS["blue"]
-    multi_lm_group = MULTI_LM_EXPERIMENTS
-    multi_lm_color = TBP_COLORS["purple"]
+    experiments = [
+        "dist_agent_1lm_randrot_noise",
+        "dist_agent_2lm_randrot_noise",
+        "dist_agent_4lm_randrot_noise",
+        "dist_agent_8lm_randrot_noise",
+        "dist_agent_16lm_randrot_noise",
+    ]
+    performance = aggregate_multilm_performance_data(experiments)
 
     fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
     top_ax, bottom_ax = axes
@@ -417,28 +442,25 @@ def plot_accuracy():
 
     # Plot params.
     ylims = [(0, 25), (75, 100)]
-    bar_width = 0.8
     xticks = np.arange(5)
 
     # 1-LM
-    percent_correct_1lm = get_accuracy(ONE_LM_EXPERIMENT)
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.bar(
             xticks[0],
-            [percent_correct_1lm],
-            color=one_lm_color,
-            width=bar_width,
+            [performance.accuracy[0]],
+            color=TBP_COLORS["blue"],
+            width=0.8,
             label="no voting",
         )
 
     # Multi-LM
-    percent_correct = np.array([get_accuracy(exp) for exp in multi_lm_group])
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         ax.bar(
             xticks[1:],
-            percent_correct,
-            color=multi_lm_color,
-            width=bar_width,
+            performance.accuracy[1:],
+            color=TBP_COLORS["purple"],
+            width=0.8,
             label="voting",
         )
 
@@ -500,9 +522,14 @@ def plot_steps():
     out_dir = OUT_DIR / "performance"
     out_dir.mkdir(exist_ok=True, parents=True)
 
-    one_lm_color = TBP_COLORS["blue"]
-    multi_lm_group = MULTI_LM_EXPERIMENTS
-    multi_lm_color = TBP_COLORS["purple"]
+    experiments = [
+        "dist_agent_1lm_randrot_noise",
+        "dist_agent_2lm_randrot_noise",
+        "dist_agent_4lm_randrot_noise",
+        "dist_agent_8lm_randrot_noise",
+        "dist_agent_16lm_randrot_noise",
+    ]
+    performance = aggregate_multilm_performance_data(experiments)
 
     fig = plt.figure(figsize=(3.4, 3))
     gs = fig.add_gridspec(3, 1)  # 3 rows, bottom plot will take 2 rows
@@ -518,33 +545,28 @@ def plot_steps():
         [0, 25, 50, 75, 100],
         [450, 475, 500],
     ]
-    bar_width = 0.8
     xticks = np.arange(5)
-    bw_method = 0.1
 
-    # 1-LM violin plot and mean marker.
-    n_steps_1lm = get_n_steps(ONE_LM_EXPERIMENT)
+    # Plot distribution of n_steps for 1-LM
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         violinplot(
-            [n_steps_1lm],
+            [performance.n_steps[0]],
             [xticks[0]],
-            color=one_lm_color,
-            width=bar_width,
+            color=TBP_COLORS["blue"],
+            width=0.8,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
-            bw_method=bw_method,
+            bw_method=0.1,
             ax=ax,
         )
 
-    # Multi-LM violin plot and mean marker.
-    n_steps = [get_n_steps(exp) for exp in multi_lm_group]
-    means = [np.mean(arr) for arr in n_steps]
+    # Plot distribution of n_steps for >1 LM
     for ax_num, ax in enumerate([bottom_ax, top_ax]):
         violinplot(
-            n_steps,
+            performance.n_steps[1:],
             xticks[1:],
-            color=multi_lm_color,
-            width=bar_width,
+            color=TBP_COLORS["purple"],
+            width=0.8,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
             bw_method=bw_method,
@@ -552,7 +574,7 @@ def plot_steps():
         )
 
     # Plot a line connecting the means across all conditions.
-    means = [np.mean(n_steps_1lm)] + [np.mean(arr) for arr in n_steps]
+    means = performance["n_steps.mean"]
     for ax in [bottom_ax, top_ax]:
         ax.scatter(
             xticks,
@@ -595,7 +617,24 @@ def plot_steps():
     plt.show()
 
 
+def save_performance_table() -> None:
+    """Save the performance metrics to a CSV file."""
+    out_dir = OUT_DIR / "performance"
+    out_dir.mkdir(exist_ok=True, parents=True)
+    experiments = [
+        "dist_agent_1lm_randrot_noise",
+        "dist_agent_2lm_randrot_noise",
+        "dist_agent_4lm_randrot_noise",
+        "dist_agent_8lm_randrot_noise",
+        "dist_agent_16lm_randrot_noise",
+    ]
+    performance = aggregate_multilm_performance_data(experiments)
+    performance = performance.drop(columns=["n_steps", "rotation_error"])
+    performance.to_csv(out_dir / "performance.csv")
+
+
 if __name__ == "__main__":
     plot_8lm_patches()
     plot_accuracy()
     plot_steps()
+    save_performance_table()

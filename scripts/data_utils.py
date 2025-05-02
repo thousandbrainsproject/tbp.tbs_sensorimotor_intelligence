@@ -320,17 +320,50 @@ def get_frequency(items: Iterable, match: Union[Any, Container[Any]]) -> float:
     return n_matching / len(s)
 
 
-def get_percent_correct(df: pd.DataFrame) -> float:
-    """Get percent of correct object recognition for an `eval_stats` dataframe.
+def aggregate_1lm_performance_data(experiments: Iterable[str]) -> pd.DataFrame:
+    """Save the performance table for the single LM experiments.
 
-    Uses the 'primary_performance' column. Values 'correct' or 'correct_mlh' count
-    as correct.
-
-    TODO: Update/replace to handle mult-LM cases.
-
+    Output is saved to `DMC_ANALYSIS_DIR/fig3/performance/single_lm_performance.csv`.
     """
-    n_correct = df.primary_performance.str.startswith("correct").sum()
-    return 100 * n_correct / len(df)
+
+    columns = {
+        "accuracy": [],
+        "percent.correct": [],
+        "percent.correct_mlh": [],
+        "n_steps": [],
+        "n_steps.mean": [],
+        "n_steps.median": [],
+        "rotation_error": [],
+        "rotation_error.mean": [],
+        "rotation_error.median": [],
+    }
+    for exp in experiments:
+        eval_stats = load_eval_stats(exp)
+        accuracy = 100 * get_frequency(
+            eval_stats["primary_performance"], ("correct", "correct_mlh")
+        )
+        percent_correct = 100 * get_frequency(
+            eval_stats["primary_performance"], "correct"
+        )
+        percent_correct_mlh = 100 * get_frequency(
+            eval_stats["primary_performance"], "correct_mlh"
+        )
+        n_steps = eval_stats["num_steps"]
+        rotation_error = np.degrees(eval_stats.rotation_error.dropna())
+
+        columns["accuracy"].append(accuracy)
+        columns["percent.correct"].append(percent_correct)
+        columns["percent.correct_mlh"].append(percent_correct_mlh)
+
+        columns["n_steps"].append(n_steps)
+        columns["n_steps.mean"].append(n_steps.mean())
+        columns["n_steps.median"].append(n_steps.median())
+
+        columns["rotation_error"].append(rotation_error)
+        columns["rotation_error.mean"].append(rotation_error.mean())
+        columns["rotation_error.median"].append(rotation_error.median())
+
+    return pd.DataFrame(columns, index=experiments)
 
 
 class DetailedJSONStatsInterface:
