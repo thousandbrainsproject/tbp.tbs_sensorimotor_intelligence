@@ -62,10 +62,12 @@ parser.add_argument(
     help="One or more datasets to download (e.g. monty.pretrained_models)",
 )
 
-
+# Environment variables.
 DMC_ROOT_DIR = Path(os.environ.get("DMC_ROOT_DIR", "~/tbp/results/dmc")).expanduser()
-MONTY_DATA_DIR = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
-DATASETS = {
+MONTY_DATA = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
+
+# DMC datasets.
+DMC_DATASETS = {
     "monty.pretrained_models": {
         "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/pretrained_models.tar.gz",
         "destination.compressed": DMC_ROOT_DIR / "pretrained_models.tar.gz",
@@ -89,7 +91,7 @@ DATASETS = {
 }
 
 
-def confirm_overwrite(path: Path) -> bool:
+def confirm_overwrite(dataset: str, path: Path) -> bool:
     """Ask the user if it should overwrite an existing file.
 
     Args:
@@ -100,7 +102,9 @@ def confirm_overwrite(path: Path) -> bool:
     """
     overwrite = None
     while overwrite is None:
-        overwrite = input(f"File {path} already exists. Overwrite? (y/[n]): ")
+        overwrite = input(
+            f"{dataset} dataset already exists at '{path}'. Overwrite? (y/[n]): "
+        )
         overwrite = overwrite.lower().strip()
         if overwrite in ("y",):
             overwrite = True
@@ -117,12 +121,12 @@ def download_dmc_dataset(dataset: str) -> None:
     Args:
         dataset: The name of the dataset to download (e.g. "monty.pretrained_models").
     """
-    dataset_info = DATASETS[dataset]
+    dataset_info = DMC_DATASETS[dataset]
 
     # Check if the (uncompressed) destination already exists. If so, ask the user
     # if they want to overwrite it.
     if dataset_info["destination.uncompressed"].exists():
-        overwrite = confirm_overwrite(dataset_info["destination.uncompressed"])
+        overwrite = confirm_overwrite(dataset, dataset_info["destination.uncompressed"])
         if overwrite:
             # Delete the destination.
             if dataset_info["destination.uncompressed"].is_dir():
@@ -160,11 +164,11 @@ def download_dmc_dataset(dataset: str) -> None:
 def download_ycb_dataset() -> None:
     """Download the YCB object dataset."""
     monty_data_dir = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
-    habitat_data_dir = monty_data_dir / "habitat"
-    if habitat_data_dir.exists():
-        overwrite = confirm_overwrite(habitat_data_dir)
+    ycb_data_dir = monty_data_dir / "habitat"
+    if ycb_data_dir.exists():
+        overwrite = confirm_overwrite("ycb", ycb_data_dir)
         if overwrite:
-            shutil.rmtree(habitat_data_dir)
+            shutil.rmtree(ycb_data_dir)
         else:
             return
 
@@ -175,7 +179,7 @@ def download_ycb_dataset() -> None:
         "--uids",
         "ycb",
         "--data-path",
-        habitat_data_dir,
+        ycb_data_dir,
     ]
     sp.run(command)
 
@@ -191,7 +195,7 @@ def main() -> None:
 
     # Validate the arguments.
     for name in datasets:
-        if not (name in DATASETS or name == "ycb"):
+        if not (name in DMC_DATASETS or name == "ycb"):
             print(f"Invalid dataset name '{name}'.")
             sys.exit(1)
 
