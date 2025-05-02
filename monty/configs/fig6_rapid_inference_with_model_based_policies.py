@@ -101,7 +101,11 @@ dist_agent_1lm_randrot_noise_nohyp[
 
 
 # Surface agent: Standard hypothesis-testing
-surf_agent_1lm_randrot_noise = make_randrot_noise_variant(surf_agent_1lm)
+surf_agent_1lm_randrot_noise = make_randrot_noise_variant(
+    surf_agent_1lm,
+    noise_params={"location": 0.002},
+    run_name="surf_agent_1lm_randrot_noise",
+)
 
 # Surface agent: No hypothesis-testing
 surf_agent_1lm_randrot_noise_nohyp = deepcopy(surf_agent_1lm_randrot_noise)
