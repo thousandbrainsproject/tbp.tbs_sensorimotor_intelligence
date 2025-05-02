@@ -20,9 +20,6 @@ images at 224x224 resolution:
 - view_finder_randrot: 5 pre-defined "random" rotations
 - view_finder_32: 32 training rotations for rapid learning experiments
 
-This file also defines a config used for figure visualizations only:
-- view_finder_base_highres: 14 standard training rotations at 512x512 resolution.
-
 All use 77 objects.
 
 To visualize the images, run the script
@@ -54,7 +51,6 @@ from tbp.monty.frameworks.config_utils.make_dataset_configs import (
     EnvironmentDataloaderPerObjectArgs,
     EvalExperimentArgs,
     PredefinedObjectInitializer,
-    RandomRotationObjectInitializer,
 )
 from tbp.monty.frameworks.config_utils.policy_setup_utils import (
     make_informed_policy_config,
@@ -382,21 +378,9 @@ view_finder_32[
     rotations=TRAIN_ROTATIONS_32,
 )
 
-"""
-Higher-Resolution Images for Visualization
-------------------------------------------
-"""
-view_finder_base_highres = copy.deepcopy(view_finder_base)
-view_finder_base_highres["logging_config"].run_name = "view_finder_base_highres"
-view_finder_base_highres["dataset_args"].env_init_args["agents"][0].agent_args[
-    "resolutions"
-] = [[64, 64], [512, 512]]
-view_finder_base_highres["dataset_args"].__post_init__()
-
 
 CONFIGS = {
     "view_finder_base": view_finder_base,
     "view_finder_randrot": view_finder_randrot,
     "view_finder_32": view_finder_32,
-    "view_finder_base_highres": view_finder_base_highres,
 }

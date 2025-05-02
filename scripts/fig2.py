@@ -42,7 +42,6 @@ from plot_utils import (
     axes3d_set_aspect_equal,
     init_matplotlib_style,
 )
-from render_view_finder_images import VIEW_FINDER_DIR
 
 init_matplotlib_style()
 
@@ -69,7 +68,7 @@ def plot_object_views(
         vmax: The maximum value for the gradient background.
     """
     # Initialize input and output paths.
-    data_dir = VIEW_FINDER_DIR / "view_finder_base_highres/view_finder_rgbd"
+    data_dir = VISUALIZATION_RESULTS_DIR / "fig2_object_views/view_finder_rgbd"
     png_dir = OUT_DIR / f"object_views/{object_name}/png"
     svg_dir = OUT_DIR / f"object_views/{object_name}/svg"
     png_dir.mkdir(parents=True, exist_ok=True)

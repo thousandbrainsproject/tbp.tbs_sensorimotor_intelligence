@@ -46,8 +46,7 @@ from data_utils import (
     VISUALIZATION_RESULTS_DIR,
     DetailedJSONStatsInterface,
     ObjectModel,
-    get_frequency,
-    load_eval_stats,
+    aggregate_1lm_performance_data,
     load_object_model,
 )
 from matplotlib.lines import Line2D
@@ -194,62 +193,56 @@ def plot_performance():
         "surf_agent_1lm_randrot_noise_nohyp",
         "surf_agent_1lm_randrot_noise",
     ]
+    performance = aggregate_1lm_performance_data(experiments)
+
+    fig, axes = plt.subplots(1, 2, figsize=(3.65, 2.55))
     xticks = np.arange(len(experiments))
     xticklabels = [
         "Random Walk",
         "Model-Free",
         "Model-Based",
     ]
-    eval_stats = []
-    for exp in experiments:
-        eval_stats.append(load_eval_stats(exp))
 
-    fig, axes = plt.subplots(1, 2, figsize=(4, 3))
-
+    # Plot accuracy.
     ax = axes[0]
-    accuracies, accuracies_mlh = [], []
-    for df in eval_stats:
-        accuracies.append(100 * get_frequency(df["primary_performance"], "correct"))
-        accuracies_mlh.append(
-            100 * get_frequency(df["primary_performance"], "correct_mlh")
-        )
-    ax.bar(xticks, accuracies, width=0.8, color=TBP_COLORS["blue"])
+    ax.bar(xticks, performance["percent.correct"], width=0.8, color=TBP_COLORS["blue"])
     ax.bar(
-        xticks, accuracies_mlh, bottom=accuracies, width=0.8, color=TBP_COLORS["yellow"]
+        xticks,
+        performance["percent.correct_mlh"],
+        bottom=performance["percent.correct"],
+        width=0.8,
+        color=TBP_COLORS["yellow"],
     )
-
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_xlabel("Motor Policy")
     ax.set_ylabel("% Correct")
     ax.set_ylim(0, 100)
-    ax.legend(["Correct", "Correct MLH"], loc="lower right", framealpha=1)
+    ax.legend(["Converged", "Timed-Out"], loc="lower right", framealpha=1)
 
+    # Plot number of steps.
     ax = axes[1]
-    n_steps = []
-    for df in eval_stats:
-        n_steps.append(df["num_steps"])
-
     violinplot(
-        n_steps,
+        performance["n_steps"],
         xticks,
         color=TBP_COLORS["blue"],
         showmedians=True,
-        median_style=dict(color="lightgray"),
+        median_style=dict(color="lightgray", lw=2),
         bw_method=0.1,
         ax=ax,
     )
 
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_xlabel("Motor Policy")
     ax.set_ylabel("Steps")
     ax.set_ylim(0, 500)
     fig.tight_layout()
-
     fig.savefig(out_dir / "performance.png", bbox_inches="tight")
     fig.savefig(out_dir / "performance.svg", bbox_inches="tight")
     plt.show()
+
+    # Save the performance table.
+    performance = performance.drop(columns=["n_steps", "rotation_error"])
+    performance.to_csv(out_dir / "performance.csv")
 
 
 """
@@ -623,9 +616,9 @@ def plot_object_hypotheses_visualization():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses/visualization`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses`.
     """
-    out_dir = OUT_DIR / "object_hypotheses/visualization"
+    out_dir = OUT_DIR / "object_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     style = STYLE.copy()
@@ -672,8 +665,8 @@ def plot_object_hypotheses_visualization():
         bbox_to_anchor=(0.1, 0.8),
     )
 
-    fig.savefig(out_dir / "object_hypothesis.png", bbox_inches="tight")
-    fig.savefig(out_dir / "object_hypothesis.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_visualization.png", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_visualization.svg", bbox_inches="tight")
     plt.show()
 
     return fig, axes
@@ -684,9 +677,9 @@ def plot_pose_hypotheses_visualization():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses/visualization`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses`.
     """
-    out_dir = OUT_DIR / "pose_hypotheses/visualization"
+    out_dir = OUT_DIR / "pose_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     style = update_style(STYLE, {"target.s": 4, "top_mlh.s": 4, "second_mlh.s": 4})
@@ -736,8 +729,8 @@ def plot_pose_hypotheses_visualization():
         fontsize=8,
     )
 
-    fig.savefig(out_dir / "pose_hypothesis.png", bbox_inches="tight")
-    fig.savefig(out_dir / "pose_hypothesis.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_visualization.png", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_visualization.svg", bbox_inches="tight")
     plt.show()
 
     return fig, axes
@@ -959,10 +952,10 @@ def plot_object_hypotheses_evidence():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses/evidence`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/object_hypotheses`.
     """
     # Initialize ouput directory.
-    out_dir = OUT_DIR / "object_hypotheses/evidence"
+    out_dir = OUT_DIR / "object_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize stats.
@@ -1008,8 +1001,8 @@ def plot_object_hypotheses_evidence():
         ylabel="Evidence",
     )
 
-    fig.savefig(out_dir / "evidence.png", bbox_inches="tight")
-    fig.savefig(out_dir / "evidence.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_evidence.png", bbox_inches="tight")
+    fig.savefig(out_dir / "object_hypotheses_evidence.svg", bbox_inches="tight")
     plt.show()
 
 
@@ -1018,10 +1011,10 @@ def plot_pose_hypotheses_evidence():
 
     Requires having run `fig6_hypothesis_driven_policy`.
 
-    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses/evidence`.
+    Output is saved to `DMC_ANALYSIS_DIR/fig6/pose_hypotheses`.
     """
     # Initialize ouput directory.
-    out_dir = OUT_DIR / "pose_hypotheses/evidence"
+    out_dir = OUT_DIR / "pose_hypotheses"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Initialize stats.
@@ -1068,8 +1061,8 @@ def plot_pose_hypotheses_evidence():
         xlabel="Step",
         ylabel="Evidence",
     )
-    fig.savefig(out_dir / "evidence.png", bbox_inches="tight")
-    fig.savefig(out_dir / "evidence.svg", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_evidence.png", bbox_inches="tight")
+    fig.savefig(out_dir / "pose_hypotheses_evidence.svg", bbox_inches="tight")
     plt.show()
 
 

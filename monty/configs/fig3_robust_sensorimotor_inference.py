@@ -11,9 +11,10 @@
 
 This module defines the following experiments:
  - `dist_agent_1lm`
- - `dist_agent_1lm_noise`
- - `dist_agent_1lm_randrot_all`
- - `dist_agent_1lm_randrot_all_noise`
+ - `dist_agent_1lm_noise_all`
+ - `dist_agent_1lm_randrot_14`
+ - `dist_agent_1lm_randrot_14_noise_all`
+ - `dist_agent_1lm_randrot_14_noise_all_color_clamped`
 
  Experiments use:
  - 77 objects
@@ -28,6 +29,7 @@ is defined in `fig5_rapid_inference_with_voting.py`.
 
 from copy import deepcopy
 
+import numpy as np
 from tbp.monty.frameworks.config_utils.config_args import (
     MontyArgs,
     PatchAndViewMontyConfig,
@@ -45,6 +47,7 @@ from tbp.monty.frameworks.experiments import MontyObjectRecognitionExperiment
 from tbp.monty.frameworks.models.evidence_matching import (
     MontyForEvidenceGraphMatching,
 )
+from tbp.monty.frameworks.models.sensor_modules import FeatureChangeSM
 from tbp.monty.simulators.habitat.configs import (
     PatchViewFinderMountHabitatDatasetArgs,
 )
@@ -100,24 +103,73 @@ dist_agent_1lm = dict(
 # Noisy/random rotation variants
 # ------------------------------------------------------------------------------
 
+noise_all_params = {
+    "location": 0.002,
+    "features": {
+        "pose_vectors": 2.0,
+        "hsv": 0.1,
+        "principal_curvatures_log": 0.1,
+        "pose_fully_defined": 0.01,
+    },
+}
+
 # - Noisy sensor variant
-dist_agent_1lm_noise = make_noise_variant(dist_agent_1lm)
+dist_agent_1lm_noise_all = make_noise_variant(
+    dist_agent_1lm,
+    noise_all_params,
+    run_name="dist_agent_1lm_noise_all",
+)
 
 # - Random rotation variant (14 random rotations)
-dist_agent_1lm_randrot_all = deepcopy(dist_agent_1lm)
-dist_agent_1lm_randrot_all["logging_config"].run_name = "dist_agent_1lm_randrot_all"
-dist_agent_1lm_randrot_all[
+dist_agent_1lm_randrot_14 = deepcopy(dist_agent_1lm)
+dist_agent_1lm_randrot_14["logging_config"].run_name = "dist_agent_1lm_randrot_14"
+dist_agent_1lm_randrot_14[
     "eval_dataloader_args"
 ].object_init_sampler = RandomRotationObjectInitializer()
 
 # - Random rotation variant (14 random rotations) and sensor noise
-dist_agent_1lm_randrot_all_noise = make_noise_variant(
-    dist_agent_1lm_randrot_all, run_name="dist_agent_1lm_randrot_all_noise"
+dist_agent_1lm_randrot_14_noise_all = make_noise_variant(
+    dist_agent_1lm_randrot_14,
+    noise_all_params,
+    run_name="dist_agent_1lm_randrot_14_noise_all",
 )
+
+class ClampedColorSM(FeatureChangeSM):
+    """Sensor module that clamps the hsv feature to blue."""
+
+    def step(self, data):
+        """Clamp hsv to solid blue if the observation is usable."""
+        # Extract features.
+        patch_observation = super().step(data)
+        # Force hsv to solid blue.
+        if patch_observation.use_state:
+            if "hsv" in patch_observation.non_morphological_features:
+                patch_observation.non_morphological_features["hsv"] = np.array(
+                    [0.667, 1.0, 1.0]
+                )
+            else:
+                raise ValueError("hsv feature not found")
+        return patch_observation
+
+
+# - Random rotation variant (14 random rotations) and sensor noise with
+#   the 'hsv' feature clamped to solid blue.
+dist_agent_1lm_randrot_14_noise_all_color_clamped = deepcopy(
+    dist_agent_1lm_randrot_14_noise_all
+)
+dist_agent_1lm_randrot_14_noise_all_color_clamped[
+    "logging_config"
+].run_name = "dist_agent_1lm_randrot_14_noise_all_color_clamped"
+
+dist_agent_1lm_randrot_14_noise_all_color_clamped["monty_config"].sensor_module_configs[
+    "sensor_module_0"
+]["sensor_module_class"] = ClampedColorSM
+
 
 CONFIGS = {
     "dist_agent_1lm": dist_agent_1lm,
-    "dist_agent_1lm_noise": dist_agent_1lm_noise,
-    "dist_agent_1lm_randrot_all": dist_agent_1lm_randrot_all,
-    "dist_agent_1lm_randrot_all_noise": dist_agent_1lm_randrot_all_noise,
+    "dist_agent_1lm_noise_all": dist_agent_1lm_noise_all,
+    "dist_agent_1lm_randrot_14": dist_agent_1lm_randrot_14,
+    "dist_agent_1lm_randrot_14_noise_all": dist_agent_1lm_randrot_14_noise_all,
+    "dist_agent_1lm_randrot_14_noise_all_color_clamped": dist_agent_1lm_randrot_14_noise_all_color_clamped,
 }
