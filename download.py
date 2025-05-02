@@ -136,7 +136,8 @@ def download_dmc_dataset(dataset: str) -> None:
         else:
             return
 
-    # Download the file.
+    # Download the compressed file.
+    print(f"Downloading {dataset} dataset...")
     dataset_info["destination.compressed"].parent.mkdir(parents=True, exist_ok=True)
     command = [
         "curl",
@@ -163,15 +164,14 @@ def download_dmc_dataset(dataset: str) -> None:
 
 def download_ycb_dataset() -> None:
     """Download the YCB object dataset."""
-    monty_data_dir = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
-    ycb_data_dir = monty_data_dir / "habitat"
+    ycb_data_dir = MONTY_DATA / "habitat"
     if ycb_data_dir.exists():
         overwrite = confirm_overwrite("ycb", ycb_data_dir)
         if overwrite:
             shutil.rmtree(ycb_data_dir)
         else:
             return
-
+    print("Downloading ycb dataset...")
     command = [
         "python",
         "-m",
@@ -191,22 +191,20 @@ def main() -> None:
     """
     args = parser.parse_args()
 
-    datasets = list(set(args.datasets))
+    datasets = list(args.datasets)
 
     # Validate the arguments.
     for name in datasets:
         if not (name in DMC_DATASETS or name == "ycb"):
-            print(f"Invalid dataset name '{name}'.")
+            print(f"Invalid dataset '{name}'.")
             sys.exit(1)
 
-    # Download the YCB dataset if requested.
-    if "ycb" in datasets:
-        datasets.remove("ycb")
-        download_ycb_dataset()
-
-    # Download and extract one of our datasets.
+    # Download and extract datasets.
     for name in datasets:
-        download_dmc_dataset(name)
+        if name == "ycb":
+            download_ycb_dataset()
+        else:
+            download_dmc_dataset(name)
 
 
 if __name__ == "__main__":
