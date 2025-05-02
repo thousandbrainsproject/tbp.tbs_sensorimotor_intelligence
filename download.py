@@ -111,8 +111,8 @@ def confirm_overwrite(path: Path) -> bool:
     return overwrite
 
 
-def download_file(dataset: str) -> None:
-    """Download and extract a dataset.
+def download_dmc_dataset(dataset: str) -> None:
+    """Download and extract one of our datasets.
 
     Args:
         dataset: The name of the dataset to download (e.g. "monty.pretrained_models").
@@ -158,7 +158,7 @@ def download_file(dataset: str) -> None:
     dataset_info["destination.compressed"].unlink()
 
 
-def download_habitat() -> None:
+def download_ycb_dataset() -> None:
     """Download the YCB object dataset."""
     monty_data_dir = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
     habitat_data_dir = monty_data_dir / "habitat"
@@ -191,20 +191,20 @@ def main() -> None:
 
     datasets = list(set(args.datasets))
 
-    # Check if we need to download habitat data. It is handled separately.
-    if "ycb" in datasets:
-        datasets.remove("ycb")
-        download_habitat()
-
-    # Validate the file IDs.
+    # Validate the arguments.
     for name in datasets:
         if name not in DATASETS:
             print(f"Invalid dataset name '{name}'.")
             sys.exit(1)
 
-    # Download the files.
+    # Download the YCB dataset if requested.
+    if "ycb" in datasets:
+        datasets.remove("ycb")
+        download_ycb_dataset()
+
+    # Download and extract one of our datasets.
     for name in datasets:
-        download_file(name)
+        download_dmc_dataset(name)
 
 
 if __name__ == "__main__":
