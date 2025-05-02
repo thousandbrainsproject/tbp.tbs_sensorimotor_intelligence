@@ -13,7 +13,6 @@ import subprocess as sp
 import sys
 from pathlib import Path
 
-TESTING = False
 description = """
 Download and extract datasets used by `tbp.tbs_sensorimotor_intelligence`.
 
@@ -69,17 +68,17 @@ FILE_INFO = {
         "destination.uncompressed": DMC_ROOT_DIR / "pretrained_models",
     },
     "monty.results": {
-        "url": "",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/results.tar.gz",
         "destination.compressed": DMC_ROOT_DIR / "results.tar.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "results",
     },
     "monty.visualizations": {
-        "url": "",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/visualizations.tar.gz",
         "destination.compressed": DMC_ROOT_DIR / "visualizations.tar.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "visualizations",
     },
     "monty.view_finder_images": {
-        "url": "",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/view_finder_images.tar.gz",
         "destination.compressed": DMC_ROOT_DIR / "view_finder_images.tar.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "view_finder_images",
     },
