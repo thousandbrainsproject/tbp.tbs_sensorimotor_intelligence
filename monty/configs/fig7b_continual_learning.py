@@ -9,11 +9,12 @@
 
 """Figure 7b: Continual Learning.
 
-Consists of one pretraining experiment with checkpointing after each epoch
-and evaluation experiments after each epoch.
+Consists of one pretraining experiment, which saves a model checkpoint after each epoch, 
+and a series of evaluation experiments backed by the stored checkpoints.  
+
 
 The dataloader is customized such that each epoch contains one object
-across all rotations.
+shown at all rotations.
 
 Experiment configs:
 - pretrain_continual_learning_dist_agent_1lm_checkpoints
@@ -46,7 +47,7 @@ from tbp.monty.frameworks.experiments.object_recognition_experiments import (
 
 from .common import DMC_PRETRAIN_DIR, RANDOM_ROTATIONS_5
 from .continual_learning_utils import (
-    InformedEnvironmentDataLoaderForContinualLearning,
+    InformedEnvironmentDataLoaderPerRotation,
 )
 from .fig3_robust_sensorimotor_inference import dist_agent_1lm
 from .fig7_rapid_learning import PretrainingExperimentWithCheckpointing
@@ -75,7 +76,7 @@ class PretrainingContinualLearningExperimentWithCheckpointing(
         """
         self.pre_epoch()
         if isinstance(
-            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+            self.dataloader, InformedEnvironmentDataLoaderPerRotation
         ):
             for _ in range(len(TRAIN_ROTATIONS)):
                 logging.info(
@@ -98,12 +99,15 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
     def run_epoch(self) -> None:
         """Run a single epoch of continual learning evaluation.
 
+        One object is shown for each epoch, and each episode within an epoch
+        shows the object at a different rotation.
+        
         Raises:
             TypeError: If the dataloader is not EnvironmentDataLoaderPerRotation.
         """
         self.pre_epoch()
         if isinstance(
-            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+            self.dataloader, InformedEnvironmentDataLoaderPerRotation
         ):
             for _ in range(len(RANDOM_ROTATIONS_5)):
                 logging.info(
@@ -140,7 +144,7 @@ class EvalContinualLearningExperiment(MontyObjectRecognitionExperiment):
             eval_epochs=self.eval_epochs,
         )
         if isinstance(
-            self.dataloader, InformedEnvironmentDataLoaderForContinualLearning
+            self.dataloader, InformedEnvironmentDataLoaderPerRotation
         ):
             args.update(target=self.dataloader.primary_target)
         return args
@@ -178,7 +182,7 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     config["experiment_class"] = EvalContinualLearningExperiment
     config["experiment_args"].model_name_or_path = model_path
 
-    config["eval_dataloader_class"] = InformedEnvironmentDataLoaderForContinualLearning
+    config["eval_dataloader_class"] = InformedEnvironmentDataLoaderPerRotation
     config["eval_dataloader_args"] = EnvironmentDataloaderPerObjectArgs(
         object_names=sorted(SHUFFLED_YCB_OBJECTS)[: task_id + 1],
         object_init_sampler=PredefinedObjectInitializer(
@@ -217,7 +221,7 @@ pretrain_continual_learning_dist_agent_1lm_checkpoints.update(
             run_name="continual_learning_dist_agent_1lm_checkpoints",
             python_log_level="INFO",
         ),
-        train_dataloader_class=InformedEnvironmentDataLoaderForContinualLearning,
+        train_dataloader_class=InformedEnvironmentDataLoaderPerRotation,
         train_dataloader_args=EnvironmentDataloaderPerObjectArgs(
             object_names=SHUFFLED_YCB_OBJECTS,
             object_init_sampler=PredefinedObjectInitializer(

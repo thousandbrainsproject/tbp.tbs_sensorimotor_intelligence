@@ -15,10 +15,22 @@ from typing import Any
 from tbp.monty.frameworks.environments import embodied_data as ED
 
 
-class InformedEnvironmentDataLoaderForContinualLearning(
+class InformedEnvironmentDataLoaderPerRotation(
     ED.InformedEnvironmentDataLoader
 ):
-    """InformedEnvironmentDataLoader for continual learning."""
+    """InformedEnvironmentDataLoader for continual learning.
+
+    This dataloader overrides the following functions of the base InformedEnvironmentDataLoader.
+    - pre_episode
+    - post_episode
+    - pre_epoch
+    - post_epoch
+    - cycle_rotation
+    - update_primary_target_object
+
+    Note that these functions are located in the parent class InformedEnvironmentDataLoader,
+    at EnvironmentDataLoaderPerObject.
+    """
 
     def __init__(
         self,
@@ -30,19 +42,23 @@ class InformedEnvironmentDataLoaderForContinualLearning(
         self.object_names = sorted(object_names)
         self.source_object_list = sorted(list(dict.fromkeys(object_names)))
 
-    def post_episode(self) -> None:
-        """Post-episode setup for continual learning dataloader."""
-        self.motor_system.post_episode()
         self.object_init_sampler.post_episode()
         self.cycle_rotation()
         self.episodes += 1
 
     def pre_epoch(self) -> None:
         """Pre-epoch setup for continual learning dataloader."""
-        self.update_primary_target_object(self.current_object, self.object_params)
+        self.update_primary_target_object()
 
     def post_epoch(self) -> None:
-        """Post-epoch setup for continual learning dataloader."""
+        """Post-epoch setup for continual learning dataloader.
+        
+        This method handles the transition between epochs by:
+        - Incrementing the epoch counter
+        - Moving to the next object in the sequence
+        - Updating object parameters through the sampler
+        - Resetting the agent state
+        """
         self.epochs += 1
         self.current_object += 1
         self.object_init_sampler.post_epoch()
@@ -57,40 +73,36 @@ class InformedEnvironmentDataLoaderForContinualLearning(
         logging.info(
             f"Going from rotation: {current_rotation} to rotation: {next_rotation}",
         )
-        self.update_primary_target_object(self.current_object, self.object_params)
+        self.update_primary_target_object()
 
-    def update_primary_target_object(self, idx: int, object_params: dict) -> None:
-        """Update the primary target object in the scene based on the given index.
-
-        Args:
-            idx: Index of the new object and ints parameters in object_params
-            object_params: Parameters for the new object
+    def update_primary_target_object(self) -> None:
+        """Update the primary target object in the scene.
 
         Raises:
-            ValueError: If the index is greater than the number of objects.
+            ValueError: If the current object index is greater than the number of objects.
 
         Note:
             Analogous to EnvironmentDataLoaderPerObject.change_object_by_idx.
         """
-        if idx > self.n_objects:
-            error_msg = f"idx must be <= self.n_objects: {self.n_objects}"
+        if self.current_object > self.n_objects:
+            error_msg = f"current_object must be <= self.n_objects: {self.n_objects}"
             logging.error(error_msg)
             raise ValueError(error_msg)
         self.dataset.env.remove_all_objects()
 
         # Specify config for the primary target object and then add it
-        init_params = object_params.copy()
+        init_params = self.object_params.copy()
         init_params.pop("euler_rotation")
         if "quat_rotation" in init_params:
             init_params.pop("quat_rotation")
-        init_params["semantic_id"] = self.semantic_label_to_id[self.object_names[idx]]
+        init_params["semantic_id"] = self.semantic_label_to_id[self.object_names[self.current_object]]
 
-        _ = self.dataset.env.add_object(name=self.object_names[idx], **init_params)
+        _ = self.dataset.env.add_object(name=self.object_names[self.current_object], **init_params)
 
         self.primary_target = {
-            "object": self.object_names[idx],
-            "semantic_id": self.semantic_label_to_id[self.object_names[idx]],
-            **object_params,
+            "object": self.object_names[self.current_object],
+            "semantic_id": self.semantic_label_to_id[self.object_names[self.current_object]],
+            **self.object_params,
         }
         logging.info(
             f"New primary target: {self.primary_target}",
