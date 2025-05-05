@@ -141,4 +141,4 @@ if __name__ == "__main__":
     total_params = count_monty_model_params(graph_memory)
 
     print(f"Total number of parameters: {total_params}")
-    print(f"\nIn millions: {total_params / 1e6:.2f}M")
+    print(f"\nIn millions: {total_params / 1e6:.0f}M")
