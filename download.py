@@ -156,7 +156,11 @@ def download_dmc_dataset(dataset: str, force: bool = False) -> None:
         "-o",
         dataset_info["destination.compressed"],
     ]
-    sp.run(command)
+    try:
+        sp.run(command, check=True)
+    except Exception as e:
+        print(f"[ERROR] Failed to download {dataset}: {e}")
+        sys.exit(1)
 
     # Decompress the file.
     command = [
@@ -166,7 +170,11 @@ def download_dmc_dataset(dataset: str, force: bool = False) -> None:
         "-C",
         dataset_info["destination.uncompressed"].parent,
     ]
-    sp.run(command)
+    try:
+        sp.run(command, check=True)
+    except Exception as e:
+        print(f"[ERROR] Failed to extract {dataset}: {e}")
+        sys.exit(1)
 
     # Delete the compressed file.
     dataset_info["destination.compressed"].unlink()
@@ -191,7 +199,11 @@ def download_ycb_dataset(force: bool = False) -> None:
         "--data-path",
         ycb_data_dir,
     ]
-    sp.run(command)
+    try:
+        sp.run(command, check=True)
+    except Exception as e:
+        print(f"[ERROR] Failed to download the YCB dataset: {e}")
+        sys.exit(1)
 
 
 def main() -> None:
