@@ -13,7 +13,8 @@ import torch
 
 """
 This script counts the number of parameters in a Monty model, specifically the
-dist_agent_1lm model.
+dist_agent_1lm model. This is a result (4 million parameters) referenced in the
+Continual Learning section of the paper.
 
 The Monty model consists of a series of learned graphs for different objects. These
 are stored in a nested state dictionary, e.g.:
