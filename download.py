@@ -81,23 +81,23 @@ MONTY_DATA = Path(os.environ.get("MONTY_DATA", "~/tbp/data")).expanduser()
 # DMC datasets.
 DMC_DATASETS = {
     "monty.pretrained_models": {
-        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/pretrained_models.tar.gz",
-        "destination.compressed": DMC_ROOT_DIR / "pretrained_models.tar.gz",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/pretrained_models.tgz",
+        "destination.compressed": DMC_ROOT_DIR / "pretrained_models.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "pretrained_models",
     },
     "monty.results": {
-        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/results.tar.gz",
-        "destination.compressed": DMC_ROOT_DIR / "results.tar.tgz",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/results.tgz",
+        "destination.compressed": DMC_ROOT_DIR / "results.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "results",
     },
     "monty.visualizations": {
-        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/visualizations.tar.gz",
-        "destination.compressed": DMC_ROOT_DIR / "visualizations.tar.tgz",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/visualizations.tgz",
+        "destination.compressed": DMC_ROOT_DIR / "visualizations.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "visualizations",
     },
     "monty.view_finder_images": {
-        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/view_finder_images.tar.gz",
-        "destination.compressed": DMC_ROOT_DIR / "view_finder_images.tar.tgz",
+        "url": "https://tbp-pretrained-models-public-c9c24aef2e49b897.s3.us-east-2.amazonaws.com/tbp.tbs_sensorimotor_intelligence/monty/view_finder_images.tgz",
+        "destination.compressed": DMC_ROOT_DIR / "view_finder_images.tgz",
         "destination.uncompressed": DMC_ROOT_DIR / "view_finder_images",
     },
 }
