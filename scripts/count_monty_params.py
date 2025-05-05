@@ -21,7 +21,7 @@ of the total number of parameters in the model.
 
 For clarity, we begin by breaking down the structure of the state dictionary.
 
-A Monty models' state_dict contains the following keys:
+A Monty model's state_dict contains the following keys:
 - 'lm_dict'
 - 'sm_dict'
 - 'motor_system_dict'
@@ -52,7 +52,7 @@ is associated with a key corresponding to the sensory channel that was used to l
 object. This is typically "patch", but could be indexed (e.g. "patch_0", "patch_1") in
 multi-LM (hierarchical or voting) models.
 
-A typical graph can therefore be accessed with e.g.
+A graph can therefore be accessed with e.g.
 state_dict["lm_dict"][lm_id]["graph_memory"]["hammer"]["patch"].
 
 The accessed graph is a torch_geometric Data object, which has the following structure:
@@ -105,7 +105,6 @@ SINGLE_LM_MODEL_PATH = (DMC_ROOT_DIR /
 SENSORY_CHANNEL = "patch"
 LM_ID = 0
 
-
 def count_monty_model_params(graph_memory: dict) -> int:
     """
     Count the number of parameters in a Monty model.
@@ -137,10 +136,9 @@ def count_monty_model_params(graph_memory: dict) -> int:
 
 
 if __name__ == "__main__":
-    # Load the model
     graph_memory = torch.load(SINGLE_LM_MODEL_PATH)["lm_dict"][LM_ID]["graph_memory"]
 
     total_params = count_monty_model_params(graph_memory)
-    print(f"Total number of parameters: {total_params}")
 
+    print(f"Total number of parameters: {total_params}")
     print(f"\nIn millions: {total_params / 1e6:.2f}M")
