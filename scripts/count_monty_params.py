@@ -64,11 +64,11 @@ Data(
     norm=[1188, 3],  # The norm of each node; this is redundant with the norm in x,
     # and is in general never accessed directly during inference.
 
-    # feature_mapping stores the mapping between the array indices, and the features
-    # they represent. For example, "pose_vectors" has values [1, 10], indicating that
-    # indices 1:10 in x store the pose vectors of the node. These are stored as utility
-    # variables as Monty frequently switches between using the full x array, vs indexing
-    # individual values.
+    # feature_mapping stores the mapping between the array indices in x, and the
+    # features they represent. For example, "pose_vectors" has values [1, 10],
+    # indicating that indices 1:10 in x store the pose vectors of the node. These are
+    # stored as utility variables as Monty frequently switches between using the full x
+    # array, vs indexing individual values.
     feature_mapping={
         node_ids=[2],
         pose_vectors=[2],
