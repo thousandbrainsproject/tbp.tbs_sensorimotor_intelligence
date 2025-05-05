@@ -44,7 +44,7 @@ Available datasets:
   monty.view_finder_images
                           Intermediate output used to generate input data
                           for the ViT model (400 MB). Not required for
-                          running experiments or plotting scripts.
+                          running Monty experiments or plotting scripts.
 
 Notes:
   - Two environment variables determine where files are downloaded to.
@@ -53,7 +53,7 @@ Notes:
     - `DMC_ROOT_DIR`: Path where all other datasets will be downloaded.
                       Default: `~/tbp/results/dmc`
   - If a requested dataset already exists, you will be prompted before it
-    is overwritten.
+    is overwritten. To force overwrite without prompting, use the `-f/--force` flag.
 
 """
 
@@ -65,6 +65,13 @@ parser.add_argument(
     "datasets",
     nargs="+",
     help="One or more datasets to download (e.g. monty.pretrained_models)",
+)
+parser.add_argument(
+    "-f",
+    "--force",
+    action="store_true",
+    default=False,
+    help="Automatically overwrite existing datasets without prompting.",
 )
 
 # Environment variables.
@@ -96,7 +103,7 @@ DMC_DATASETS = {
 }
 
 
-def confirm_overwrite(dataset: str, path: Path) -> bool:
+def confirm_overwrite(dataset: str, path: Path, force: bool = False) -> bool:
     """Ask the user if it should overwrite an existing file.
 
     Args:
@@ -105,22 +112,18 @@ def confirm_overwrite(dataset: str, path: Path) -> bool:
     Returns:
         True if the user confirms overwrite, False otherwise.
     """
-    overwrite = None
-    while overwrite is None:
-        overwrite = input(
-            f"{dataset} dataset already exists at '{path}'. Overwrite? (y/[n]): "
-        )
-        overwrite = overwrite.lower().strip()
-        if overwrite in ("y",):
-            overwrite = True
-        elif overwrite in ("n", ""):
-            overwrite = False
-        else:
-            overwrite = None
-    return overwrite
+    if force:
+        return True
+    prompt = f"{dataset} dataset already exists at '{path}'. Overwrite? (y/[n]): "
+    while True:
+        choice = input(prompt).strip().lower()
+        if choice == "y":
+            return True
+        elif choice in ("n", ""):
+            return False
 
 
-def download_dmc_dataset(dataset: str) -> None:
+def download_dmc_dataset(dataset: str, force: bool = False) -> None:
     """Download and extract one of our datasets.
 
     Args:
@@ -131,7 +134,9 @@ def download_dmc_dataset(dataset: str) -> None:
     # Check if the (uncompressed) destination already exists. If so, ask the user
     # if they want to overwrite it.
     if dataset_info["destination.uncompressed"].exists():
-        overwrite = confirm_overwrite(dataset, dataset_info["destination.uncompressed"])
+        overwrite = confirm_overwrite(
+            dataset, dataset_info["destination.uncompressed"], force=force
+        )
         if overwrite:
             # Delete the destination.
             if dataset_info["destination.uncompressed"].is_dir():
@@ -167,11 +172,11 @@ def download_dmc_dataset(dataset: str) -> None:
     dataset_info["destination.compressed"].unlink()
 
 
-def download_ycb_dataset() -> None:
+def download_ycb_dataset(force: bool = False) -> None:
     """Download the YCB object dataset."""
     ycb_data_dir = MONTY_DATA / "habitat"
     if ycb_data_dir.exists():
-        overwrite = confirm_overwrite("ycb", ycb_data_dir)
+        overwrite = confirm_overwrite("ycb", ycb_data_dir, force=force)
         if overwrite:
             shutil.rmtree(ycb_data_dir)
         else:
@@ -197,6 +202,7 @@ def main() -> None:
     args = parser.parse_args()
 
     datasets = list(args.datasets)
+    force = args.force
 
     # Validate the arguments.
     for name in datasets:
@@ -207,9 +213,9 @@ def main() -> None:
     # Download and extract datasets.
     for name in datasets:
         if name == "ycb":
-            download_ycb_dataset()
+            download_ycb_dataset(force=force)
         else:
-            download_dmc_dataset(name)
+            download_dmc_dataset(name, force=force)
 
 
 if __name__ == "__main__":
