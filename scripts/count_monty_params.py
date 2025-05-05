@@ -105,6 +105,7 @@ SINGLE_LM_MODEL_PATH = (DMC_ROOT_DIR /
 SENSORY_CHANNEL = "patch"
 LM_ID = 0
 
+
 def count_monty_model_params(graph_memory: dict) -> int:
     """
     Count the number of parameters in a Monty model.
@@ -127,12 +128,13 @@ def count_monty_model_params(graph_memory: dict) -> int:
 
         # Each feature mapping key has two values (the upper and lower bounds of the
         # indices in the x array that store the feature).
-        total_params += len(torch_geometric_data.feature_mapping.keys())*2
+        total_params += len(torch_geometric_data.feature_mapping.keys()) * 2
 
         # Due to redundancy/not being used, norm and edge_index/edge_attr are not
         # counted.
 
     return total_params
+
 
 if __name__ == "__main__":
     # Load the model
