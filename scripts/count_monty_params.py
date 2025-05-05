@@ -6,13 +6,8 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-import os
-from pathlib import Path
 
-import torch
-
-"""
-This script counts the number of parameters in a Monty model, specifically the
+"""This script counts the number of parameters in a Monty model, specifically the
 dist_agent_1lm model. This is a result (4 million parameters) referenced in the
 Continual Learning section of the paper.
 
@@ -95,6 +90,11 @@ Data(
     edge_attr=[13068, 3]
 )
 """
+
+import os
+from pathlib import Path
+
+import torch
 
 # Get the value of the DMC_ROOT_DIR environment variable, or use "~/tbp/results/dmc" as
 # the default if not set
