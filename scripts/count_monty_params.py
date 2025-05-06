@@ -44,7 +44,7 @@ state_dict["lm_dict"][lm_id] contains:
 - 'target_to_graph_id'
 - 'graph_id_to_target'
 The latter two are mappings between the object name and the index of the graph, which
-are needed to assess the performance of the model. They are of negligible size.
+are needed to assess the performance of the model. 
 
 state_dict["lm_dict"][lm_id]["graph_memory"] contains keys corresponding
 to all of the learned objects (e.g. 77 in the case of YCB).
