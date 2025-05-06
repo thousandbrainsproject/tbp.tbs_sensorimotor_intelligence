@@ -93,14 +93,12 @@ Data(
 )
 """
 
-import os
-from pathlib import Path
-
 import torch
 
 # Get the value of the DMC_ROOT_DIR environment variable, or use "~/tbp/results/dmc" as
-# the default if not set
-DMC_ROOT_DIR = Path(os.environ.get("DMC_ROOT_DIR", "~/tbp/results/dmc")).expanduser()
+# the default if not set.
+from data_utils import DMC_ROOT_DIR
+
 # We use the single-LM, distant-agent model.
 SINGLE_LM_MODEL_PATH = (DMC_ROOT_DIR /
                         "pretrained_models/dist_agent_1lm/pretrained/model.pt")
