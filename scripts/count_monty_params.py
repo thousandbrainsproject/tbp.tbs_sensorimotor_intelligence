@@ -10,8 +10,8 @@
 """Count the number of parameters in the `dist_agent_1lm`  Monty model.
 
 This script counts the number of parameters in a Monty model, specifically the
-`dist_agent_1lm` pretrained model. This produces the result (4 million parameters) referenced in the
-Continual Learning section of the paper.
+`dist_agent_1lm` pretrained model. This produces the result (4 million parameters)
+referenced in the Continual Learning section of the paper.
 
 The Monty model consists of a series of learned graphs for different objects. These
 are stored in a nested state dictionary, e.g.:
@@ -94,6 +94,7 @@ Data(
 """
 
 import torch
+from typing import Union, List
 
 # Get the value of the DMC_ROOT_DIR environment variable, or use "~/tbp/results/dmc" as
 # the default if not set.
@@ -105,30 +106,44 @@ DIST_AGENT_1LM_MODEL_PATH = (DMC_ROOT_DIR /
 SENSORY_CHANNEL = "patch"
 LM_ID = 0
 
-def count_monty_model_params(graph_memory: dict, sensory_channel: str) -> int:
+def count_monty_model_params(
+        graph_memory: dict,
+        sensory_channels_input: Union[str, List[str]]
+) -> int:
     """Count the number of parameters in a Monty model.
 
     Args:
         graph_memory (dict): The graph memory dictionary of the model.
-        sensory_channel (str): The sensory channel for the learned graphs that we want
-            to count the parameters for.
+        sensory_channels_input (Union[str, List[str]]): The sensory channel name or a
+            list of sensory channel names for the learned graphs for which to count
+            parameters.
 
     Returns:
-        The total number of parameters in the model.
+        The total number of parameters in the model for the specified sensory
+        channel(s).
     """
 
     total_params = 0
 
+    if isinstance(sensory_channels_input, str):
+        channels_to_process = [sensory_channels_input]
+    else:
+        channels_to_process = sensory_channels_input
+
     # Iterate through the learned objects
-    for object_data in graph_memory.values():
-        torch_geometric_data = object_data[sensory_channel]
+    for object_data_for_all_channels in graph_memory.values():
+        # object_data_for_all_channels is a dict like {"patch": data} or
+        # {"patch_0": data, "patch_1": data_1, ...} for a single object
+        for channel_name in channels_to_process:
+            if channel_name in object_data_for_all_channels:
+                torch_geometric_data = object_data_for_all_channels[channel_name]
 
-        total_params += torch_geometric_data.x.numel()
-        total_params += torch_geometric_data.pos.numel()
+                total_params += torch_geometric_data.x.numel()
+                total_params += torch_geometric_data.pos.numel()
 
-        # Each feature mapping key has two values (the upper and lower bounds of the
-        # indices in the x array that store the feature).
-        total_params += len(torch_geometric_data.feature_mapping.keys()) * 2
+                # Each feature mapping key has two values (the upper and lower bounds of
+                # the indices in the x array that store the feature).
+                total_params += len(torch_geometric_data.feature_mapping.keys()) * 2
 
         # Due to redundancy/not being used, norm and edge_index/edge_attr are not
         # counted.
@@ -137,12 +152,14 @@ def count_monty_model_params(graph_memory: dict, sensory_channel: str) -> int:
 
 
 if __name__ == "__main__":
-    graph_memory = torch.load(DIST_AGENT_1LM_MODEL_PATH)["lm_dict"][LM_ID]["graph_memory"]
+    graph_memory = torch.load(
+        DIST_AGENT_1LM_MODEL_PATH
+    )["lm_dict"][LM_ID]["graph_memory"]
 
     total_params = count_monty_model_params(graph_memory, SENSORY_CHANNEL)
 
     print("Monty Model Parameter Count")
     print(f" - Model: {DIST_AGENT_1LM_MODEL_PATH}")
-    print(f" - Sensory Channel: '{SENSORY_CHANNEL}'")
+    print(f" - Sensory Channel(s): '{SENSORY_CHANNEL}'")
     print(f" - LM ID: {LM_ID}")
     print(f" - Total number of parameters: {total_params} (~{total_params / 1e6:.0f}M)")
