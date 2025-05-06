@@ -108,8 +108,7 @@ SENSORY_CHANNEL = "patch"
 LM_ID = 0
 
 def count_monty_model_params(graph_memory: dict) -> int:
-    """
-    Count the number of parameters in a Monty model.
+    """Count the number of parameters in a Monty model.
 
     Args:
         graph_memory (dict): The graph memory dictionary of the model.
