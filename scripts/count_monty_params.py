@@ -135,7 +135,7 @@ def count_monty_model_params(graph_memory: dict) -> int:
 
 
 if __name__ == "__main__":
-    graph_memory = torch.load(SINGLE_LM_MODEL_PATH)["lm_dict"][LM_ID]["graph_memory"]
+    graph_memory = torch.load(DIST_AGENT_1LM_MODEL_PATH)["lm_dict"][LM_ID]["graph_memory"]
 
     total_params = count_monty_model_params(graph_memory)
 
