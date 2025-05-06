@@ -100,7 +100,7 @@ import torch
 from data_utils import DMC_ROOT_DIR
 
 # We use the single-LM, distant-agent model.
-SINGLE_LM_MODEL_PATH = (DMC_ROOT_DIR /
+DIST_AGENT_1LM_MODEL_PATH = (DMC_ROOT_DIR /
                         "pretrained_models/dist_agent_1lm/pretrained/model.pt")
 SENSORY_CHANNEL = "patch"
 LM_ID = 0
