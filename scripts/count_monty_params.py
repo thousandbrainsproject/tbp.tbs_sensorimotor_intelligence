@@ -7,8 +7,10 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-"""This script counts the number of parameters in a Monty model, specifically the
-dist_agent_1lm model. This is a result (4 million parameters) referenced in the
+"""Count the number of parameters in the `dist_agent_1lm`  Monty model.
+
+This script counts the number of parameters in a Monty model, specifically the
+`dist_agent_1lm` pretrained model. This produces the result (4 million parameters) referenced in the
 Continual Learning section of the paper.
 
 The Monty model consists of a series of learned graphs for different objects. These
