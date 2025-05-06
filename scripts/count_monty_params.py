@@ -142,5 +142,8 @@ if __name__ == "__main__":
 
     total_params = count_monty_model_params(graph_memory)
 
-    print(f"Total number of parameters: {total_params}")
-    print(f"\nIn millions: {total_params / 1e6:.0f}M")
+    print("Monty Model Parameter Count")
+    print(f" - Model: {DIST_AGENT_1LM_MODEL_PATH}")
+    print(f" - Sensory Channel: '{SENSORY_CHANNEL}'")
+    print(f" - LM ID: {LM_ID}")
+    print(f" - Total number of parameters: {total_params} (~{total_params / 1e6:.0f}M)")
