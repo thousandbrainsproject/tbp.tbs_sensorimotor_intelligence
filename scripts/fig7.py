@@ -11,20 +11,29 @@
 Panel B: Line Graphs Comparing Monty and ViT in Continual Learning
  - `plot_line_graphs()`
 
+Panel C: Heatmaps of ViT and Monty Accuracies during Continual Learning
+ - `plot_accuracy_heatmaps()`
+
 Running the above functions requires that the following experiments have been run:
-Rapid Learning (Panel A)
+1. Rapid Learning (Panel A)
     TODO
 
-Continual Learning (Panels B and C)
+2. Continual Learning (Panels B and C)
  - For Monty, all experiments from `monty/configs/fig7b_continual_learning.py` have been run.
  - For ViT, all experiments from `pytorch/configs/fig7b_continual_learning` have been run.
 """
 
 from __future__ import annotations
+from typing import TypeAlias
+
+from pathlib import Path
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
-from pathlib import Path
+from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
+
 from data_utils import (
     DMC_ANALYSIS_DIR,
     DMC_RESULTS_DIR,
@@ -35,7 +44,6 @@ from plot_utils import (
     TBP_COLORS,
     init_matplotlib_style,
 )
-from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
 
 init_matplotlib_style()
 
@@ -45,6 +53,11 @@ OUT_DIR = DMC_ANALYSIS_DIR / "fig7"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 YCB_NUM_CLASSES = len(SHUFFLED_YCB_OBJECTS)
+
+# Type aliases for color specifications
+RGB: TypeAlias = tuple[float, float, float]
+RGBA: TypeAlias = tuple[float, float, float, float]
+ColorSpec: TypeAlias = str | RGB | RGBA
 
 """
 --------------------------------------------------------------------------------
@@ -115,6 +128,31 @@ def get_vit_continual_learning_accuracy(model_id: int) -> dict[int, float]:
     return accuracies
 
 
+def create_black_to_color_gradient_colormap(
+    color: ColorSpec,
+) -> LinearSegmentedColormap:
+    """Create a custom colormap that transitions from black to a specified color with a lighter variant.
+
+    This function creates a three-color gradient colormap that transitions from black to the specified
+    color, and then to a lighter version of that color with 50% opacity. This is useful for creating
+    visually appealing heatmaps with a dark-to-light progression.
+
+    Args:
+        color: The target color to fade to from black. Can be specified as:
+            - A string color name (e.g., 'blue', 'red')
+            - An RGB tuple (r, g, b) with values between 0 and 1
+            - An RGBA tuple (r, g, b, a) with values between 0 and 1
+
+    Returns:
+        LinearSegmentedColormap: A custom colormap that transitions from black to the specified color
+        to a lighter version of that color.
+    """
+    # Convert color to RGBA and create a lighter version with 50% opacity
+    rgba = mcolors.to_rgba(color)
+    lighter_color = (rgba[0], rgba[1], rgba[2], 0.5)
+    return LinearSegmentedColormap.from_list("custom", ["black", color, lighter_color])
+
+
 """
 --------------------------------------------------------------------------------
 Panel B: Line Graphs Comparing Monty and ViT in Continual Learning
@@ -180,5 +218,76 @@ def plot_line_graphs() -> None:
     plt.show()
 
 
+"""
+--------------------------------------------------------------------------------
+Panel C: Heatmaps of ViT and Monty Accuracies during Continual Learning
+--------------------------------------------------------------------------------
+"""
+
+
+def plot_accuracy_heatmaps() -> None:
+    """Plot heatmaps showing both Monty and ViT's accuracy for each class at each model checkpoint.
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig7/continual_learning`.
+    """
+
+    out_dir = OUT_DIR / "continual_learning"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create the heatmap matrices and fill them with accuracies
+    monty_heatmap = np.full((YCB_NUM_CLASSES, YCB_NUM_CLASSES), np.nan)
+    vit_heatmap = np.full((YCB_NUM_CLASSES, YCB_NUM_CLASSES), np.nan)
+
+    for model_id in range(1, YCB_NUM_CLASSES + 1):
+        monty_accuracy = get_monty_continual_learning_accuracy(model_id)
+        for class_id, accuracy in monty_accuracy.items():
+            monty_heatmap[model_id - 1, class_id] = accuracy
+
+    for model_id in range(1, YCB_NUM_CLASSES + 1):
+        vit_accuracy = get_vit_continual_learning_accuracy(model_id)
+        for class_id, accuracy in vit_accuracy.items():
+            vit_heatmap[model_id - 1, class_id] = accuracy
+
+    # Create the plot with two subplots
+    axes_width, axes_height = 6.5, 3
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(axes_width, axes_height))
+    colormap = create_black_to_color_gradient_colormap(TBP_COLORS["green"])
+
+    # Create the heatmaps using custom colormap
+    _ = ax1.imshow(monty_heatmap, cmap=colormap, vmin=0, vmax=100)
+    im2 = ax2.imshow(vit_heatmap, cmap=colormap, vmin=0, vmax=100)
+
+    # Plot Params
+    ax1.set_xlabel("Target Object")
+    ax1.set_ylabel("Number of Objects Learned")
+    ax1.set_title("Monty")
+
+    ax2.set_xlabel("Target Object")
+    ax2.set_ylabel("Number of Objects Learned")
+    ax2.set_title("ViT")
+
+    for ax in [ax1, ax2]:
+        ticks = [1, 10, 20, 30, 40, 50, 60, 70, 77]
+        ax.set_xticks([t - 1 for t in ticks])
+        ax.set_yticks([t - 1 for t in ticks])
+        ax.set_xticklabels(ticks)
+        ax.set_yticklabels(ticks)
+
+    # Adjust the subplot layout to make room for the colorbar
+    plt.subplots_adjust(left=0.08, right=0.80, wspace=0.3)
+
+    # Add colorbar
+    cax = fig.add_axes([0.82, 0.52, 0.02, 0.3])
+    cbar = fig.colorbar(im2, cax=cax)
+    cbar.set_label("Accuracy (%)", labelpad=5, y=0.5, fontsize=8)
+    cax.xaxis.set_label_position("top")
+    cax.xaxis.set_ticks_position("top")
+
+    fig.savefig(out_dir / "accuracy_heatmaps.png", bbox_inches="tight")
+    fig.savefig(out_dir / "accuracy_heatmaps.svg", bbox_inches="tight")
+    plt.show()
+
+
 if __name__ == "__main__":
     plot_line_graphs()
+    plot_accuracy_heatmaps()
