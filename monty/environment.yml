@@ -30,4 +30,3 @@ dependencies:
   - pip
   - pip:
     - -e .[dev]
-    - calflops # For counting FLOPs of pytorch models, see https://github.com/MrYxJ/calculate-flops.pytorch
