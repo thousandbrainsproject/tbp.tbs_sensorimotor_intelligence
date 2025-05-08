@@ -55,9 +55,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 YCB_NUM_CLASSES = len(SHUFFLED_YCB_OBJECTS)
 
 # Type aliases for color specifications
-RGB: Tuple[float, float, float]
-RGBA: Tuple[float, float, float, float]
-ColorSpec: Union[str, RGB, RGBA]
+RGB = Tuple[float, float, float]
+RGBA = Tuple[float, float, float, float]
+ColorSpec = Union[str, RGB, RGBA]
 
 """
 --------------------------------------------------------------------------------
