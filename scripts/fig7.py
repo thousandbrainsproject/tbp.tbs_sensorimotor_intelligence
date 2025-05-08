@@ -24,9 +24,9 @@ Running the above functions requires that the following experiments have been ru
 """
 
 from __future__ import annotations
-from typing import TypeAlias
 
 from pathlib import Path
+from typing import Dict, Tuple, Union
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -55,9 +55,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 YCB_NUM_CLASSES = len(SHUFFLED_YCB_OBJECTS)
 
 # Type aliases for color specifications
-RGB: TypeAlias = tuple[float, float, float]
-RGBA: TypeAlias = tuple[float, float, float, float]
-ColorSpec: TypeAlias = str | RGB | RGBA
+RGB: Tuple[float, float, float]
+RGBA: Tuple[float, float, float, float]
+ColorSpec: Union[str, RGB, RGBA]
 
 """
 --------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ Utilities
 """
 
 
-def get_monty_continual_learning_accuracy(model_id: int) -> dict[int, float]:
+def get_monty_continual_learning_accuracy(model_id: int) -> Dict[int, float]:
     """Get accuracies for all classes up to model_id.
 
     Args:
@@ -92,7 +92,7 @@ def get_monty_continual_learning_accuracy(model_id: int) -> dict[int, float]:
     return accuracies
 
 
-def get_vit_continual_learning_accuracy(model_id: int) -> dict[int, float]:
+def get_vit_continual_learning_accuracy(model_id: int) -> Dict[int, float]:
     """Get the accuracies for VIT for each task in the continual learning experiment.
 
     Args:
