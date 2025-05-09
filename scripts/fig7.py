@@ -8,19 +8,25 @@
 # https://opensource.org/licenses/MIT.
 """This module defines functions used to generate images for figure 7.
 
+Panel A: Rapid Learning Accuracy Comparison
+ - `plot_rapid_learning_accuracy()`: Compares accuracy between Monty and ViT models
+   with different numbers of rotations in training data.
+
 Panel B: Line Graphs Comparing Monty and ViT in Continual Learning
- - `plot_line_graphs()`
+ - `plot_line_graphs()`: Shows average accuracy as more objects are learned.
 
 Panel C: Heatmaps of ViT and Monty Accuracies during Continual Learning
- - `plot_accuracy_heatmaps()`
+ - `plot_accuracy_heatmaps()`: Visualizes accuracy for each class at each model checkpoint.
 
 Running the above functions requires that the following experiments have been run:
+
 1. Rapid Learning (Panel A)
-    TODO
+   - For Monty: All experiments from `rapid_learning/dist_agent_1lm_randrot_nohyp_*rot_trained`
+   - For ViT: All experiments from `fig7a_vit-b16-224-in21k_*` with different rotation counts
 
 2. Continual Learning (Panels B and C)
- - For Monty, all experiments from `monty/configs/fig7b_continual_learning.py` have been run.
- - For ViT, all experiments from `pytorch/configs/fig7b_continual_learning` have been run.
+   - For Monty: All experiments from `monty/configs/fig7b_continual_learning.py`
+   - For ViT: All experiments from `pytorch/configs/fig7b_continual_learning`
 """
 
 from __future__ import annotations
@@ -28,17 +34,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.lines as mlines
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 from tbp.monty.frameworks.environments.ycb import SHUFFLED_YCB_OBJECTS
 
 from data_utils import (
     DMC_ANALYSIS_DIR,
     DMC_RESULTS_DIR,
-    load_vit_predictions,
     aggregate_1lm_performance_data,
+    load_vit_predictions,
 )
 from plot_utils import (
     TBP_COLORS,
@@ -55,9 +63,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 YCB_NUM_CLASSES = len(SHUFFLED_YCB_OBJECTS)
 
 # Type aliases for color specifications
-RGB: Tuple[float, float, float]
-RGBA: Tuple[float, float, float, float]
-ColorSpec: Union[str, RGB, RGBA]
+RGB = Tuple[float, float, float]
+RGBA = Tuple[float, float, float, float]
+ColorSpec = Union[str, RGB, RGBA]
 
 """
 --------------------------------------------------------------------------------
@@ -151,6 +159,331 @@ def create_black_to_color_gradient_colormap(
     rgba = mcolors.to_rgba(color)
     lighter_color = (rgba[0], rgba[1], rgba[2], 0.5)
     return LinearSegmentedColormap.from_list("custom", ["black", color, lighter_color])
+
+
+def load_vit_rapid_learning_predictions(
+    data_dir: Path,
+    num_rotations: list[int],
+    experiment_type: str,
+) -> dict[int, float]:
+    """Load ViT predictions for rapid learning experiments.
+    
+    Args:
+        data_dir: Base directory containing ViT logs
+        num_rotations: List of rotation counts to load
+        experiment_type: Type of experiment (e.g. "1epoch", "25epochs_random_init")
+        
+    Returns:
+        Dictionary mapping number of rotations to accuracy
+    """
+    paths = [
+        data_dir / f"fig7a_vit-b16-224-in21k_{experiment_type}_{i}rot/inference/predictions.csv"
+        for i in num_rotations
+    ]
+    dfs = [load_vit_predictions(p) for p in paths]
+    for i, df in enumerate(dfs):
+        df["num_rotations"] = num_rotations[i]
+    combined_df = pd.concat(dfs)
+    return {
+        num_rot: (df["real_class"] == df["predicted_class"]).mean() * 100
+        for num_rot, df in combined_df.groupby("num_rotations")
+    }
+
+
+def get_monty_rotation_error_data(df: pd.DataFrame) -> tuple[dict[int, float], dict[int, float]]:
+    """Get rotation error data for Monty, including mean and std.
+    
+    Args:
+        df: DataFrame containing Monty rotation error data
+        
+    Returns:
+        Tuple of (means, stds) dictionaries mapping number of rotations to error values
+    """
+    means = {}
+    stds = {}
+    
+    for num_rotations in df["num_rotations"].unique():
+        df_subset = df[df["num_rotations"] == num_rotations]
+        
+        # Calculate error for correct samples only
+        correct_subset = df_subset[df_subset["primary_performance"].isin(["correct", "correct_mlh"])]
+        correct_samples_error = correct_subset["rotation_error"].mean() * 180 / np.pi
+        
+        # Store the correct samples error for plotting
+        means[num_rotations] = correct_samples_error
+        stds[num_rotations] = correct_subset["rotation_error"].std() * 180 / np.pi
+    
+    return means, stds
+
+
+def get_vit_rotation_error_data(df: pd.DataFrame) -> tuple[dict[int, float], dict[int, float]]:
+    """Get rotation error data for ViT, including mean and std.
+    
+    Args:
+        df: DataFrame containing ViT rotation error data
+        
+    Returns:
+        Tuple of (means, stds) dictionaries mapping number of rotations to error values
+    """
+    means = {}
+    stds = {}
+    
+    for num_rotations in df["num_rotations"].unique():
+        df_subset = df[df["num_rotations"] == num_rotations]
+        
+        # Calculate error for correct samples only
+        correct_subset = df_subset[df_subset["real_class"] == df_subset["predicted_class"]]
+        correct_samples_error = correct_subset["quaternion_error_degs"].mean()
+        
+        # Store the correct samples error for plotting
+        means[num_rotations] = correct_samples_error
+        stds[num_rotations] = correct_subset["quaternion_error_degs"].std()
+    
+    return means, stds
+
+
+"""
+--------------------------------------------------------------------------------
+Panel A (left): Rapid Learning Accuracy Plot
+--------------------------------------------------------------------------------
+"""
+
+def plot_rapid_learning_accuracy() -> None:
+    """Plot accuracy comparison between Monty and ViT in rapid learning.
+
+    For Monty, requires the experiments from `rapid_learning` have been run.
+    For ViT, requires the experiments from `fig7a_vit-b16-224-in21k_*` have been run.
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig7/rapid_learning`.
+    """
+    out_dir = OUT_DIR / "rapid_learning"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load Monty data
+    monty_experiments = [
+        "dist_agent_1lm_randrot_nohyp_1rot_trained",
+        "dist_agent_1lm_randrot_nohyp_2rot_trained",
+        "dist_agent_1lm_randrot_nohyp_4rot_trained",
+        "dist_agent_1lm_randrot_nohyp_8rot_trained",
+        "dist_agent_1lm_randrot_nohyp_16rot_trained",
+        "dist_agent_1lm_randrot_nohyp_32rot_trained",
+    ]
+    monty_data = aggregate_1lm_performance_data(monty_experiments)
+    monty_accuracies = {i+1: acc for i, acc in enumerate(monty_data["accuracy"])}
+
+    # Load ViT data
+    vit_data_dir = DMC_RESULTS_DIR / "vit" / "logs"
+    num_rotations = [1, 2, 4, 8, 16, 32]
+
+    # Load ViT from pretrained 1 epoch
+    vit_pretrained_accuracies = load_vit_rapid_learning_predictions(
+        vit_data_dir, num_rotations, "1epoch"
+    )
+
+    # Load ViT trained from random initialization trained for 25 epochs
+    vit_from_random_init_25epochs_accuracies = load_vit_rapid_learning_predictions(
+        vit_data_dir, num_rotations, "25epochs_random_init"
+    )
+
+    # Load ViT trained from random initialization trained for 1 epoch
+    vit_from_random_init_1epoch_accuracies = load_vit_rapid_learning_predictions(
+        vit_data_dir, num_rotations, "1epoch_random_init"
+    )
+
+    # Create figure
+    axes_width, axes_height = 5, 3
+    fig, ax = plt.subplots(figsize=(axes_width, axes_height))
+
+    # Plot Monty accuracy (blue)
+    ax.plot(
+        list(monty_accuracies.keys()),
+        list(monty_accuracies.values()),
+        marker="o",
+        color=TBP_COLORS["blue"],
+        label="Monty",
+        zorder=10,
+    )
+
+    # Plot ViT from pretrained accuracy (solid purple)
+    ax.plot(
+        list(vit_pretrained_accuracies.keys()),
+        list(vit_pretrained_accuracies.values()),
+        marker="o",
+        color=TBP_COLORS["purple"],
+        label="ViT-Pretrained (25 Epochs)",
+        zorder=10,
+    )
+
+    # Plot ViT from scratch accuracy (solid yellow)
+    ax.plot(
+        list(vit_from_random_init_25epochs_accuracies.keys()),
+        list(vit_from_random_init_25epochs_accuracies.values()),
+        marker="o",
+        color=TBP_COLORS["yellow"],
+        label="ViT (75 Epochs)",
+        zorder=10,
+    )
+
+    # Plot ViT from scratch accuracy (dashed yellow)
+    ax.plot(
+        list(vit_from_random_init_1epoch_accuracies.keys()),
+        list(vit_from_random_init_1epoch_accuracies.values()),
+        marker="o",
+        color=TBP_COLORS["yellow"],
+        linestyle="--",
+        label="ViT (1 Epoch)",
+        zorder=10,
+    )
+
+    # Set x-axis tickmarks and limits
+    ax.set_xticks([1, 2, 4, 8, 16, 32])
+    ax.set_xlabel("Number of Rotations in Training Data")
+    ax.set_ylabel("Accuracy (%)")
+    ax.set_ylim(0, 100)
+
+    # Set legend outside to the right
+    monty_line = mlines.Line2D([], [], color=TBP_COLORS["blue"], linestyle="-", label="Monty (1 Epoch)")
+    vit_pretrained_line = mlines.Line2D([], [], color=TBP_COLORS["purple"], linestyle="-", label="Pretrained ViT (25 Epochs)")
+    vit_from_random_init_25epochs_line = mlines.Line2D([], [], color=TBP_COLORS["yellow"], linestyle="-", label="ViT (75 Epochs)")
+    vit_from_random_init_1epoch_line = mlines.Line2D([], [], color=TBP_COLORS["yellow"], linestyle="--", label="ViT (1 Epoch)")
+    ax.legend(
+        handles=[monty_line, vit_pretrained_line, vit_from_random_init_1epoch_line, vit_from_random_init_25epochs_line],
+        fontsize=7,
+        loc="center right",
+        bbox_to_anchor=(1.0, 0.5),
+        frameon=False,
+    )
+
+    # Save figures
+    fig.savefig(out_dir / "rapid_learning_accuracy.png", dpi=300, bbox_inches="tight")
+    fig.savefig(out_dir / "rapid_learning_accuracy.svg", bbox_inches="tight")
+    plt.show()
+
+"""
+--------------------------------------------------------------------------------
+Panel A (right): Rotation Error Plot
+--------------------------------------------------------------------------------
+"""
+
+def plot_rotation_error() -> None:
+    """Plot rotation error comparison between Monty and ViT in rapid learning.
+
+    For Monty, requires the experiments from `rapid_learning` have been run.
+    For ViT, requires the experiments from `fig7a_vit-b16-224-in21k_*` have been run.
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig7/rapid_learning`.
+    """
+    out_dir = OUT_DIR / "rapid_learning"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load Monty data
+    monty_experiments = [
+        "dist_agent_1lm_randrot_nohyp_1rot_trained",
+        "dist_agent_1lm_randrot_nohyp_2rot_trained",
+        "dist_agent_1lm_randrot_nohyp_4rot_trained",
+        "dist_agent_1lm_randrot_nohyp_8rot_trained",
+        "dist_agent_1lm_randrot_nohyp_16rot_trained",
+        "dist_agent_1lm_randrot_nohyp_32rot_trained",
+    ]
+    monty_data = aggregate_1lm_performance_data(monty_experiments)
+    monty_means, monty_stds = get_monty_rotation_error_data(monty_data)
+
+    # Load ViT data
+    vit_data_dir = DMC_RESULTS_DIR / "vit" / "logs"
+    num_rotations = [1, 2, 4, 8, 16, 32]
+
+    # Load ViT from pretrained 1 epoch
+    vit_pretrained_df = pd.concat([
+        load_vit_predictions(vit_data_dir / f"fig7a_vit-b16-224-in21k_1epoch_{i}rot/inference/predictions.csv")
+        for i in num_rotations
+    ])
+    vit_pretrained_df["num_rotations"] = np.repeat(num_rotations, len(vit_pretrained_df) // len(num_rotations))
+    vit_pretrained_means, vit_pretrained_stds = get_vit_rotation_error_data(vit_pretrained_df)
+
+    # Load ViT trained from random initialization trained for 25 epochs
+    vit_from_random_init_25epochs_df = pd.concat([
+        load_vit_predictions(vit_data_dir / f"fig7a_vit-b16-224-in21k_25epochs_{i}rot_random_init/inference/predictions.csv")
+        for i in num_rotations
+    ])
+    vit_from_random_init_25epochs_df["num_rotations"] = np.repeat(num_rotations, len(vit_from_random_init_25epochs_df) // len(num_rotations))
+    vit_from_random_init_25epochs_means, vit_from_random_init_25epochs_stds = get_vit_rotation_error_data(vit_from_random_init_25epochs_df)
+
+    # Load ViT trained from random initialization trained for 1 epoch
+    vit_from_random_init_1epoch_df = pd.concat([
+        load_vit_predictions(vit_data_dir / f"fig7a_vit-b16-224-in21k_1epoch_{i}rot_random_init/inference/predictions.csv")
+        for i in num_rotations
+    ])
+    vit_from_random_init_1epoch_df["num_rotations"] = np.repeat(num_rotations, len(vit_from_random_init_1epoch_df) // len(num_rotations))
+    vit_from_random_init_1epoch_means, vit_from_random_init_1epoch_stds = get_vit_rotation_error_data(vit_from_random_init_1epoch_df)
+
+    # Create figure
+    axes_width, axes_height = 5, 3
+    fig, ax = plt.subplots(figsize=(axes_width, axes_height))
+
+    # Plot Monty rotation error (blue)
+    ax.plot(
+        list(monty_means.keys()),
+        list(monty_means.values()),
+        marker="o",
+        color=TBP_COLORS["blue"],
+        label="Monty",
+        zorder=10,
+    )
+
+    # Plot ViT from pretrained rotation error (solid purple)
+    ax.plot(
+        list(vit_pretrained_means.keys()),
+        list(vit_pretrained_means.values()),
+        marker="o",
+        color=TBP_COLORS["purple"],
+        label="ViT-Pretrained (25 Epochs)",
+        zorder=10,
+    )
+
+    # Plot ViT from scratch accuracy (solid yellow)
+    ax.plot(
+        list(vit_from_random_init_25epochs_means.keys()),
+        list(vit_from_random_init_25epochs_means.values()),
+        marker="o",
+        color=TBP_COLORS["yellow"],
+        label="ViT (75 Epochs)",
+        zorder=10,
+    )
+
+    # Plot ViT from scratch accuracy (dashed yellow)
+    ax.plot(
+        list(vit_from_random_init_1epoch_means.keys()),
+        list(vit_from_random_init_1epoch_means.values()),
+        marker="o",
+        color=TBP_COLORS["yellow"],
+        linestyle="--",
+        label="ViT (1 Epoch)",
+        zorder=10,
+    )
+
+    # Set x-axis tickmarks and limits
+    ax.set_xticks([1, 2, 4, 8, 16, 32])
+    ax.set_xlabel("Number of Rotations in Training Data")
+    ax.set_ylabel("Rotation Error (deg)")
+    ax.set_ylim(0, 180)
+
+    # Set legend outside to the right
+    monty_line = mlines.Line2D([], [], color=TBP_COLORS["blue"], linestyle="-", label="Monty (1 Epoch)")
+    vit_pretrained_line = mlines.Line2D([], [], color=TBP_COLORS["purple"], linestyle="-", label="Pretrained ViT (25 Epochs)")
+    vit_from_random_init_25epochs_line = mlines.Line2D([], [], color=TBP_COLORS["yellow"], linestyle="-", label="ViT (75 Epochs)")
+    vit_from_random_init_1epoch_line = mlines.Line2D([], [], color=TBP_COLORS["yellow"], linestyle="--", label="ViT (1 Epoch)")
+    ax.legend(
+        handles=[monty_line, vit_pretrained_line, vit_from_random_init_1epoch_line, vit_from_random_init_25epochs_line],
+        fontsize=7,
+        loc="center right",
+        bbox_to_anchor=(1.0, 0.5),
+        frameon=False,
+    )
+
+    # Save figures
+    fig.savefig(out_dir / "rapid_learning_rotation_error.png", dpi=300, bbox_inches="tight")
+    fig.savefig(out_dir / "rapid_learning_rotation_error.svg", bbox_inches="tight")
+    plt.show()
 
 
 """
@@ -291,3 +624,5 @@ def plot_accuracy_heatmaps() -> None:
 if __name__ == "__main__":
     plot_line_graphs()
     plot_accuracy_heatmaps()
+    plot_rapid_learning_accuracy()
+    plot_rotation_error()
