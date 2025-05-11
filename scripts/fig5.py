@@ -569,7 +569,7 @@ def plot_steps():
             width=0.8,
             showmedians=True,
             median_style=dict(color="lightgray", lw=2),
-            bw_method=bw_method,
+            bw_method=0.1,
             ax=ax,
         )
 
