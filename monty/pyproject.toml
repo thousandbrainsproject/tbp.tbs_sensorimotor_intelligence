@@ -98,50 +98,50 @@ select = [
     "E265", # Block comment should start with '# '
 ]
 ignore = [
-    "C4", # C4XX: ignore all Flake8 comprehensions
-    "COM812", # Trailing comma missing; conflicts with ruff format
-    "ISC001", # Implicitly concatenated string literals on one line; conflicts with ruff format
-    "G004", 
-    "FA100", 
-    "ANN003",
-    "ANN401",
-    "TRY003",
-    "EM102",
-    "N812",
-    "DOC501",
-    "RET505", 
-    "D417",
-    "ANN201",
-    "G003",
-    "SIM114", 
-    "SIM118",
-    "D100", 
-    "ANN204",
-    "T201",
-    "ARG002",
-    "PTH123",
-    "I001",
-    "W291",
-    "D107",
-    "D205",
-    "ANN206",
-    "FBT001",
-    "EM101",
-    "PIE790",
-    "RET504",
-    "PTH118",
-    "PERF401",
-    "W293",
-    "DOC202",
-    "D101",
-    "D102",
-    "D410",
-    "D411",
-    "D414",
-    "F401",
-    "PLR0911",
-    "PLR0912",
-    "W292"
+    "C4",      # C4XX: flake8-comprehensions rules (e.g., prefer comprehensions over map/filter)
+    "COM812",  # COM812: trailing comma missing in comprehension
+    "ISC001",  # ISC001: implicitly concatenated string literals in comprehension
+    "G004",    # G004: logging-fstring (avoid f-strings in logging calls)
+    "FA100",   # FA100: missing `from __future__ import annotations`
+    "ANN003",  # ANN003: missing type arguments for generics
+    "ANN401",  # ANN401: use explicit types instead of Any
+    "TRY003",  # TRY003: avoid raising bare exceptions
+    "EM102",   # EM102: f-string in exception (avoid f-strings in raise)
+    "N812",    # N812: imported module name not lowercase
+    "DOC501",  # DOC501: missing “Raises” section in docstring
+    "RET505",  # RET505: superfluous `else` after `return`
+    "D417",    # D417: parameter in docstring is undocumented
+    "ANN201",  # ANN201: missing return type on public functions
+    "G003",    # G003: logging-not-lazy (avoid concatenation in logging)
+    "SIM114",  # SIM114: prefer context manager for open()
+    "SIM118",  # SIM118: unnecessary `return None`
+    "D100",    # D100: missing module-level docstring
+    "ANN204",  # ANN204: missing return type on `__init__`
+    "T201",    # T201: `print` found
+    "ARG002",  # ARG002: unused function argument
+    "PTH123",  # PTH123: use `Path.open()` instead of `open()`
+    "I001",    # I001: unsorted imports (isort)
+    "W291",    # W291: trailing whitespace
+    "D107",    # D107: missing docstring on `__init__`
+    "D205",    # D205: missing blank line after summary in docstring
+    "ANN206",  # ANN206: missing return type on class methods
+    "FBT001",  # FBT001: boolean positional argument in function definition
+    "EM101",   # EM101: raw string literal in exception (avoid `raise Exception("msg")`)
+    "PIE790",  # PIE790: unnecessary placeholder (remove `pass` or `...`)
+    "RET504",  # RET504: unnecessary assignment immediately before return
+    "PTH118",  # PTH118: use `Path`-based methods instead of `os.path.join()`
+    "PERF401", # PERF401: replace manual loops with list comprehensions
+    "W293",    # W293: blank line contains whitespace
+    "DOC202",  # DOC202: extraneous Returns section in docstring
+    "D101",    # D101: missing docstring in public class
+    "D102",    # D102: missing docstring in public method
+    "D410",    # D410: missing blank line after a section header in docstring
+    "D411",    # D411: missing blank line before a section header in docstring
+    "D414",    # D414: section in docstring has no content
+    "F401",    # F401: imported but unused
+    "PLR0911", # PLR0911: too many return statements (pylint)
+    "PLR0912", # PLR0912: too many branches (pylint)
+    "W292",    # W292: no newline at end of file
 ]
 
 [tool.ruff.lint.per-file-ignores]
