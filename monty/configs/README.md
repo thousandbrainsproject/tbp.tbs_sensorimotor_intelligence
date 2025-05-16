@@ -135,12 +135,11 @@ Consists of 78 experiments:
 - `continual_learning_dist_agent_1lm_task76`
 
 As with [Figure 7: Rapid Learning](#figure-7-rapid-learning), performance is evaluated with:
-- 77 objects
+- N objects seen in pretraining
 - 5 random rotations
 - NO sensor noise*
 - NO hypothesis-testing*
 - No voting
-- Varying the number of objects trained on 
 
 *No hypothesis-testing as the ViT model comparison only receives one view and cannot move around object, and no noise since Sensor-Module noise does not have a clear analogue for the ViT model.
 
