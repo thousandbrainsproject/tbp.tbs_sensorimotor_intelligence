@@ -33,6 +33,7 @@ This means performance is evaluated on:
 
 import logging
 from copy import deepcopy
+from typing import Any
 
 from tbp.monty.frameworks.config_utils.make_dataset_configs import (
     ExperimentArgs,
@@ -62,7 +63,8 @@ Continual Learning Dataloader
 class InformedEnvironmentDataLoaderPerRotation(ED.InformedEnvironmentDataLoader):
     """InformedEnvironmentDataLoader for continual learning.
 
-    This dataloader overrides the following functions of the base InformedEnvironmentDataLoader.
+    This dataloader overrides the following functions from
+     the base InformedEnvironmentDataLoader.
     - pre_episode
     - post_episode
     - pre_epoch
@@ -70,8 +72,8 @@ class InformedEnvironmentDataLoaderPerRotation(ED.InformedEnvironmentDataLoader)
     - cycle_rotation
     - update_primary_target_object
 
-    Note that these functions are located in the parent class InformedEnvironmentDataLoader,
-    at EnvironmentDataLoaderPerObject.
+    Note that these functions are located in the parent class
+    InformedEnvironmentDataLoader (at EnvironmentDataLoaderPerObject).
     """
 
     def __init__(
@@ -120,7 +122,8 @@ class InformedEnvironmentDataLoaderPerRotation(ED.InformedEnvironmentDataLoader)
         """Update the primary target object in the scene.
 
         Raises:
-            ValueError: If the current object index is greater than the number of objects.
+            ValueError: If the current object index is greater than the number of
+            objects.
 
         Note:
             Analogous to EnvironmentDataLoaderPerObject.change_object_by_idx.
