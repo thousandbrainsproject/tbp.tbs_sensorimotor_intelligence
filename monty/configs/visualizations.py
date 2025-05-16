@@ -64,7 +64,7 @@ from .fig5_rapid_inference_with_voting import (
     dist_agent_8lm_randrot_noise,
 )
 from .fig6_rapid_inference_with_model_based_policies import surf_agent_1lm
-from .fig7_rapid_learning import (
+from .fig7a_rapid_learning import (
     DMCPretrainLoggingConfig,
     PretrainingExperimentWithCheckpointing,
 )
