@@ -7,7 +7,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from typing import Tuple
+from typing import Tuple, TypeAlias
 
 import torch
 import torch.nn as nn
@@ -16,7 +16,7 @@ from transformers import AutoConfig, ViTModel
 
 from .norm_linear_head import NormLinearHead
 
-ProjectionInfo = Tuple[torch.Tensor, torch.Tensor, tuple, tuple, tuple]
+ProjectionInfo: TypeAlias = Tuple[torch.Tensor, torch.Tensor, tuple, tuple, tuple]
 
 
 class ViTRgbdObjectClassifierWithRotation(nn.Module):
