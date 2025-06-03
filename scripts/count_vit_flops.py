@@ -25,7 +25,8 @@ For clarity, we break down the FLOPs calculation:
 
 2. Training FLOPs:
    - Forward pass FLOPs (as above)
-   - Backward pass FLOPs (estimated as 2x forward pass)
+   - Backward pass FLOPs (estimated as 2x forward pass, following Kaplan et al. 2020,
+   "Scaling laws for neural language models.")
    - Multiplied by number of images and epochs
    - Separate calculations for pretraining and finetuning
 
