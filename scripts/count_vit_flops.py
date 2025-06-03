@@ -66,7 +66,8 @@ num_epochs_for_vit: int = 75
 
 # ImageNet-21K Pretraining Parameters
 imagenet21k_num_images: int = 14_000_000
-imagenet21k_num_epochs: int = 90  # See Table 3 of ViT paper; value for ViT-B/16
+imagenet21k_num_epochs: int = 90  # See Table 3 of ViT paper - value for ViT-B/16 (Dosovitskiy et al, 2020
+    An image is worth 16x16 words: Transformers for image recognition at scale)
 
 model = RGBD_ViT(
     model_name=backbone_vit_model,
