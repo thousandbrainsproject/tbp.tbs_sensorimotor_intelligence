@@ -259,7 +259,7 @@ def make_continual_learning_eval_config(task_id: int) -> dict:
     and loads a model pretrained after `task_id` epochs.
 
     Args:
-        task_id (int): The ID of the task to evaluate on.
+        task_id (int): The ID of the task to evaluate on, indexed from 0.
 
     Returns:
         dict: Config for a partially trained model.
