@@ -1,0 +1,16 @@
+# @package _global_
+
+defaults:
+  - /experiment/hyperparameter_optimization/starting_config
+  - _self_
+
+trainer:
+  gradient_clip_val: 1.0 # Added following 02_gradient_clipping experiment
+
+data:
+  train_transform:
+    _target_: src.data.transforms.rgbd_transforms.RGBDTrainAugment
+
+logger:
+  wandb:
+    name: "vit-b16_data_augmentation"

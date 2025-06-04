@@ -1,0 +1,34 @@
+# @package _global_
+# Configuration for testing NormLinearHead (LayerNorm + Linear)
+# While there is no change in config, the vit_module.py has been updated to use differential learning rates for the backbone and heads.
+
+defaults:
+  - /experiment/hyperparameter_optimization/starting_config
+  - _self_
+
+model:
+  rotation_weight: 1 # The default rotation weight for ViT
+  net: # Added following 05_multilayer_heads experiment
+    classification_head_type: "norm_linear"
+    quaternion_head_type: "norm_linear"
+  optimizer: # Added following 07_adamw_optimizer experiment
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 0.0001
+    weight_decay: 0.01
+    betas: [0.9, 0.999] # default betas for AdamW
+    eps: 1e-8 # default eps for AdamW
+  scheduler: # Added following 06_warmup_cosine_decay experiment
+    _target_: transformers.get_cosine_schedule_with_warmup
+    _partial_: true
+
+trainer:
+  gradient_clip_val: 1.0 # Added following 02_gradient_clipping experiment
+
+data:
+  train_transform:
+    _target_: src.data.transforms.rgbd_transforms.RGBDBaseTransform # Explicitly set to base transform
+
+logger:
+  wandb:
+    name: "vit-b16_lr_1e-4"
