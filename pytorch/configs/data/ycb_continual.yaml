@@ -1,0 +1,14 @@
+_target_: src.data.ycb_continual_datamodule.YCBContinualDataModule
+
+# Data Path
+data_dir: ${paths.data_dir}/view_finder_base/view_finder_rgbd
+test_dir: ${paths.data_dir}/view_finder_randrot/view_finder_rgbd 
+
+# Task parameters for continual learning
+task_id: null
+num_classes_for_task: 77
+
+# DataLoader parameters
+batch_size: 128 # Needs to be divisible by the number of devices (e.g., if in a distributed setup)
+num_workers: 0
+pin_memory: False
