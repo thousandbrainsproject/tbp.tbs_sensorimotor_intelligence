@@ -1,0 +1,19 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - /experiment/fig7b_continual_learning/train/task0
+
+task_id: 2
+num_classes_for_task: 1
+
+ckpt_path: ${paths.log_dir}/fig7b_continual_learning/fig7b_vit-b16-224-in21k_task${eval:${task_id}-1}_classes${num_classes_for_task}/checkpoints/last.ckpt
+
+trainer:
+  max_epochs: 10000
+
+logger:
+  wandb:
+    name: "fig7b_vit-b16-224-in21k_task${task_id}_classes${num_classes_for_task}"

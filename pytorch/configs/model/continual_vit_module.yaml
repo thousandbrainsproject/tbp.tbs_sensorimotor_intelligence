@@ -1,0 +1,26 @@
+_target_: src.models.continual_vit_module.ContinualViTLitModule
+
+net:
+  _target_: src.models.components.rgbd_vit.ViTRgbdObjectClassifierWithRotation
+  model_name: vit-b16-224-in21k
+  num_classes: 77
+  freeze_backbone: false
+  use_pretrained: true
+
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 0.0005
+  weight_decay: 0.01
+  betas: [0.9, 0.999] # default betas for AdamW
+  eps: 1e-8 # default eps for AdamW
+
+scheduler:
+  _target_: transformers.get_cosine_schedule_with_warmup
+  _partial_: true
+
+compile: false # false for debugging
+
+rotation_weight: 1.0
+task_id: null
+num_classes_for_task: null
