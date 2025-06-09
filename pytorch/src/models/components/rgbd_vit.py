@@ -26,6 +26,12 @@ class ViTRgbdObjectClassifierWithRotation(nn.Module):
     This model extends a standard ViT to handle 4-channel RGB-D input by modifying the patch
     embedding projection. It includes two heads: one for classification and one for quaternion
     prediction.
+
+    Args:
+        model_name: Name of the base ViT model to use
+        num_classes: Number of classification classes
+        freeze_backbone: Whether to freeze the backbone parameters
+        use_pretrained: Whether to use pretrained weights
     """
 
     def __init__(
@@ -35,14 +41,6 @@ class ViTRgbdObjectClassifierWithRotation(nn.Module):
         freeze_backbone: bool = False,
         use_pretrained: bool = True,
     ) -> None:
-        """Initialize the RGBD_ViT model.
-
-        Args:
-            model_name: Name of the base ViT model to use
-            num_classes: Number of classification classes
-            freeze_backbone: Whether to freeze the backbone parameters
-            use_pretrained: Whether to use pretrained weights
-        """
         super().__init__()
         model_id = MODEL_DICT[model_name]
         config = AutoConfig.from_pretrained(model_id)
