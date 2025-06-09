@@ -181,16 +181,16 @@ class YCBDataset(Dataset):
         rotation = self.episodes[idx]["rotation"]
         return torch.tensor(rotation, dtype=torch.float32)
 
-    def normalize_rotation_to_unit_quaternion(
+    def normalize_rotation_to_unit_xyzw_quaternion(
         self, rotation: torch.Tensor
     ) -> torch.Tensor:
-        """Convert rotation angles to unit quaternion representation.
+        """Convert rotation angles to unit quaternion representation in xyzw format (scalar-last).
 
         Args:
             rotation: Tensor containing rotation angles in degrees [x, y, z].
 
         Returns:
-            Unit quaternion representation [x, y, z, w].
+            Unit quaternion representation in xyzw format (scalar-last) [x, y, z, w].
         """
         rotation_rad = np.radians(rotation.numpy())
         r = R.from_euler("xyz", rotation_rad, degrees=False)
@@ -219,9 +219,10 @@ class YCBDataset(Dataset):
             raise FileNotFoundError(f"Image file {image_path} does not exist")
 
         try:
-            rgbd_image = np.load(image_path)
+            rgbd_image = np.load(image_path) # (H, W, 4)
             rgbd_image = torch.tensor(rgbd_image, dtype=torch.float32)
-            rgbd_image = rgbd_image.permute(2, 0, 1)
+            # Convert from HWC format (numpy) to CHW format (PyTorch's expected image format)
+            rgbd_image = rgbd_image.permute(2, 0, 1) # (4, H, W)
         except (ValueError, RuntimeError) as e:
             raise ValueError(f"Failed to load image at {image_path}: {str(e)}")
 
@@ -231,7 +232,7 @@ class YCBDataset(Dataset):
         object_id = self.extract_object_id(idx)
         object_id_tensor = torch.tensor(object_id, dtype=torch.int64)
         euler_rotation = self.extract_rotation(idx)
-        unit_quaternion = self.normalize_rotation_to_unit_quaternion(euler_rotation)
+        unit_quaternion = self.normalize_rotation_to_unit_xyzw_quaternion(euler_rotation)
         object_name = self.label_encoder.inverse_transform([object_id])[0]
 
         return {
