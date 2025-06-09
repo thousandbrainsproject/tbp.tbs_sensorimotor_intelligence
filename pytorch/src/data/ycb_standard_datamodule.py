@@ -10,7 +10,7 @@
 from typing import Any, Optional
 
 import torch
-from torch.utils.data import random_split
+from torch.utils.data import random_split, Subset
 
 from src.data.base_ycb_datamodule import BaseYCBDataModule
 from src.data.components.ycb_dataset import YCBDataset
@@ -117,11 +117,11 @@ class YCBStandardDataModule(BaseYCBDataModule):
 
             dataset_length = len(base_dataset)
             print(f"Dataset length: {dataset_length}")
-            train_length = int(dataset_length * self.train_val_split[0])  # 80%
-            val_length = dataset_length - train_length  # 20%
+            train_length = int(dataset_length * self.train_val_split[0])
+            val_length = dataset_length - train_length
 
             # Split the dataset indices
-            train_indices, val_indices = random_split(
+            train_split, val_split = random_split(
                 dataset=base_dataset,
                 lengths=[train_length, val_length],
                 generator=torch.Generator().manual_seed(42),
@@ -134,7 +134,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
                 num_rotations_to_train=self.num_rotations_to_train,
             )
             # Select train indicdes
-            self.data_train = train_dataset[train_indices]
+            self.data_train = Subset(train_dataset, train_split.indices)
 
             val_dataset = YCBDataset(
                 data_dir=self.hparams.data_dir,
@@ -142,7 +142,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
                 num_rotations_to_train=self.num_rotations_to_train,
             )
             # Select val indicdes
-            self.data_val = val_dataset[val_indices]
+            self.data_val = Subset(val_dataset, val_split.indices)
 
             # Create test dataset with test transform
             self.data_test = YCBDataset(
