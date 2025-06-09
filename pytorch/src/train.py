@@ -109,7 +109,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log.info("Logging hyperparameters!")
         log_hyperparameters(object_dict)
 
-    # Assert that if task_id > 0, then it must have a checkpoint path
+    # Assert in continual learning that if task_id > 0, then it must have a checkpoint path
     # because continual model must pick up training from a checkpoint
     if hasattr(cfg, "task_id") and cfg.task_id and cfg.task_id > 0 and not cfg.get("ckpt_path"):
         raise ValueError(
