@@ -1,0 +1,24 @@
+defaults:
+  - /callbacks/definitions/model_checkpoint
+  - /callbacks/definitions/early_stopping
+  - /callbacks/definitions/model_summary
+  - /callbacks/definitions/rich_progress_bar
+  - /callbacks/definitions/lr_logger
+  - /callbacks/definitions/log_predictions
+  - _self_
+
+model_checkpoint:
+  dirpath: ${paths.output_dir}/checkpoints
+  filename: "epoch_{epoch:03d}"
+  monitor: "val/loss"
+  mode: "min"
+  save_last: true
+  auto_insert_metric_name: false
+
+early_stopping:
+  monitor: "val/loss"
+  patience: 20
+  mode: "min"
+
+model_summary:
+  max_depth: -1
