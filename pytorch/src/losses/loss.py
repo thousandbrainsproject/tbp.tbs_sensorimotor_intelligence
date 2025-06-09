@@ -80,7 +80,8 @@ def masked_cross_entropy_loss(
 
     This function calculates the cross-entropy loss only for valid classes specified by
     valid_class_indices. It masks out invalid classes by setting their logits to a very
-    negative value before applying softmax.
+    negative value before applying softmax. This is a global mask, i.e. there is no
+    granularity in the form of different masks for different members of the batch.
 
     Args:
         logits (torch.Tensor): Predicted logits of shape (N, C) where C is the total number of

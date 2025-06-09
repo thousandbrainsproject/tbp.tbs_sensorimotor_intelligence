@@ -30,9 +30,11 @@ def get_rotation_error_in_degrees(
 ) -> torch.Tensor:
     """Get the rotation error between two quaternions.
 
+    Assumes quaternions are in xyzw (scalar-last) format.
+
     Args:
-        predicted_quaternion (torch.Tensor): Predicted quaternion (batch_size, 4) or (4,).
-        target_quaternion (torch.Tensor): Target quaternion (batch_size, 4) or (4,).
+        predicted_quaternion (torch.Tensor): Predicted quaternion (batch_size, 4) or (4,) in xyzw format.
+        target_quaternion (torch.Tensor): Target quaternion (batch_size, 4) or (4,) in xyzw format.
         reduce (bool, optional): If True, returns the mean error. If False,
             returns individual errors. Defaults to False.
 
