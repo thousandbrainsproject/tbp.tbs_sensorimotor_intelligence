@@ -1,0 +1,25 @@
+# @package _global_
+# Configuration for testing NormLinearHead (LayerNorm + Linear)
+
+defaults:
+  - /experiment/hyperparameter_optimization/starting_config
+  - _self_
+
+model:
+  net: # Added following 05_multilayer_heads experiment
+    classification_head_type: "norm_linear"
+    quaternion_head_type: "norm_linear"
+  scheduler:
+    _target_: transformers.get_cosine_schedule_with_warmup
+    _partial_: true
+
+trainer:
+  gradient_clip_val: 1.0 # Added following 02_gradient_clipping experiment
+
+data:
+  train_transform:
+    _target_: src.data.transforms.rgbd_transforms.RGBDTrainAugment
+
+logger:
+  wandb:
+    name: "vit-b16_warmup_cosine_decay"
