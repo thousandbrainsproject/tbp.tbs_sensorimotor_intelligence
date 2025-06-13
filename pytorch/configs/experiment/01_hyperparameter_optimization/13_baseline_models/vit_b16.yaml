@@ -1,5 +1,4 @@
 # @package _global_
-# Configuration for testing NormLinearHead (LayerNorm + Linear)
 # While there is no change in config, the vit_module.py has been updated to use differential learning rates for the backbone and heads.
 
 defaults:
