@@ -43,7 +43,7 @@ The model architecture consists of:
 
 ## Datasets
 
-The project uses the YCB dataset with RGB-D inputs. Dataset structure:
+The project uses RGB-D images extracted the YCB dataset using the Habitat simulator. The dataset structure is as follows:
 
 ```
 view_finder_images/
