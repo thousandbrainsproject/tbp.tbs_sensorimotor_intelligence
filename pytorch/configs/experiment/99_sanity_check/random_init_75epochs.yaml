@@ -30,7 +30,7 @@ model:
 
 trainer:
   max_epochs: 75 
-  num_sanity_val_steps: 2
+  num_sanity_val_steps: 2 # Number of validation steps to run before training starts to catch any potential issues early
 
 logger:
   wandb:

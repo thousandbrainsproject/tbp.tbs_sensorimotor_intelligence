@@ -1,3 +1,6 @@
+# Validation of training pipeline using a pre-trained Vision Transformer (ViT) for RGB classification.
+# This experiment serves as a baseline by evaluating model performance under minimal distribution shift,
+# utilizing only RGB inputs without depth information or rotation prediction tasks.
 # @package _global_
 
 defaults:
