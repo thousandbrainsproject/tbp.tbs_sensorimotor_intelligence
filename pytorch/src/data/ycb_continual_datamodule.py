@@ -98,7 +98,8 @@ class YCBContinualDataModule(BaseYCBDataModule):
             num_rotations_to_train=14,
         )
 
-        # Filter dataset by class
+        # Filter only the training dataset by class, keeping data_test unfiltered
+        # to enable visualization and analysis of model performance across all classes
         self.data_train = self.filter_dataset_by_class(
             self.full_dataset, self.current_task_classes
         )
