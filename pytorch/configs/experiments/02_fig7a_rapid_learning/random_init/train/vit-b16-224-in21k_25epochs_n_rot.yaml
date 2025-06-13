@@ -18,7 +18,7 @@ seed: 12345
 data:
   data_dir: ${paths.data_dir}/view_finder_32/view_finder_rgbd
   train_val_split: [1.0, 0.0] # Use all training data
-  num_rotations_to_train: 32
+  num_rotations_for_train: null
 
 model:
   compile: false # For debugging
@@ -34,4 +34,4 @@ trainer:
 
 logger:
   wandb:
-    name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_to_train}rot_random_init"
+    name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_for_train}rot_random_init"
