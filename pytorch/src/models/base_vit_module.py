@@ -124,7 +124,7 @@ class BaseViTLitModule(LightningModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
                 - object_name: Ground truth object names of shape (batch_size,)
 
@@ -135,16 +135,16 @@ class BaseViTLitModule(LightningModule):
                 - quaternion_geodesic_loss: Rotation loss component of shape (1,)
                 - pred_class: Class prediction logits of shape (batch_size, num_classes)
                 - pred_quaternion: Quaternion prediction tensor of shape (batch_size, 4)
-                - object_id: Ground truth object class IDs of shape (batch_size,)
+                - object_ids: Ground truth object class IDs of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
-        rgbd_image, object_id, unit_quaternion = (
+        rgbd_image, object_ids, unit_quaternion = (
             batch["rgbd_image"],
-            batch["object_id"],
+            batch["object_ids"],
             batch["unit_quaternion"],
         )
         pred_class, pred_quaternion = self.forward(rgbd_image)
-        classification_loss = self.classification_loss(pred_class, object_id)
+        classification_loss = self.classification_loss(pred_class, object_ids)
         quaternion_geodesic_loss = self.quaternion_geodesic_loss(
             pred_quaternion, unit_quaternion
         )
@@ -159,7 +159,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -171,7 +171,7 @@ class BaseViTLitModule(LightningModule):
         quaternion_geodesic_loss: torch.Tensor,
         pred_class: torch.Tensor,
         pred_quaternion: torch.Tensor,
-        object_id: torch.Tensor,
+        object_ids: torch.Tensor,
         unit_quaternion: torch.Tensor,
     ) -> None:
         """Log metrics for a given prefix (train, val, test).
@@ -183,7 +183,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss: Quaternion loss component of shape (1,)
             pred_class: Class prediction logits of shape (batch_size, num_classes)
             pred_quaternion: Quaternion prediction tensor of shape (batch_size, 4)
-            object_id: Ground truth object class IDs of shape (batch_size,)
+            object_ids: Ground truth object class IDs of shape (batch_size,)
             unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
         metrics = (
@@ -206,7 +206,7 @@ class BaseViTLitModule(LightningModule):
         metrics[f"{prefix}/loss"].update(loss)
         metrics[f"{prefix}/classification_loss"].update(classification_loss)
         metrics[f"{prefix}/quaternion_geodesic_loss"].update(quaternion_geodesic_loss)
-        metrics[f"{prefix}/class_acc"].update(pred_class, object_id)
+        metrics[f"{prefix}/class_acc"].update(pred_class, object_ids)
         metrics[f"{prefix}/rotation_error"].update(rotation_errors)
 
         self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
@@ -217,7 +217,7 @@ class BaseViTLitModule(LightningModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
                 - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
@@ -231,7 +231,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         ) = self.model_step(batch)
         self.log_metrics(
@@ -241,7 +241,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
         return loss
@@ -261,7 +261,7 @@ class BaseViTLitModule(LightningModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
                 - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
@@ -272,7 +272,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         ) = self.model_step(batch)
         self.log_metrics(
@@ -282,7 +282,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -301,7 +301,7 @@ class BaseViTLitModule(LightningModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
                 - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
@@ -312,7 +312,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         ) = self.model_step(batch)
         self.log_metrics(
@@ -322,7 +322,7 @@ class BaseViTLitModule(LightningModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -341,7 +341,7 @@ class BaseViTLitModule(LightningModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
                 - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
@@ -351,12 +351,12 @@ class BaseViTLitModule(LightningModule):
                 - class_probabilities: Softmax probabilities for object classes of shape
                     (batch_size, num_classes)
                 - predicted_quaternion: Predicted rotation quaternions of shape (batch_size, 4)
-                - object_id: Ground truth object class IDs of shape (batch_size,)
+                - object_ids: Ground truth object class IDs of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
-        rgbd_image, object_id, unit_quaternion = (
+        rgbd_image, object_ids, unit_quaternion = (
             batch["rgbd_image"],
-            batch["object_id"],
+            batch["object_ids"],
             batch["unit_quaternion"],
         )
         pred_class, pred_quaternion = self.forward(rgbd_image)
@@ -367,7 +367,7 @@ class BaseViTLitModule(LightningModule):
         return {
             "class_probabilities": class_probabilities,
             "predicted_quaternion": pred_quaternion,
-            "object_id": object_id,
+            "object_ids": object_ids,
             "unit_quaternion": unit_quaternion,
         }
 

@@ -206,7 +206,7 @@ class YCBDataset(Dataset):
         Returns:
             Dictionary containing:
                 - rgbd_image: RGBD image tensor with shape (C, H, W)
-                - object_id: Integer tensor representing the object class
+                - object_ids: Integer tensor representing the object class
                 - unit_quaternion: Unit quaternion representing the object's rotation
                 - object_name: String name of the object
 
@@ -230,14 +230,14 @@ class YCBDataset(Dataset):
             rgbd_image = self.transform(rgbd_image)
 
         object_id = self.extract_object_id(idx)
-        object_id_tensor = torch.tensor(object_id, dtype=torch.int64)
+        object_id_tensor = torch.tensor(object_ids, dtype=torch.int64)
         euler_rotation = self.extract_rotation(idx)
         unit_quaternion = self.normalize_rotation_to_unit_xyzw_quaternion(euler_rotation)
         object_name = self.label_encoder.inverse_transform([object_id])[0]
 
         return {
             "rgbd_image": rgbd_image,
-            "object_id": object_id_tensor,
+            "object_ids": object_id_tensor,
             "unit_quaternion": unit_quaternion,
             "object_name": object_name,
         }

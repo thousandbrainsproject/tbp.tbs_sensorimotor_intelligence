@@ -25,7 +25,7 @@ import torch.optim as optim
 from torchmetrics import MeanMetric
 
 from src.losses.loss import masked_cross_entropy_loss, quaternion_geodesic_loss
-from src.metrics.continual_accuracy import calculate_accuracy
+from src.metrics.continual_accuracy import calculate_continual_accuracy
 from src.models.base_vit_module import (
     BaseViTLitModule,
     BatchDict,
@@ -101,7 +101,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
 
         Returns:
@@ -111,29 +111,25 @@ class ContinualViTLitModule(BaseViTLitModule):
                 - quaternion_geodesic_loss: Rotation loss component of shape (1,)
                 - pred_class: Class prediction logits of shape (batch_size, num_classes)
                 - pred_quaternion: Quaternion prediction tensor of shape (batch_size, 4)
-                - object_id: Ground truth object class IDs of shape (batch_size,)
+                - object_ids: Ground truth object class IDs of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
-        rgbd_image, object_id, unit_quaternion = (
+        rgbd_image, object_ids, unit_quaternion = (
             batch["rgbd_image"],
-            batch["object_id"],
+            batch["object_ids"],
             batch["unit_quaternion"],
         )
         pred_class, pred_quaternion = self.forward(rgbd_image)
 
         # Always use all_seen_classes for valid classes
+        # This is a form of forward masking that ensures the model does not try to predict
+        # classes it has not seen yet. By restricting predictions to only seen classes,
+        # we prevent the model from making predictions on future/unseen classes during training.
         valid_classes = self.all_seen_classes
 
-        classification_loss = self.classification_loss(
-            pred_class, object_id, valid_classes
-        )
-        quaternion_geodesic_loss = self.quaternion_geodesic_loss(
-            pred_quaternion, unit_quaternion
-        )
-        loss = (
-            classification_loss
-            + self.hparams.rotation_weight * quaternion_geodesic_loss
-        )
+        classification_loss = self.classification_loss(pred_class, object_ids, valid_classes)
+        quaternion_geodesic_loss = self.quaternion_geodesic_loss(pred_quaternion, unit_quaternion)
+        loss = classification_loss + self.hparams.rotation_weight * quaternion_geodesic_loss
 
         return (
             loss,
@@ -141,7 +137,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -153,7 +149,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         quaternion_geodesic_loss: torch.Tensor,
         pred_class: torch.Tensor,
         pred_quaternion: torch.Tensor,
-        object_id: torch.Tensor,
+        object_ids: torch.Tensor,
         unit_quaternion: torch.Tensor,
     ) -> None:
         """Log metrics for a given prefix (train, val, test).
@@ -165,7 +161,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss: Quaternion loss component of shape (1,)
             pred_class: Class prediction logits of shape (batch_size, num_classes)
             pred_quaternion: Quaternion prediction tensor of shape (batch_size, 4)
-            object_id: Ground truth object class IDs of shape (batch_size,)
+            object_ids: Ground truth object class IDs of shape (batch_size,)
             unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
         # First call parent class log_metrics
@@ -176,7 +172,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -192,14 +188,14 @@ class ContinualViTLitModule(BaseViTLitModule):
         pred_indices = torch.argmax(pred_class, dim=1)
 
         # Calculate accuracy for current task classes
-        current_task_acc = calculate_accuracy(
-            pred_indices, object_id, self.current_task_classes
+        current_task_acc = calculate_continual_accuracy(
+            pred_indices, object_ids, self.current_task_classes
         )
         metrics[f"{prefix}/current_task_class_acc"].update(current_task_acc)
 
         # Calculate accuracy for all seen classes
-        all_seen_acc = calculate_accuracy(
-            pred_indices, object_id, self.all_seen_classes
+        all_seen_acc = calculate_continual_accuracy(
+            pred_indices, object_ids, self.all_seen_classes
         )
         metrics[f"{prefix}/all_seen_class_acc"].update(all_seen_acc)
 
@@ -209,9 +205,7 @@ class ContinualViTLitModule(BaseViTLitModule):
                 f"{prefix}/current_task_class_acc": metrics[
                     f"{prefix}/current_task_class_acc"
                 ].compute(),
-                f"{prefix}/all_seen_class_acc": metrics[
-                    f"{prefix}/all_seen_class_acc"
-                ].compute(),
+                f"{prefix}/all_seen_class_acc": metrics[f"{prefix}/all_seen_class_acc"].compute(),
             },
             on_step=False,
             on_epoch=True,
@@ -224,7 +218,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
             batch_idx: The index of the current batch.
 
@@ -237,7 +231,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         ) = self.model_step(batch)
         self.log_metrics(
@@ -247,7 +241,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
         return loss
@@ -267,7 +261,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
             batch_idx: The index of the current batch.
         """
@@ -277,7 +271,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         ) = self.model_step(batch)
         self.log_metrics(
@@ -287,7 +281,7 @@ class ContinualViTLitModule(BaseViTLitModule):
             quaternion_geodesic_loss,
             pred_class,
             pred_quaternion,
-            object_id,
+            object_ids,
             unit_quaternion,
         )
 
@@ -351,7 +345,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         Args:
             batch: A dictionary containing:
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_id: Ground truth class labels of shape (batch_size,)
+                - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
             batch_idx: The index of the current batch.
 
@@ -360,19 +354,17 @@ class ContinualViTLitModule(BaseViTLitModule):
                 - class_probabilities: Softmax probabilities for object classes of shape
                     (batch_size, num_classes)
                 - predicted_quaternion: Predicted rotation quaternions of shape (batch_size, 4)
-                - object_id: Ground truth object class IDs of shape (batch_size,)
+                - object_ids: Ground truth object class IDs of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
         # Call model_step without mode parameter
-        _, _, _, pred_class, pred_quaternion, object_id, unit_quaternion = (
-            self.model_step(batch)
-        )
+        _, _, _, pred_class, pred_quaternion, object_ids, unit_quaternion = self.model_step(batch)
 
         class_probabilities = torch.softmax(pred_class, dim=1)
 
         return {
             "class_probabilities": class_probabilities,
             "predicted_quaternion": pred_quaternion,
-            "object_id": object_id,
+            "object_ids": object_ids,
             "unit_quaternion": unit_quaternion,
         }
