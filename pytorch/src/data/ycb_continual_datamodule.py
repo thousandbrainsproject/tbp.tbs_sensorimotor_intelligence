@@ -95,7 +95,7 @@ class YCBContinualDataModule(BaseYCBDataModule):
         self.full_dataset = YCBDataset(
             data_dir=self.hparams.data_dir,
             transform=self.transform,
-            num_rotations_to_train=14,
+            num_rotations_for_train=14,
         )
 
         # Filter only the training dataset by class, keeping data_test unfiltered

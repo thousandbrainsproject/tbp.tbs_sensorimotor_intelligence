@@ -5,7 +5,7 @@ data_dir: ${paths.data_dir}/view_finder_base/view_finder_rgbd
 test_dir: ${paths.data_dir}/view_finder_randrot/view_finder_rgbd
 
 # Dataset parameters
-num_rotations_to_train: null # Set to null to use all data
+num_rotations_for_train: null # Set to null to use all data
 train_val_split: [0.8, 0.2] # 80% train, 20% validation
 
 # DataLoader parameters
