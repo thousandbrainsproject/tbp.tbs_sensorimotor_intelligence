@@ -16,13 +16,13 @@ tags: ["fig7a"]
 
 data:
   data_dir: ${paths.data_dir}/view_finder_32/view_finder_rgbd
-  num_rotations_to_train: 4
+  num_rotations_for_train: null
 
 model:
   net:
     model_name: vit-b16-224-in21k
 
 base_dir: "${oc.env:HOME}/tbp/results/dmc/results/vit/logs"
-exp_name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_to_train}rot"
+exp_name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_for_train}rot"
 ckpt_path: "${base_dir}/${exp_name}/checkpoints/last.ckpt"
 save_dir: "${base_dir}/${exp_name}/inference"
