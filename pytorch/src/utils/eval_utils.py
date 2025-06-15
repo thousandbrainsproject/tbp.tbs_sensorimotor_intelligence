@@ -42,7 +42,7 @@ def analyze_predictions(
         else:
             predicted_class = class_probs.argmax(dim=1)
         predicted_quaternion = batch["predicted_quaternion"]
-        object_id = batch["object_id"]
+        object_id = batch["object_ids"]
         unit_quaternion = batch["unit_quaternion"]
         quaternion_error = compute_quaternion_error(
             predicted_quaternion, unit_quaternion, reduction=None
