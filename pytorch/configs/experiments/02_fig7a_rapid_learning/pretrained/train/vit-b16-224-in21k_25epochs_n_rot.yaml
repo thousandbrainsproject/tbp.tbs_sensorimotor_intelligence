@@ -1,0 +1,35 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - /experiment/hyperparameter_optimization/optimized_config
+  - override /callbacks: full_train_callbacks
+  - _self_
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["fig7a"]
+
+seed: 12345
+
+data:
+  data_dir: ${paths.data_dir}/view_finder_32/view_finder_rgbd
+  train_val_split: [1.0, 0.0] # Use all training data
+  num_rotations_for_train: null
+
+model:
+  compile: false # For debugging
+  net:
+    model_name: vit-b16-224-in21k
+  rotation_weight: 1.0
+
+trainer:
+  max_epochs: 25
+  num_sanity_val_steps: 0
+
+logger:
+  wandb:
+    name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_for_train}rot"

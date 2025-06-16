@@ -44,7 +44,7 @@ class YCBDataset(Dataset):
     Attributes:
         data_dir: Path to the directory containing the data.
         image_dir: Path to the directory containing the image arrays.
-        num_rotations_to_train: Optional limit on number of rotations to use.
+        num_rotations_for_train: Optional limit on number of rotations to use.
         episodes: List of episode data containing object and rotation information.
         unique_object_names: List of unique object names in the dataset.
         label_encoder: Encoder for converting object names to numeric IDs.
@@ -61,7 +61,7 @@ class YCBDataset(Dataset):
         self,
         data_dir: str | Path,
         transform: RGBDNormalization | None = None,
-        num_rotations_to_train: int | None = None,
+        num_rotations_for_train: int | None = None,
     ) -> None:
         """Initialize the YCB Dataset.
 
@@ -70,7 +70,7 @@ class YCBDataset(Dataset):
                 It should have a subdirectory called 'arrays' and 'episodes.jsonl' file.
             transform: Transform to apply to the images.
                 Defaults to None.
-            num_rotations_to_train: If set, limits the dataset to use N rotations.
+            num_rotations_for_train: If set, limits the dataset to use N rotations.
                 Defaults to None (use all data).
 
         Raises:
@@ -89,16 +89,16 @@ class YCBDataset(Dataset):
         if not episodes_file.exists():
             raise FileNotFoundError(f"Episodes file {episodes_file} does not exist")
 
-        self.num_rotations_to_train = num_rotations_to_train
+        self.num_rotations_for_train = num_rotations_for_train
 
         with open(episodes_file) as f:
             all_episodes: list[EpisodeData] = [json.loads(line) for line in f]
             if not all_episodes:
                 raise ValueError("Episodes file is empty")
 
-            if num_rotations_to_train is not None:
+            if num_rotations_for_train is not None:
                 self.episodes = all_episodes[
-                    : self.NUM_YCB_OBJECTS * num_rotations_to_train
+                    : self.NUM_YCB_OBJECTS * num_rotations_for_train
                 ]
             else:
                 self.episodes = all_episodes
@@ -145,8 +145,8 @@ class YCBDataset(Dataset):
         Returns:
             Number of samples in the dataset.
         """
-        if self.num_rotations_to_train is not None:
-            return self.NUM_YCB_OBJECTS * self.num_rotations_to_train
+        if self.num_rotations_for_train is not None:
+            return self.NUM_YCB_OBJECTS * self.num_rotations_for_train
         return len(list(self.image_dir.glob("*.npy")))
 
     def _get_unique_object_names(self) -> list[str]:

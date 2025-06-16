@@ -24,7 +24,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
         self,
         data_dir: str = "view_finder_base/view_finder_rgbd/arrays",
         test_dir: str = "view_finder_randrot/view_finder_rgbd/arrays",
-        num_rotations_to_train: Optional[int] = None,
+        num_rotations_for_train: Optional[int] = None,
         train_val_split: tuple[float, float] = (0.8, 0.2),
         batch_size: int = 64,
         num_workers: int = 0,
@@ -39,7 +39,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
                 Defaults to "view_finder_base/view_finder_rgbd/arrays".
             test_dir: Path to the test data directory containing RGBD arrays.
                 Defaults to "view_finder_randrot/view_finder_rgbd/arrays".
-            num_rotations_to_train: Number of rotations to use for training.
+            num_rotations_for_train: Number of rotations to use for training.
                 If None, all rotations are used.
             train_val_split: Tuple of (train_ratio, val_ratio) for splitting the dataset.
                 Must sum to 1.0. Defaults to (0.8, 0.2).
@@ -68,7 +68,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
         if sum(train_val_split) != 1.0:
             raise ValueError("train_val_split values must sum to 1.0")
 
-        self.num_rotations_to_train = num_rotations_to_train
+        self.num_rotations_for_train = num_rotations_for_train
         self.train_val_split = train_val_split
 
         # Set default transforms if not provided
@@ -112,7 +112,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
             base_dataset = YCBDataset(
                 data_dir=self.hparams.data_dir,
                 transform=None,  # No transform initially
-                num_rotations_to_train=self.hparams.num_rotations_to_train,
+                num_rotations_for_train=self.hparams.num_rotations_for_train,
             )
 
             dataset_length = len(base_dataset)
@@ -131,7 +131,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
             train_dataset = YCBDataset(
                 data_dir=self.hparams.data_dir,
                 transform=self.train_transform,
-                num_rotations_to_train=self.num_rotations_to_train,
+                num_rotations_for_train=self.num_rotations_for_train,
             )
             # Select train indicdes
             self.data_train = Subset(train_dataset, train_split.indices)
@@ -139,7 +139,7 @@ class YCBStandardDataModule(BaseYCBDataModule):
             val_dataset = YCBDataset(
                 data_dir=self.hparams.data_dir,
                 transform=self.val_transform,
-                num_rotations_to_train=self.num_rotations_to_train,
+                num_rotations_for_train=self.num_rotations_for_train,
             )
             # Select val indicdes
             self.data_val = Subset(val_dataset, val_split.indices)
