@@ -1,0 +1,4 @@
+train_acc_threshold:
+  _target_: src.callbacks.train_acc_threshold.TrainAccuracyThresholdCallback
+  accuracy_threshold: 0.9
+  metric_name: "train/current_task_class_acc"

@@ -3,6 +3,7 @@ defaults:
   - /callbacks/definitions/model_summary
   - /callbacks/definitions/rich_progress_bar
   - /callbacks/definitions/lr_logger
+  - /callbacks/definitions/train_acc_threshold
   - _self_
 
 model_checkpoint:
