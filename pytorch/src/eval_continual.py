@@ -145,16 +145,19 @@ def _get_masked_predictions_fn(model_id: int):
         A function that takes logits tensor and returns masked predictions
     """
 
-    def masker(class_logits: torch.Tensor) -> torch.Tensor:
-        total_classes = class_logits.shape[1]
+    def masker(class_probs: torch.Tensor) -> torch.Tensor:
+        total_classes = class_probs.shape[1]
         if model_id + 1 < total_classes:
-            mask = torch.zeros_like(class_logits, dtype=torch.bool)
+            mask = torch.zeros_like(class_probs, dtype=torch.bool)
             mask[:, : model_id + 1] = True
-            masked_logits = torch.where(
-                mask, class_logits, torch.tensor(-float("inf"), device=class_logits.device)
+            # Sets probabilities of unseen classes to -inf to avoid them being selected
+            # This ensures argmax will never pick unseen classes, even if the logits
+            # go through softmax (since exp(-inf) = 0)
+            masked_probs = torch.where(
+                mask, class_probs, torch.tensor(-float("inf"), device=class_probs.device)
             )
-            return masked_logits.argmax(dim=1)
-        return class_logits.argmax(dim=1)
+            return masked_probs.argmax(dim=1)
+        return class_probs.argmax(dim=1)
 
     return masker
 
