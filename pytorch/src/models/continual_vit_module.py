@@ -63,7 +63,7 @@ class ContinualViTLitModule(BaseViTLitModule):
         super().__init__(net, optimizer, scheduler, compile, rotation_weight)
         self.task_id = task_id
 
-        # Override the loss functions for continual learning
+        # Update classification loss function from BaseViTLitModule
         self.classification_loss = masked_cross_entropy_loss
         self.quaternion_geodesic_loss = quaternion_geodesic_loss
 
