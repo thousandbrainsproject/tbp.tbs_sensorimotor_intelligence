@@ -2,6 +2,7 @@
 
 # to execute this experiment run:
 # python train.py experiment=example
+# This script was used to deep dive into geodesic loss for randomly-initialized ViT models
 
 defaults:
   - /experiment/hyperparameter_optimization/optimized_config

@@ -2,6 +2,8 @@
 
 # to execute this experiment run:
 # python train.py experiment=example
+# This script was used to obtain performance of ViT in RGBD classification task
+# and was compared to performance of ViT in RGB classification task from 1_rgb_classification.yaml
 
 defaults:
   - override /data: ycb_standard
