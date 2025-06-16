@@ -84,6 +84,10 @@ def evaluate_model(cfg: DictConfig, model_id: int, ckpt_path: Path | str) -> Non
     masker = _get_masked_predictions_fn(model_id)
     results_df = analyze_predictions(predictions, class_masker=masker)
 
+    # Remove quaternion error column since it's not relevant for continual learning evaluation
+    # Quaternion predictions are continuous values and don't need masking like class predictions
+    results_df = results_df.drop(columns=['quaternion_error_degs'])
+
     # Save and summarize results
     save_and_summarize_results(
         results_df, cfg.save_dir, filename=f"predictions_model{model_id}.csv", logger=log.info
