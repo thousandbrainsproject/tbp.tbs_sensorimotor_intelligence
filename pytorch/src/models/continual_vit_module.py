@@ -6,117 +6,94 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-"""Base Vision Transformer (ViT) Lightning Module implementation. This module provides the core
-functionality for training and evaluating ViT models on classification and rotation prediction
-tasks. It serves as the foundation for specialized implementations like the continual learning
-variant.
+"""Continual Learning extension of the base Vision Transformer (ViT) Lightning Module. This module
+extends the base ViT implementation to support continual learning scenarios where the model needs
+to learn new tasks while maintaining performance on previously learned tasks.
 
 Key Features:
-- Classification and quaternion prediction
-- Standard metrics tracking
-- Basic loss computation
-- Core training/validation/testing loops
+- Task-specific class ranges management
+- Metrics tracking for current and all seen classes
+- Masked cross-entropy loss for continual learning
+- Task ID management
 """
 
-from typing import Any, Dict, Optional, Tuple, TypeAlias
+from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchmetrics
-from lightning import LightningModule
-from torchmetrics import Accuracy, MeanMetric
+from torchmetrics import MeanMetric
 
-from src.losses.loss import quaternion_geodesic_loss
-from src.metrics.rotation_error import get_rotation_error_in_degrees
-
-# Type aliases
-BatchDict: TypeAlias = Dict[str, torch.Tensor]
-ModelOutput: TypeAlias = Tuple[
-    torch.Tensor, torch.Tensor
-]  # (pred_class, pred_quaternion)
-ModelStepOutput: TypeAlias = Tuple[
-    torch.Tensor,  # loss
-    torch.Tensor,  # classification_loss
-    torch.Tensor,  # quaternion_geodesic_loss
-    torch.Tensor,  # pred_class
-    torch.Tensor,  # pred_quaternion
-    torch.Tensor,  # object_id
-    torch.Tensor,  # unit_quaternion
-]
-MetricsDict: TypeAlias = Dict[str, torchmetrics.Metric]
-OptimizerConfig: TypeAlias = Dict[str, Any]
-PredictOutput: TypeAlias = Dict[str, torch.Tensor]
+from src.losses.loss import masked_cross_entropy_loss, quaternion_geodesic_loss
+from src.metrics.continual_accuracy import calculate_continual_accuracy
+from src.models.base_vit_module import (
+    BaseViTLitModule,
+    BatchDict,
+    MetricsDict,
+    ModelStepOutput,
+    OptimizerConfig,
+    PredictOutput,
+)
+from src.utils.continual_learning_utils import compute_class_ranges
 
 
-class BaseViTLitModule(LightningModule):
+class ContinualViTLitModule(BaseViTLitModule):
     def __init__(
         self,
         net: nn.Module,
         optimizer: optim.Optimizer,
         scheduler: optim.lr_scheduler._LRScheduler,
-        rotation_weight: float,
         compile: bool,
+        rotation_weight: float,
+        task_id: int,
+        num_classes_for_task: Optional[int] = None,
     ) -> None:
-        """Initialize a ViTLitModule.
+        """Initialize a ContinualViTLitModule.
 
         Args:
             net: The model to finetune.
             optimizer: The optimizer to use for training.
             scheduler: The learning rate scheduler to use for training.
-            rotation_weight: Weight for the rotation loss component in the combined loss.
             compile: Whether to compile the model for faster training.
+            rotation_weight: Weight for the rotation loss component in the combined loss.
+            task_id: Current task identifier for continual learning.
+            num_classes_for_task: Number of classes in the current task. If None, uses default
+                class ranges.
         """
-        super().__init__()
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        super().__init__(net, optimizer, scheduler, compile, rotation_weight)
+        self.task_id = task_id
 
-        self.net = net
-
-        self.classification_loss = nn.CrossEntropyLoss()
+        # Update classification loss function from BaseViTLitModule
+        self.classification_loss = masked_cross_entropy_loss
         self.quaternion_geodesic_loss = quaternion_geodesic_loss
 
-        # Create metric objects
-        self.train_metrics = self.create_metrics("train")
-        self.val_metrics = self.create_metrics("val")
-        self.test_metrics = self.create_metrics("test")
+        # Create additional metrics specific to continual learning
+        self.train_metrics.update(self.create_continual_metrics("train"))
+        self.val_metrics.update(self.create_continual_metrics("val"))
+        self.test_metrics.update(self.create_continual_metrics("test"))
 
-    def create_metrics(self, prefix: str) -> MetricsDict:
-        """Create metric objects for tracking model performance.
+        _, _, self.current_task_classes, self.all_seen_classes = compute_class_ranges(
+            num_classes_for_task, task_id
+        )
+
+    def create_continual_metrics(self, prefix: str) -> MetricsDict:
+        """Create additional metrics specific to continual learning.
 
         Args:
             prefix: Dataset split identifier ('train', 'val', or 'test')
 
         Returns:
-            metrics: Dictionary mapping metric names to metric objects
+            Dictionary mapping metric names to metric objects for continual learning metrics.
         """
         metrics = {
-            f"{prefix}/loss": MeanMetric(),
-            f"{prefix}/classification_loss": MeanMetric(),
-            f"{prefix}/quaternion_geodesic_loss": MeanMetric(),
-            f"{prefix}/class_acc": Accuracy(task="multiclass", num_classes=77),
-            f"{prefix}/rotation_error": MeanMetric(),
+            f"{prefix}/all_seen_class_acc": MeanMetric(),
+            f"{prefix}/current_task_class_acc": MeanMetric(),
         }
 
-        # Register metrics as attributes
         for name, metric in metrics.items():
             setattr(self, name.replace("/", "_"), metric)
 
         return metrics
-
-    def forward(self, x: torch.Tensor) -> ModelOutput:
-        """Forward pass through the network.
-
-        Args:
-            x: Input tensor containing RGBD images
-
-        Returns:
-            Tuple containing:
-                pred_class: Class prediction logits
-                pred_quaternion: Quaternion prediction tensor
-        """
-        return self.net(x)
 
     def model_step(self, batch: BatchDict) -> ModelStepOutput:
         """Perform a single model step on a batch of data.
@@ -126,7 +103,6 @@ class BaseViTLitModule(LightningModule):
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
                 - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-                - object_name: Ground truth object names of shape (batch_size,)
 
         Returns:
             Tuple containing:
@@ -144,14 +120,16 @@ class BaseViTLitModule(LightningModule):
             batch["unit_quaternion"],
         )
         pred_class, pred_quaternion = self.forward(rgbd_image)
-        classification_loss = self.classification_loss(pred_class, object_ids)
-        quaternion_geodesic_loss = self.quaternion_geodesic_loss(
-            pred_quaternion, unit_quaternion
-        )
-        loss = (
-            classification_loss
-            + self.hparams.rotation_weight * quaternion_geodesic_loss
-        )
+
+        # Always use all_seen_classes for valid classes
+        # This is a form of forward masking that ensures the model does not try to predict
+        # classes it has not seen yet. By restricting predictions to only seen classes,
+        # we prevent the model from making predictions on future/unseen classes during training.
+        valid_classes = self.all_seen_classes
+
+        classification_loss = self.classification_loss(pred_class, object_ids, valid_classes)
+        quaternion_geodesic_loss = self.quaternion_geodesic_loss(pred_quaternion, unit_quaternion)
+        loss = classification_loss + self.hparams.rotation_weight * quaternion_geodesic_loss
 
         return (
             loss,
@@ -186,6 +164,18 @@ class BaseViTLitModule(LightningModule):
             object_ids: Ground truth object class IDs of shape (batch_size,)
             unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
         """
+        # First call parent class log_metrics
+        super().log_metrics(
+            prefix,
+            loss,
+            classification_loss,
+            quaternion_geodesic_loss,
+            pred_class,
+            pred_quaternion,
+            object_ids,
+            unit_quaternion,
+        )
+
         metrics = (
             self.train_metrics
             if prefix == "train"
@@ -194,22 +184,33 @@ class BaseViTLitModule(LightningModule):
             else self.test_metrics
         )
 
-        rotation_errors = get_rotation_error_in_degrees(
-            pred_quaternion, unit_quaternion
+        # Get predicted class indices
+        pred_indices = torch.argmax(pred_class, dim=1)
+
+        # Calculate accuracy for current task classes
+        current_task_acc = calculate_continual_accuracy(
+            pred_indices, object_ids, self.current_task_classes
         )
+        metrics[f"{prefix}/current_task_class_acc"].update(current_task_acc)
 
-        # Move metrics to the correct device
-        for metric in metrics.values():
-            metric.to(self.device)
+        # Calculate accuracy for all seen classes
+        all_seen_acc = calculate_continual_accuracy(
+            pred_indices, object_ids, self.all_seen_classes
+        )
+        metrics[f"{prefix}/all_seen_class_acc"].update(all_seen_acc)
 
-        # Update metrics with current batch values
-        metrics[f"{prefix}/loss"].update(loss)
-        metrics[f"{prefix}/classification_loss"].update(classification_loss)
-        metrics[f"{prefix}/quaternion_geodesic_loss"].update(quaternion_geodesic_loss)
-        metrics[f"{prefix}/class_acc"].update(pred_class, object_ids)
-        metrics[f"{prefix}/rotation_error"].update(rotation_errors)
-
-        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
+        # Log additional metrics
+        self.log_dict(
+            {
+                f"{prefix}/current_task_class_acc": metrics[
+                    f"{prefix}/current_task_class_acc"
+                ].compute(),
+                f"{prefix}/all_seen_class_acc": metrics[f"{prefix}/all_seen_class_acc"].compute(),
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def training_step(self, batch: BatchDict, batch_idx: int) -> torch.Tensor:
         """Perform a single training step on a batch of data.
@@ -219,7 +220,6 @@ class BaseViTLitModule(LightningModule):
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
                 - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-                - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
 
         Returns:
@@ -255,46 +255,6 @@ class BaseViTLitModule(LightningModule):
         for metric in self.train_metrics.values():
             metric.reset()
 
-    def validation_step(self, batch: BatchDict, batch_idx: int) -> None:
-        """Perform a single validation step on a batch of data.
-
-        Args:
-            batch: A dictionary containing:
-                - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_ids: Ground truth class labels of shape (batch_size,)
-                - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-                - object_name: Ground truth object names of shape (batch_size,)
-            batch_idx: The index of the current batch.
-        """
-        (
-            val_loss,
-            classification_loss,
-            quaternion_geodesic_loss,
-            pred_class,
-            pred_quaternion,
-            object_ids,
-            unit_quaternion,
-        ) = self.model_step(batch)
-        self.log_metrics(
-            "val",
-            val_loss,
-            classification_loss,
-            quaternion_geodesic_loss,
-            pred_class,
-            pred_quaternion,
-            object_ids,
-            unit_quaternion,
-        )
-
-    def on_validation_epoch_end(self) -> None:
-        """Reset validation metrics at the end of each validation epoch.
-
-        This method is called automatically by PyTorch Lightning after each validation epoch to
-        ensure metrics are properly reset for the next epoch.
-        """
-        for metric in self.val_metrics.values():
-            metric.reset()
-
     def test_step(self, batch: BatchDict, batch_idx: int) -> None:
         """Perform a single test step on a batch of data.
 
@@ -303,7 +263,6 @@ class BaseViTLitModule(LightningModule):
                 - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
                 - object_ids: Ground truth class labels of shape (batch_size,)
                 - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-                - object_name: Ground truth object names of shape (batch_size,)
             batch_idx: The index of the current batch.
         """
         (
@@ -335,42 +294,6 @@ class BaseViTLitModule(LightningModule):
         for metric in self.test_metrics.values():
             metric.reset()
 
-    def predict_step(self, batch: BatchDict, batch_idx: int) -> PredictOutput:
-        """Perform a single prediction step on a batch of data.
-
-        Args:
-            batch: A dictionary containing:
-                - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
-                - object_ids: Ground truth class labels of shape (batch_size,)
-                - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-                - object_name: Ground truth object names of shape (batch_size,)
-            batch_idx: The index of the current batch.
-
-        Returns:
-            Dictionary containing:
-                - class_probabilities: Softmax probabilities for object classes of shape
-                    (batch_size, num_classes)
-                - predicted_quaternion: Predicted rotation quaternions of shape (batch_size, 4)
-                - object_ids: Ground truth object class IDs of shape (batch_size,)
-                - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
-        """
-        rgbd_image, object_ids, unit_quaternion = (
-            batch["rgbd_image"],
-            batch["object_ids"],
-            batch["unit_quaternion"],
-        )
-        pred_class, pred_quaternion = self.forward(rgbd_image)
-
-        # Convert logits to probabilities using softmax
-        class_probabilities = torch.softmax(pred_class, dim=1)
-
-        return {
-            "class_probabilities": class_probabilities,
-            "predicted_quaternion": pred_quaternion,
-            "object_ids": object_ids,
-            "unit_quaternion": unit_quaternion,
-        }
-
     def setup(self, stage: Optional[str]) -> None:
         """Set up the model for the specified stage.
 
@@ -396,7 +319,6 @@ class BaseViTLitModule(LightningModule):
         optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
 
         if self.hparams.scheduler is not None:
-            # total_steps = self.trainer.estimated_stepping_batches
             total_steps = 1400  # 200 epochs * 7 steps/epoch when we did hparam search
             warmup_steps = int(0.05 * total_steps)  # 5% of total steps
             scheduler = self.hparams.scheduler(
@@ -412,3 +334,37 @@ class BaseViTLitModule(LightningModule):
                 },
             }
         return {"optimizer": optimizer}
+
+    def predict_step(
+        self,
+        batch: BatchDict,
+        batch_idx: int,
+    ) -> PredictOutput:
+        """Perform a single prediction step on a batch of data.
+
+        Args:
+            batch: A dictionary containing:
+                - rgbd_image: Input tensor of shape (batch_size, channels, height, width)
+                - object_ids: Ground truth class labels of shape (batch_size,)
+                - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
+            batch_idx: The index of the current batch.
+
+        Returns:
+            Dictionary containing:
+                - class_probabilities: Softmax probabilities for object classes of shape
+                    (batch_size, num_classes)
+                - predicted_quaternion: Predicted rotation quaternions of shape (batch_size, 4)
+                - object_ids: Ground truth object class IDs of shape (batch_size,)
+                - unit_quaternion: Ground truth rotation quaternions of shape (batch_size, 4)
+        """
+        # Call model_step without mode parameter
+        _, _, _, pred_class, pred_quaternion, object_ids, unit_quaternion = self.model_step(batch)
+
+        class_probabilities = torch.softmax(pred_class, dim=1)
+
+        return {
+            "class_probabilities": class_probabilities,
+            "predicted_quaternion": pred_quaternion,
+            "object_ids": object_ids,
+            "unit_quaternion": unit_quaternion,
+        }

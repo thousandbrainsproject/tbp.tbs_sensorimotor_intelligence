@@ -1,0 +1,23 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - /experiment/fig7b_continual_learning/train/task0
+
+task_id: 2
+num_classes_for_task: 1
+
+ckpt_path: ${paths.log_dir}/fig7b_continual_learning/fig7b_vit-b16-224-in21k_task${eval:${task_id}-1}_classes${num_classes_for_task}/checkpoints/last.ckpt
+
+trainer:
+  # Set to 10000 because we train a new model initialized from previous task,
+  # which starts from the epoch left off in previous task, and have 77 tasks total.
+  # Note: Models don't actually train for this long as early stopping kicks in;
+  # this high value just ensures we can train all models without stopping due to low max_epoch
+  max_epochs: 10000
+
+logger:
+  wandb:
+    name: "fig7b_vit-b16-224-in21k_task${task_id}_classes${num_classes_for_task}"
