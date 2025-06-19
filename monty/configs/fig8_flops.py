@@ -9,7 +9,7 @@
 
 """Configs for Figure 8: Flops Comparison.
 
-This module defines the following experiments:
+This module defines the following inference experiments:
  - `dist_agent_1lm_randrot_nohyp_x_percent_5p`
  - `dist_agent_1lm_randrot_nohyp_x_percent_10p`
  - `dist_agent_1lm_randrot_nohyp_x_percent_20p`
@@ -23,7 +23,14 @@ This module defines the following experiments:
  - `dist_agent_1lm_randrot_x_percent_60p`
  - `dist_agent_1lm_randrot_x_percent_80p`
 
-Experiments use:
+And the following training experiment:
+ - `pretrain_dist_agent_1lm_evidencegraphlm`
+
+Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
+that it uses EvidenceGraphLM instead of DisplacementGraphLM. This was done to exclude
+unnecessary FLOPs from edge-creation in object models. 
+
+Inference experiments use:
  - 77 objects
  - 5 random rotations
  - No sensor noise
@@ -35,12 +42,15 @@ whether hypothesis testing is used.
 
 import copy
 
+from tbp.monty.frameworks.models.evidence_matching import EvidenceGraphLM
+
 from .fig5_rapid_inference_with_voting import (
     dist_agent_1lm_randrot_noise,  # With hypothesis testing
 )
 from .fig6_rapid_inference_with_model_based_policies import (
     dist_agent_1lm_randrot_noise_nohyp,
 )  # No hypothesis testing
+from .pretraining_experiments import pretrain_dist_agent_1lm
 
 
 def update_x_percent_threshold_in_config(
@@ -80,9 +90,9 @@ def update_x_percent_threshold_in_config(
     return config
 
 
-################
-# Base Configs #
-################
+##########################
+# Base Inference Configs #
+##########################
 """Creates two base configurations:
 
 1. dist_agent_1lm_randrot_nohyp:
@@ -165,6 +175,20 @@ dist_agent_1lm_randrot_x_percent_80p = update_x_percent_threshold_in_config(
 )
 
 
+###################
+# Training Config #
+###################
+
+pretrain_dist_agent_1lm_evidencegraphlm = copy.deepcopy(pretrain_dist_agent_1lm)
+
+# Replace DisplacementGraphLM with EvidenceGraphLM
+pretrain_dist_agent_1lm_evidencegraphlm["monty_config"].learning_module_configs["learning_module_0"].update({
+    "learning_module_class": EvidenceGraphLM
+})
+
+# Update the logging config run name
+pretrain_dist_agent_1lm_evidencegraphlm["logging_config"].run_name = "pretrain_dist_agent_1lm_evidencegraphlm"
+
 CONFIGS = {
     "dist_agent_1lm_randrot_nohyp_x_percent_5p": (
         dist_agent_1lm_randrot_nohyp_x_percent_5p
@@ -190,4 +214,5 @@ CONFIGS = {
     "dist_agent_1lm_randrot_x_percent_40p": dist_agent_1lm_randrot_x_percent_40p,
     "dist_agent_1lm_randrot_x_percent_60p": dist_agent_1lm_randrot_x_percent_60p,
     "dist_agent_1lm_randrot_x_percent_80p": dist_agent_1lm_randrot_x_percent_80p,
+    "pretrain_dist_agent_1lm_evidencegraphlm": pretrain_dist_agent_1lm_evidencegraphlm,
 }
