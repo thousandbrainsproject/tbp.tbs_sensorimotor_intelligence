@@ -28,7 +28,7 @@ And the following training experiment:
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
 that the argument k is set to None in DisplacementGraphLM. This is to prevent FLOP
-counts associated with building unncessary edges of a graph.
+counts associated with building unncessary edges of a graph, as these are not used during inference.
 
 Inference experiments use:
  - 77 objects
