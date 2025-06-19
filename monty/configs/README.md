@@ -147,6 +147,10 @@ The main output measure is accuracy as a function of number of objects seen so f
 
 ## Figure 8: Computationally Efficient Learning and Inference
 
+### Pretraining (1 experiment)
+
+- `pretrain_dist_agent_1lm_evidencegraphlm` - Uses EvidenceGraphLM instead of DisplacementGraphLM to exclude unnecessary FLOPs from edge-creation in object models
+
 ### Inference (2 experiments)
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
