@@ -10,18 +10,8 @@
 """Configs for Figure 8: Flops Comparison.
 
 This module defines the following inference experiments:
- - `dist_agent_1lm_randrot_nohyp_x_percent_5p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_10p`
  - `dist_agent_1lm_randrot_nohyp_x_percent_20p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_40p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_60p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_80p`
- - `dist_agent_1lm_randrot_x_percent_5p`
- - `dist_agent_1lm_randrot_x_percent_10p`
  - `dist_agent_1lm_randrot_x_percent_20p`
- - `dist_agent_1lm_randrot_x_percent_40p`
- - `dist_agent_1lm_randrot_x_percent_60p`
- - `dist_agent_1lm_randrot_x_percent_80p`
 
 And the following training experiment:
  - `pretrain_dist_agent_1lm_k_none`
@@ -133,47 +123,16 @@ dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 #####################################################################
 # No Hypothesis Testing Configs with different x percent thresholds #
 #####################################################################
-dist_agent_1lm_randrot_nohyp_x_percent_5p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 5
-)
-dist_agent_1lm_randrot_nohyp_x_percent_10p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 10
-)
 dist_agent_1lm_randrot_nohyp_x_percent_20p = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
-)
-dist_agent_1lm_randrot_nohyp_x_percent_40p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 40
-)
-dist_agent_1lm_randrot_nohyp_x_percent_60p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 60
-)
-dist_agent_1lm_randrot_nohyp_x_percent_80p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 80
 )
 
 ##################################################################
 # Hypothesis Testing Configs with different x percent thresholds #
 ##################################################################
-dist_agent_1lm_randrot_x_percent_5p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 5
-)
-dist_agent_1lm_randrot_x_percent_10p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 10
-)
 dist_agent_1lm_randrot_x_percent_20p = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot, 20
 )
-dist_agent_1lm_randrot_x_percent_40p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 40
-)
-dist_agent_1lm_randrot_x_percent_60p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 60
-)
-dist_agent_1lm_randrot_x_percent_80p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 80
-)
-
 
 ###################
 # Training Config #
@@ -192,29 +151,9 @@ pretrain_dist_agent_1lm_k_none["monty_config"].learning_module_configs["learning
 pretrain_dist_agent_1lm_k_none["logging_config"].run_name = "pretrain_dist_agent_1lm_k_none"
 
 CONFIGS = {
-    "dist_agent_1lm_randrot_nohyp_x_percent_5p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_5p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_10p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_10p
-    ),
     "dist_agent_1lm_randrot_nohyp_x_percent_20p": (
         dist_agent_1lm_randrot_nohyp_x_percent_20p
     ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_40p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_40p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_60p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_60p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_80p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_80p
-    ),
-    "dist_agent_1lm_randrot_x_percent_5p": dist_agent_1lm_randrot_x_percent_5p,
-    "dist_agent_1lm_randrot_x_percent_10p": dist_agent_1lm_randrot_x_percent_10p,
     "dist_agent_1lm_randrot_x_percent_20p": dist_agent_1lm_randrot_x_percent_20p,
-    "dist_agent_1lm_randrot_x_percent_40p": dist_agent_1lm_randrot_x_percent_40p,
-    "dist_agent_1lm_randrot_x_percent_60p": dist_agent_1lm_randrot_x_percent_60p,
-    "dist_agent_1lm_randrot_x_percent_80p": dist_agent_1lm_randrot_x_percent_80p,
     "pretrain_dist_agent_1lm_k_none": pretrain_dist_agent_1lm_k_none,
 }
