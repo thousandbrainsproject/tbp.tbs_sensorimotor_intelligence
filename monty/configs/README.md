@@ -149,7 +149,7 @@ The main output measure is accuracy as a function of number of objects seen so f
 
 ### Pretraining (1 experiment)
 
-- `pretrain_dist_agent_1lm_evidencegraphlm` - Uses EvidenceGraphLM instead of DisplacementGraphLM to exclude unnecessary FLOPs from edge-creation in object models
+- `pretrain_dist_agent_1lm_k_none` - Sets the `k=None` for `DisplacementGraphLM` to prevent FLOP counting associated with edge creation in object model graphs, which is currently unused.
 
 ### Inference (2 experiments)
 

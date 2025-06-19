@@ -24,11 +24,11 @@ This module defines the following inference experiments:
  - `dist_agent_1lm_randrot_x_percent_80p`
 
 And the following training experiment:
- - `pretrain_dist_agent_1lm_evidencegraphlm`
+ - `pretrain_dist_agent_1lm_k_none`
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
-that it uses EvidenceGraphLM instead of DisplacementGraphLM. This was done to exclude
-unnecessary FLOPs from edge-creation in object models. 
+that the argument k is set to None in DisplacementGraphLM. This is to prevent FLOP
+counts associated with building unncessary edges of a graph.
 
 Inference experiments use:
  - 77 objects
@@ -179,15 +179,17 @@ dist_agent_1lm_randrot_x_percent_80p = update_x_percent_threshold_in_config(
 # Training Config #
 ###################
 
-pretrain_dist_agent_1lm_evidencegraphlm = copy.deepcopy(pretrain_dist_agent_1lm)
+pretrain_dist_agent_1lm_k_none = copy.deepcopy(pretrain_dist_agent_1lm)
 
 # Replace DisplacementGraphLM with EvidenceGraphLM
-pretrain_dist_agent_1lm_evidencegraphlm["monty_config"].learning_module_configs["learning_module_0"].update({
-    "learning_module_class": EvidenceGraphLM
+pretrain_dist_agent_1lm_k_none["monty_config"].learning_module_configs["learning_module_0"].update({
+    "learning_module_args": dict(
+        k=None,
+    )
 })
 
 # Update the logging config run name
-pretrain_dist_agent_1lm_evidencegraphlm["logging_config"].run_name = "pretrain_dist_agent_1lm_evidencegraphlm"
+pretrain_dist_agent_1lm_k_none["logging_config"].run_name = "pretrain_dist_agent_1lm_k_none"
 
 CONFIGS = {
     "dist_agent_1lm_randrot_nohyp_x_percent_5p": (
@@ -214,5 +216,5 @@ CONFIGS = {
     "dist_agent_1lm_randrot_x_percent_40p": dist_agent_1lm_randrot_x_percent_40p,
     "dist_agent_1lm_randrot_x_percent_60p": dist_agent_1lm_randrot_x_percent_60p,
     "dist_agent_1lm_randrot_x_percent_80p": dist_agent_1lm_randrot_x_percent_80p,
-    "pretrain_dist_agent_1lm_evidencegraphlm": pretrain_dist_agent_1lm_evidencegraphlm,
+    "pretrain_dist_agent_1lm_k_none": pretrain_dist_agent_1lm_k_none,
 }
