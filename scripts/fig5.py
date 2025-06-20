@@ -11,11 +11,11 @@
 Panel B: 8-patch view finder
  - `plot_8lm_patches()`
 
-Panel C: Accuracy
- - `plot_accuracy()`
-
 Panel C: Steps
  - `plot_steps()`
+
+Panel D: Accuracy
+ - `plot_accuracy()`
 
 Running the above functions requires that the following experiments have been run:
  - `fig5_visualize_8lm_patches`
@@ -405,101 +405,6 @@ def plot_8lm_patches():
 
 """
 --------------------------------------------------------------------------------
-Panel C: Accuracy
---------------------------------------------------------------------------------
-"""
-
-
-def plot_accuracy():
-    """Plot accuracy of 1-LM and multi-LM experiments.
-
-    Requires the following experiments to have been run:
-    - `dist_agent_1lm_randrot_noise`
-    - `dist_agent_2lm_randrot_noise`
-    - `dist_agent_4lm_randrot_noise`
-    - `dist_agent_8lm_randrot_noise`
-    - `dist_agent_16lm_randrot_noise`
-
-    Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
-
-    """
-    # Initialize output directory.
-    out_dir = OUT_DIR / "performance"
-    out_dir.mkdir(exist_ok=True, parents=True)
-
-    experiments = [
-        "dist_agent_1lm_randrot_noise",
-        "dist_agent_2lm_randrot_noise",
-        "dist_agent_4lm_randrot_noise",
-        "dist_agent_8lm_randrot_noise",
-        "dist_agent_16lm_randrot_noise",
-    ]
-    performance = aggregate_multilm_performance_data(experiments)
-
-    fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
-    top_ax, bottom_ax = axes
-    fig.subplots_adjust(hspace=0.05)
-
-    # Plot params.
-    ylims = [(0, 25), (75, 100)]
-    xticks = np.arange(5)
-
-    # 1-LM
-    for ax_num, ax in enumerate([bottom_ax, top_ax]):
-        ax.bar(
-            xticks[0],
-            [performance.accuracy[0]],
-            color=TBP_COLORS["blue"],
-            width=0.8,
-            label="no voting",
-        )
-
-    # Multi-LM
-    for ax_num, ax in enumerate([bottom_ax, top_ax]):
-        ax.bar(
-            xticks[1:],
-            performance.accuracy[1:],
-            color=TBP_COLORS["purple"],
-            width=0.8,
-            label="voting",
-        )
-
-    for ax_num, ax in enumerate([bottom_ax, top_ax]):
-        ax.set_ylim(ylims[ax_num])
-
-    # Sets parameters for both x-axes (they're shared, so removing ticks for the
-    # top plot removes ticks for the bottom plot).
-    bottom_ax.set_xlabel("Num. LMs")
-    bottom_ax.set_xticks(xticks)
-    bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
-    bottom_ax.legend(loc="lower right")
-
-    bottom_ax.set_ylabel("% Correct")
-    bottom_ax.set_yticks([0, 10, 20])
-    top_ax.spines.bottom.set_visible(False)
-    top_ax.set_yticks([80, 90, 100])
-
-    # Draw y-axis divider markers.
-    marker_kwargs = dict(
-        marker=[(-1, -0.5), (1, 0.5)],
-        markersize=8,
-        linestyle="none",
-        color="k",
-        mec="k",
-        mew=1,
-        clip_on=False,
-    )
-    top_ax.plot([0], [0], transform=top_ax.transAxes, **marker_kwargs)
-    bottom_ax.plot([0], [1], transform=bottom_ax.transAxes, **marker_kwargs)
-
-    fig.savefig(out_dir / "accuracy.png")
-    fig.savefig(out_dir / "accuracy.svg")
-    plt.show()
-
-
-
-"""
---------------------------------------------------------------------------------
 Panel C: Steps
 --------------------------------------------------------------------------------
 """
@@ -596,7 +501,7 @@ def plot_steps():
     bottom_ax.set_xticks(xticks)
     bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
 
-    bottom_ax.set_ylabel("Steps")
+    bottom_ax.set_ylabel("Number of Steps")
     top_ax.spines.bottom.set_visible(False)
 
     # Draw y-axis divider markers.
@@ -633,8 +538,102 @@ def save_performance_table() -> None:
     performance.to_csv(out_dir / "performance.csv")
 
 
+"""
+--------------------------------------------------------------------------------
+Panel D: Accuracy
+--------------------------------------------------------------------------------
+"""
+
+
+def plot_accuracy():
+    """Plot accuracy of 1-LM and multi-LM experiments.
+
+    Requires the following experiments to have been run:
+    - `dist_agent_1lm_randrot_noise`
+    - `dist_agent_2lm_randrot_noise`
+    - `dist_agent_4lm_randrot_noise`
+    - `dist_agent_8lm_randrot_noise`
+    - `dist_agent_16lm_randrot_noise`
+
+    Output is saved to `DMC_ANALYSIS_DIR/fig5/performance`.
+
+    """
+    # Initialize output directory.
+    out_dir = OUT_DIR / "performance"
+    out_dir.mkdir(exist_ok=True, parents=True)
+
+    experiments = [
+        "dist_agent_1lm_randrot_noise",
+        "dist_agent_2lm_randrot_noise",
+        "dist_agent_4lm_randrot_noise",
+        "dist_agent_8lm_randrot_noise",
+        "dist_agent_16lm_randrot_noise",
+    ]
+    performance = aggregate_multilm_performance_data(experiments)
+
+    fig, axes = plt.subplots(2, 1, figsize=(3.4, 3), sharex=True)
+    top_ax, bottom_ax = axes
+    fig.subplots_adjust(hspace=0.05)
+
+    # Plot params.
+    ylims = [(0, 25), (75, 100)]
+    xticks = np.arange(5)
+
+    # 1-LM
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.bar(
+            xticks[0],
+            [performance.accuracy[0]],
+            color=TBP_COLORS["blue"],
+            width=0.8,
+            label="no voting",
+        )
+
+    # Multi-LM
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.bar(
+            xticks[1:],
+            performance.accuracy[1:],
+            color=TBP_COLORS["purple"],
+            width=0.8,
+            label="voting",
+        )
+
+    for ax_num, ax in enumerate([bottom_ax, top_ax]):
+        ax.set_ylim(ylims[ax_num])
+
+    # Sets parameters for both x-axes (they're shared, so removing ticks for the
+    # top plot removes ticks for the bottom plot).
+    bottom_ax.set_xlabel("Num. LMs")
+    bottom_ax.set_xticks(xticks)
+    bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
+    bottom_ax.legend(loc="lower right")
+
+    bottom_ax.set_ylabel("% Correct")
+    bottom_ax.set_yticks([0, 10, 20])
+    top_ax.spines.bottom.set_visible(False)
+    top_ax.set_yticks([80, 90, 100])
+
+    # Draw y-axis divider markers.
+    marker_kwargs = dict(
+        marker=[(-1, -0.5), (1, 0.5)],
+        markersize=8,
+        linestyle="none",
+        color="k",
+        mec="k",
+        mew=1,
+        clip_on=False,
+    )
+    top_ax.plot([0], [0], transform=top_ax.transAxes, **marker_kwargs)
+    bottom_ax.plot([0], [1], transform=bottom_ax.transAxes, **marker_kwargs)
+
+    fig.savefig(out_dir / "accuracy.png")
+    fig.savefig(out_dir / "accuracy.svg")
+    plt.show()
+
+
 if __name__ == "__main__":
     plot_8lm_patches()
-    plot_accuracy()
     plot_steps()
+    plot_accuracy()
     save_performance_table()
