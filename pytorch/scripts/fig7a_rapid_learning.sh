@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
 # Script to run all rapid training experiments for fig7a
 # This script runs training and evaluation for various rotation settings with both pretrained and random initialization
 

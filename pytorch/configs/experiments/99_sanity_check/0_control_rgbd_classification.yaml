@@ -1,0 +1,58 @@
+# @package _global_
+
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# to execute this experiment run:
+# python train.py experiment=example
+# This script was used to obtain performance of ViT in RGBD classification task
+# and was compared to performance of ViT in RGB classification task from 1_rgb_classification.yaml
+
+defaults:
+  - override /data: ycb_standard
+  - override /model: base_vit_module
+  - override /callbacks: default
+  - override /trainer: default
+  - _self_
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["ycb", "vit"]
+
+seed: 12345
+
+trainer:
+  accelerator: mps
+  max_epochs: 200
+
+model:
+  compile: false # For debugging
+  net:
+    model_name: vit-b16-224-in21k
+  rotation_weight: 1.0
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "ycb"
+    project: "benchmark_vit"
+    name: "SANITY_CHECK_${model.net.model_name}_control"
+
+hydra:
+  run:
+    dir: ${paths.log_dir}/${logger.wandb.name}
+  job_logging:
+    handlers:
+      file:
+        filename: ${paths.log_dir}/${logger.wandb.name}/${task_name}.log
+
+callbacks:
+  model_checkpoint:
+    dirpath: ${paths.log_dir}/${logger.wandb.name}/checkpoints
