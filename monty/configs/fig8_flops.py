@@ -10,15 +10,16 @@
 """Configs for Figure 8: Flops Comparison.
 
 This module defines the following inference experiments:
- - `dist_agent_1lm_randrot_nohyp_x_percent_20p`
- - `dist_agent_1lm_randrot_x_percent_20p`
+ - `dist_agent_1lm_randrot_nohyp` (No hypothesis testing)
+ - `dist_agent_1lm_randrot` (Hypothesis testing)
 
 And the following training experiment:
  - `pretrain_dist_agent_1lm_k_none`
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
 that the argument k is set to None in DisplacementGraphLM. This is to prevent FLOP
-counts associated with building unncessary edges of a graph, as these are not used during inference.
+counts associated with building unncessary edges of a graph, as these are not used 
+during inference.
 
 Inference experiments use:
  - 77 objects
@@ -120,17 +121,12 @@ for sm_dict in dist_agent_1lm_randrot["monty_config"].sensor_module_configs.valu
     sm_args["noise_params"] = {}  # Set noise_param to empty dictionary to remove noise
 dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 
-#####################################################################
-# No Hypothesis Testing Configs with different x percent thresholds #
-#####################################################################
-dist_agent_1lm_randrot_nohyp_x_percent_20p = update_x_percent_threshold_in_config(
+# No Hypothesis Testing Config
+dist_agent_1lm_randrot_nohyp = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
 )
-
-##################################################################
-# Hypothesis Testing Configs with different x percent thresholds #
-##################################################################
-dist_agent_1lm_randrot_x_percent_20p = update_x_percent_threshold_in_config(
+# Hypothesis Testing Config
+dist_agent_1lm_randrot = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot, 20
 )
 
@@ -151,9 +147,7 @@ pretrain_dist_agent_1lm_k_none["monty_config"].learning_module_configs["learning
 pretrain_dist_agent_1lm_k_none["logging_config"].run_name = "pretrain_dist_agent_1lm_k_none"
 
 CONFIGS = {
-    "dist_agent_1lm_randrot_nohyp_x_percent_20p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_20p
-    ),
-    "dist_agent_1lm_randrot_x_percent_20p": dist_agent_1lm_randrot_x_percent_20p,
+    "dist_agent_1lm_randrot_nohyp": dist_agent_1lm_randrot_nohyp,
+    "dist_agent_1lm_randrot": dist_agent_1lm_randrot,
     "pretrain_dist_agent_1lm_k_none": pretrain_dist_agent_1lm_k_none,
 }
