@@ -522,22 +522,6 @@ def plot_steps():
     plt.show()
 
 
-def save_performance_table() -> None:
-    """Save the performance metrics to a CSV file."""
-    out_dir = OUT_DIR / "performance"
-    out_dir.mkdir(exist_ok=True, parents=True)
-    experiments = [
-        "dist_agent_1lm_randrot_noise",
-        "dist_agent_2lm_randrot_noise",
-        "dist_agent_4lm_randrot_noise",
-        "dist_agent_8lm_randrot_noise",
-        "dist_agent_16lm_randrot_noise",
-    ]
-    performance = aggregate_multilm_performance_data(experiments)
-    performance = performance.drop(columns=["n_steps", "rotation_error"])
-    performance.to_csv(out_dir / "performance.csv")
-
-
 """
 --------------------------------------------------------------------------------
 Panel D: Accuracy
@@ -630,6 +614,22 @@ def plot_accuracy():
     fig.savefig(out_dir / "accuracy.png")
     fig.savefig(out_dir / "accuracy.svg")
     plt.show()
+
+
+def save_performance_table() -> None:
+    """Save the performance metrics to a CSV file."""
+    out_dir = OUT_DIR / "performance"
+    out_dir.mkdir(exist_ok=True, parents=True)
+    experiments = [
+        "dist_agent_1lm_randrot_noise",
+        "dist_agent_2lm_randrot_noise",
+        "dist_agent_4lm_randrot_noise",
+        "dist_agent_8lm_randrot_noise",
+        "dist_agent_16lm_randrot_noise",
+    ]
+    performance = aggregate_multilm_performance_data(experiments)
+    performance = performance.drop(columns=["n_steps", "rotation_error"])
+    performance.to_csv(out_dir / "performance.csv")
 
 
 if __name__ == "__main__":
