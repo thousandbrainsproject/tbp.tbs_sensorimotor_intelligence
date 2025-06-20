@@ -75,10 +75,10 @@ Style utilities. Can be hard-coded later when we decide on colors, etc.
 
 # Plotting styles.
 HYPOTHESIS_COLORS = [
-    TBP_COLORS["purple"],
-    TBP_COLORS["green"],
     TBP_COLORS["blue"],
     TBP_COLORS["pink"],
+    TBP_COLORS["purple"],
+    TBP_COLORS["green"],
     TBP_COLORS["yellow"],
 ]
 
@@ -211,7 +211,8 @@ def plot_performance():
         performance["percent.correct_mlh"],
         bottom=performance["percent.correct"],
         width=0.8,
-        color=TBP_COLORS["yellow"],
+        color=TBP_COLORS["blue"],
+        alpha=0.3,
     )
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
@@ -233,7 +234,7 @@ def plot_performance():
 
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_ylabel("Steps")
+    ax.set_ylabel("Number of Steps")
     ax.set_ylim(0, 500)
     fig.tight_layout()
     fig.savefig(out_dir / "performance.png", bbox_inches="tight")
