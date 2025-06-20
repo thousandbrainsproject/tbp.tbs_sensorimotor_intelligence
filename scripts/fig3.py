@@ -464,17 +464,17 @@ def draw_icons():
             "rotation": (0, 0, 0),
         },
         {
-            "label": "RR",
+            "label": "new\nrotations",
             "noise": {},
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR",
+            "label": "noise + new\nrotations",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR\n(uniform hsv)",
+            "label": "+ new\ncolor",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
