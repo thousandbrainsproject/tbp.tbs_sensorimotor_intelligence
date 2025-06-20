@@ -420,9 +420,9 @@ def plot_performance() -> None:
     xticklabels = [
         "base",
         "noise",
-        "RR",
-        "noise+RR",
-        "noise+RR\n(uniform hsv)",
+        "new rotations",
+        "noise \n+ new rotations",
+        "+ new color",
     ]
     ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
