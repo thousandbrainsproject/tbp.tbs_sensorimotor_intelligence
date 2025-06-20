@@ -216,7 +216,7 @@ def plot_performance():
     )
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, rotation=45, ha="center")
-    ax.set_ylabel("% Correct")
+    ax.set_ylabel("Accuracy (%)")
     ax.set_ylim(0, 100)
     ax.legend(["Converged", "Timed-Out"], loc="lower right", framealpha=1)
 

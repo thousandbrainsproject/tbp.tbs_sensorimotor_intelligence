@@ -398,7 +398,7 @@ def plot_performance() -> None:
         width=bar_width,
     )
     ax1.set_ylim(0, 100)
-    ax1.set_ylabel("% Correct")
+    ax1.set_ylabel("Accuracy (%)")
 
     # Plot rotation error violins
     violinplot(

@@ -593,7 +593,7 @@ def plot_accuracy():
     bottom_ax.set_xticklabels(["1", "2", "4", "8", "16"])
     bottom_ax.legend(loc="lower right")
 
-    bottom_ax.set_ylabel("% Correct")
+    bottom_ax.set_ylabel("Accuracy (%)")
     bottom_ax.set_yticks([0, 10, 20])
     top_ax.spines.bottom.set_visible(False)
     top_ax.set_yticks([80, 90, 100])
