@@ -75,10 +75,10 @@ Style utilities. Can be hard-coded later when we decide on colors, etc.
 
 # Plotting styles.
 HYPOTHESIS_COLORS = [
-    TBP_COLORS["blue"],
-    TBP_COLORS["pink"],
     TBP_COLORS["purple"],
     TBP_COLORS["green"],
+    TBP_COLORS["blue"],
+    TBP_COLORS["pink"],
     TBP_COLORS["yellow"],
 ]
 
