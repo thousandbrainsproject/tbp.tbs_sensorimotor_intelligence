@@ -385,7 +385,7 @@ def plot_performance() -> None:
     bar_width = 0.4
     violin_width = 0.4
     gap = 0.04
-    xticks = np.arange(len(experiments)) * 1.3
+    xticks = np.arange(len(experiments)) * 1.43
     bar_positions = xticks - bar_width / 2 - gap / 2
     violin_positions = xticks + violin_width / 2 + gap / 2
     median_style = dict(color="lightgray", lw=1, ls="-")
@@ -420,9 +420,9 @@ def plot_performance() -> None:
     xticklabels = [
         "base",
         "noise",
-        "new rotations",
-        "noise \n+ new rotations",
-        "+ new color",
+        "new\nrotations",
+        "noise + new\nrotations",
+        "+ new\ncolor",
     ]
     ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
