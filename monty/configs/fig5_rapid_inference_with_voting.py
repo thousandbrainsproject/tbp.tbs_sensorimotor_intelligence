@@ -25,6 +25,9 @@ All of these experiments use:
  - Sensor noise and 5 (predefined) random rotations
  - Voting over 2, 4, 8, or 16 LM, and terminating when 2 LMs have converged.
 
+Note in our final paper, these results appear in the "Figure 6", after "Rapid Inference
+with Model-Free and Model-Based Policies".
+
 """
 
 from typing import Any, Mapping

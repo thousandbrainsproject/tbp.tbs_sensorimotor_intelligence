@@ -8,6 +8,9 @@
 # https://opensource.org/licenses/MIT.
 """This module defines functions used to generate images for figure 6.
 
+Note in our final paper, these results appear in the "Figure 5", before "Rapid Inference
+with Voting".
+
 Panel A: Curvature Guided Policy
  - `plot_curvature_guided_policy()`
 

@@ -20,6 +20,9 @@ This module defines the following experiments:
  - No voting
  - Varying levels of hypothesis-testing
 
+Note in our final paper, these results appear in the "Figure 5", before "Rapid Inference
+with Voting".
+
 """
 
 from copy import deepcopy

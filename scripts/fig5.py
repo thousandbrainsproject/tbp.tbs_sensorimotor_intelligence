@@ -8,6 +8,9 @@
 # https://opensource.org/licenses/MIT.
 """This module defines functions used to generate images for figure 5.
 
+Note in our final paper, these results appear in the "Figure 6", after "Rapid Inference
+with Model-Free and Model-Based Policies".
+
 Panel B: 8-patch view finder
  - `plot_8lm_patches()`
 
