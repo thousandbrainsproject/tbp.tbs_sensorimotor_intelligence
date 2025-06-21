@@ -230,7 +230,7 @@ class YCBDataset(Dataset):
             rgbd_image = self.transform(rgbd_image)
 
         object_id = self.extract_object_id(idx)
-        object_id_tensor = torch.tensor(object_ids, dtype=torch.int64)
+        object_id_tensor = torch.tensor(object_id, dtype=torch.int64)
         euler_rotation = self.extract_rotation(idx)
         unit_quaternion = self.normalize_rotation_to_unit_xyzw_quaternion(euler_rotation)
         object_name = self.label_encoder.inverse_transform([object_id])[0]
