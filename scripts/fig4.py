@@ -674,7 +674,7 @@ def plot_symmetry_stats():
     violinplot(
         arrays,
         xticks,
-        color=TBP_COLORS["blue"],
+        color=TBP_COLORS["purple"],
         width=0.8,
         median_style=median_style,
         showmedians=True,
