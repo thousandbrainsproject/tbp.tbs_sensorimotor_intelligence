@@ -27,7 +27,6 @@ model:
   net:
     model_name: vit-l16-224-in21k
 
-base_dir: "${oc.env:HOME}/tbp/results/dmc/results/vit/logs"
 exp_name: "fig8b_vit-l16-224-in21k_random_init"
-ckpt_path: "${base_dir}/${exp_name}/checkpoints/last.ckpt"
-save_dir: "${base_dir}/${exp_name}/inference"
+ckpt_path: "${paths.log_dir}/${exp_name}/checkpoints/last.ckpt"
+save_dir: "${paths.log_dir}/${exp_name}/inference"

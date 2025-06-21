@@ -13,8 +13,8 @@
 # python train.py experiment=example
 
 defaults:
-  - /experiment/hyperparameter_optimization/optimized_config
-  - override /callbacks: full_train_callbacks
+  - /experiment/01_hyperparameter_optimization/optimized_config
+  - override /callbacks: presets/full_train_callbacks
   - _self_
 
 # all parameters below will be merged with parameters from default configurations set above

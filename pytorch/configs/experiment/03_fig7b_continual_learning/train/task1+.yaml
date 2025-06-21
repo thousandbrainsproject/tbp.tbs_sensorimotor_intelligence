@@ -13,7 +13,7 @@
 # python train.py experiment=example
 
 defaults:
-  - /experiment/fig7b_continual_learning/train/task0
+  - /experiment/03_fig7b_continual_learning/train/task0
 
 task_id: 2
 num_classes_for_task: 1

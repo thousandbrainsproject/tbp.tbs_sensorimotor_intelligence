@@ -50,7 +50,8 @@ echo "🔍 Test 2: Running dry training (no actual training)..."
 echo "Command: python src/train.py experiment=01_hyperparameter_optimization/optimized_config trainer.fast_dev_run=true"
 python src/train.py \
     experiment=01_hyperparameter_optimization/optimized_config \
-    +trainer.fast_dev_run=true
+    +trainer.fast_dev_run=true \
+    paths=reproduction
     
 if [ $? -ne 0 ]; then
     echo "❌ Dry run training failed. Check the error above."
@@ -66,7 +67,8 @@ python src/train.py \
     experiment=01_hyperparameter_optimization/optimized_config \
     trainer.max_epochs=1 \
     trainer.num_sanity_val_steps=0 \
-    logger.wandb.name="quick_test_$(date +%Y%m%d_%H%M%S)"
+    logger.wandb.name="quick_test_$(date +%Y%m%d_%H%M%S)" \
+    paths=reproduction
 
 if [ $? -ne 0 ]; then
     echo "❌ Quick training failed. Check the error above."
@@ -78,7 +80,7 @@ echo
 # Test 4: Quick evaluation
 echo "🔍 Test 4: Running evaluation on the trained model..."
 # Find the most recent checkpoint
-CHECKPOINT_DIR="$HOME/tbp/results/dmc/results/vit/logs"
+CHECKPOINT_DIR="$HOME/tbp/results/dmc/results/vit/logs_reproduction"
 LATEST_CHECKPOINT=$(find "$CHECKPOINT_DIR" -name "quick_test_*" -type d | sort | tail -1)
 
 if [ -z "$LATEST_CHECKPOINT" ]; then
@@ -89,7 +91,8 @@ else
         echo "Command: python src/eval.py ckpt_path=$CHECKPOINT_FILE"
         python src/eval.py \
             ckpt_path="$CHECKPOINT_FILE" \
-            trainer.accelerator=auto
+            trainer.accelerator=auto \
+            paths=reproduction
         
         if [ $? -ne 0 ]; then
             echo "⚠️  Evaluation failed, but this might be due to data setup"

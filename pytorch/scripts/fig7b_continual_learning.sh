@@ -24,7 +24,7 @@ handle_error() {
 
 # Run initial task (task0) with task0.yaml
 echo "Running initial task (task0)..."
-python src/train.py experiment=03_fig7b_continual_learning/train/task0.yaml "task_id=0" || handle_error "0"
+python src/train.py experiment=03_fig7b_continual_learning/train/task0 "task_id=0" paths=reproduction || handle_error "0"
 echo "Successfully completed task 0"
 
 # Run subsequent tasks (1-76) with task1+.yaml
@@ -32,7 +32,7 @@ echo "Running subsequent tasks (1-76)..."
 
 for task_id in $(seq 1 76); do
     echo "Running training for task_id = ${task_id}"
-    python src/train.py experiment=03_fig7b_continual_learning/train/task1+.yaml "task_id=${task_id}" || handle_error "${task_id}"
+    python src/train.py experiment=03_fig7b_continual_learning/train/task1+ "task_id=${task_id}" paths=reproduction || handle_error "${task_id}"
     echo "Successfully completed task ${task_id}"
 
     # Optional: add a small delay between tasks to allow system resources to settle

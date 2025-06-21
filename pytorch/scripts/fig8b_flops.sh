@@ -23,7 +23,7 @@ echo "Section 1: Training with pretrained initialization..."
 # Train different model architectures
 for model in "${MODELS[@]}"; do
     echo "Training pretrained ${model}..."
-    python src/train.py experiment=04_fig8b_flops/pretrained/train/${model}
+    python src/train.py experiment=04_fig8b_flops/pretrained/train/${model} paths=reproduction
 done
 
 # Section 2: Training with random initialization
@@ -32,7 +32,7 @@ echo "Section 2: Training with random initialization..."
 # Train different model architectures
 for model in "${MODELS[@]}"; do
     echo "Training randomly initialized ${model}..."
-    python src/train.py experiment=04_fig8b_flops/random_init/train/${model}
+    python src/train.py experiment=04_fig8b_flops/random_init/train/${model} paths=reproduction
 done
 
 # Section 3: Evaluation of pretrained models
@@ -41,7 +41,7 @@ echo "Section 3: Evaluating pretrained models..."
 # Evaluate different model architectures
 for model in "${MODELS[@]}"; do
     echo "Testing pretrained ${model}..."
-    python src/eval.py experiment=04_fig8b_flops/pretrained/inference/${model}
+    python src/eval.py experiment=04_fig8b_flops/pretrained/inference/${model} paths=reproduction
 done
 
 # Section 4: Evaluation of randomly initialized models
@@ -50,7 +50,7 @@ echo "Section 4: Evaluating randomly initialized models..."
 # Evaluate different model architectures
 for model in "${MODELS[@]}"; do
     echo "Testing randomly initialized ${model}..."
-    python src/eval.py experiment=04_fig8b_flops/random_init/inference/${model}
+    python src/eval.py experiment=04_fig8b_flops/random_init/inference/${model} paths=reproduction
 done
 
 echo "All flops experiments completed!" 

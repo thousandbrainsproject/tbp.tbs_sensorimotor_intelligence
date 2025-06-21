@@ -10,7 +10,7 @@
 # https://opensource.org/licenses/MIT.
 
 defaults:
-  - /experiment/hyperparameter_optimization/starting_config
+  - /experiment/01_hyperparameter_optimization/starting_config
   - _self_
 
 model:

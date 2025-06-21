@@ -1,0 +1,28 @@
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Paths configuration for reproduction runs
+# This config uses a separate log directory to avoid overriding existing results
+# Based on default.yaml but with modified log_dir for safety
+
+# path to root directory
+# this requires PROJECT_ROOT environment variable to exist
+# you can replace it with "." if you want the root to be the current working directory
+root_dir: ${oc.env:PROJECT_ROOT}
+
+# path to data directory
+data_dir: "${oc.env:HOME}/tbp/results/dmc/data/view_finder_images"
+
+# path to output directory, created dynamically by hydra
+# path generation pattern is specified in `configs/hydra/default.yaml`
+# use it to store all files generated during the run, like ckpts and metrics
+output_dir: ${hydra:runtime.output_dir}
+
+# path to logging directory - SEPARATE FROM DEFAULT TO AVOID CONFLICTS
+log_dir: "${oc.env:HOME}/tbp/results/dmc/results/vit/logs_reproduction" 

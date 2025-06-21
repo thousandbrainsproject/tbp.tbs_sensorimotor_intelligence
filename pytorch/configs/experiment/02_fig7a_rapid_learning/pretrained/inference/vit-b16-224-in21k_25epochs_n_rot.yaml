@@ -13,8 +13,8 @@
 # python eval.py experiment=example
 
 defaults:
-  - override /data: ycb_standard_standard
-  - override /model: vit_module
+  - override /data: ycb_standard
+  - override /model: base_vit_module
   - override /logger: null
   - override /trainer: default
   - _self_
@@ -31,7 +31,6 @@ model:
   net:
     model_name: vit-b16-224-in21k
 
-base_dir: "${oc.env:HOME}/tbp/results/dmc/results/vit/logs"
 exp_name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_for_train}rot"
-ckpt_path: "${base_dir}/${exp_name}/checkpoints/last.ckpt"
-save_dir: "${base_dir}/${exp_name}/inference"
+ckpt_path: "${paths.log_dir}/${exp_name}/checkpoints/last.ckpt"
+save_dir: "${paths.log_dir}/${exp_name}/inference"

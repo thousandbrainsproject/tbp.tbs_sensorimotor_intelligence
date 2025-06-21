@@ -48,8 +48,115 @@ log_section() {
     echo "================================================================================"
 }
 
+# Show usage information
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "Run ViT experiments for reproducibility."
+    echo
+    echo "Options:"
+    echo "  -h, --help              Show this help message"
+    echo "  -a, --all               Run all experiments (default)"
+    echo "  -7a, --fig7a            Run only Figure 7a (Rapid Learning) experiments"
+    echo "  -7b, --fig7b            Run only Figure 7b (Continual Learning) experiments"  
+    echo "  -8b, --fig8b            Run only Figure 8b (FLOP Analysis) experiments"
+    echo "  -s, --skip-setup        Skip environment setup and verification"
+    echo "  --from-7a               Run from Figure 7a onwards (7a, 7b, 8b)"
+    echo "  --from-7b               Run from Figure 7b onwards (7b, 8b)"
+    echo "  --from-8b               Run only Figure 8b"
+    echo
+    echo "Examples:"
+    echo "  $0                      Run all experiments (interactive mode)"
+    echo "  $0 --all                Run all experiments"
+    echo "  $0 --fig7a              Run only Figure 7a experiments"
+    echo "  $0 --from-7b            Run Figure 7b and 8b experiments"
+    echo "  $0 --fig8b --skip-setup Run only Figure 8b, skip setup"
+}
+
+# Show interactive menu
+show_menu() {
+    echo
+    log_section "ViT Experiments - Select What to Run"
+    echo "1) Run all experiments (Fig 7a + 7b + 8b)"
+    echo "2) Run from Figure 7a onwards (7a + 7b + 8b)"  
+    echo "3) Run from Figure 7b onwards (7b + 8b)"
+    echo "4) Run only Figure 7a (Rapid Learning)"
+    echo "5) Run only Figure 7b (Continual Learning - limited)"
+    echo "6) Run only Figure 8b (FLOP Analysis)"
+    echo "7) Exit"
+    echo
+}
+
+# Get user choice from menu
+get_user_choice() {
+    while true; do
+        show_menu
+        read -p "Please select an option (1-7): " choice
+        case $choice in
+            1) 
+                log_info "Selected: Run all experiments"
+                RUN_FIG7A=true
+                RUN_FIG7B=true  
+                RUN_FIG8B=true
+                break
+                ;;
+            2)
+                log_info "Selected: Run from Figure 7a onwards"
+                RUN_FIG7A=true
+                RUN_FIG7B=true
+                RUN_FIG8B=true
+                break
+                ;;
+            3)
+                log_info "Selected: Run from Figure 7b onwards"
+                RUN_FIG7A=false
+                RUN_FIG7B=true
+                RUN_FIG8B=true
+                break
+                ;;
+            4)
+                log_info "Selected: Run only Figure 7a"
+                RUN_FIG7A=true
+                RUN_FIG7B=false
+                RUN_FIG8B=false
+                break
+                ;;
+            5)
+                log_info "Selected: Run only Figure 7b"
+                RUN_FIG7A=false
+                RUN_FIG7B=true
+                RUN_FIG8B=false
+                break
+                ;;
+            6)
+                log_info "Selected: Run only Figure 8b"
+                RUN_FIG7A=false
+                RUN_FIG7B=false
+                RUN_FIG8B=true
+                break
+                ;;
+            7)
+                log_info "Exiting..."
+                exit 0
+                ;;
+            *)
+                log_error "Invalid option. Please select 1-7."
+                ;;
+        esac
+    done
+}
+
 # Check if conda is available
 check_conda() {
+    # Try to initialize conda first
+    if [ -f "$(conda info --base)/etc/profile.d/conda.sh" ]; then
+        source "$(conda info --base)/etc/profile.d/conda.sh"
+    elif [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+        source "$HOME/miniconda3/etc/profile.d/conda.sh"
+    elif [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
+        source "$HOME/anaconda3/etc/profile.d/conda.sh"
+    fi
+    
     if ! command -v conda &> /dev/null; then
         log_error "Conda not found. Please install Miniconda or Anaconda first."
         echo "Visit: https://docs.conda.io/en/latest/miniconda.html"
@@ -62,21 +169,25 @@ check_conda() {
 setup_environment() {
     log_section "Setting up Conda Environment"
     
-    # Check if environment already exists
-    if conda env list | grep -q "^vit "; then
-        log_warning "Environment 'vit' already exists. Skipping creation."
-        log_info "To recreate environment, run: conda env remove -n vit"
+    # Check if we're already in the vit environment
+    if [[ "$CONDA_DEFAULT_ENV" == "vit" ]]; then
+        log_success "Already in 'vit' environment. Skipping setup."
     else
-        log_info "Creating conda environment from environment.yaml..."
-        conda env create -f environment.yaml
-        log_success "Environment 'vit' created successfully"
+        # Check if environment already exists
+        if conda env list | grep -q "^vit "; then
+            log_warning "Environment 'vit' already exists. Skipping creation."
+            log_info "To recreate environment, run: conda env remove -n vit"
+        else
+            log_info "Creating conda environment from environment.yaml..."
+            conda env create -f environment.yaml
+            log_success "Environment 'vit' created successfully"
+        fi
+        
+        # Activate environment
+        log_info "Activating environment..."
+        conda activate vit
+        log_success "Environment 'vit' activated"
     fi
-    
-    # Activate environment
-    log_info "Activating environment..."
-    source "$(conda info --base)/etc/profile.d/conda.sh"
-    conda activate vit
-    log_success "Environment 'vit' activated"
     
     # Set PROJECT_ROOT
     export PROJECT_ROOT=$(pwd)
@@ -126,7 +237,8 @@ run_fig7a_experiments() {
         log_info "Training pretrained model with ${rot} rotations for 25 epochs..."
         python src/train.py \
             experiment=02_fig7a_rapid_learning/pretrained/train/vit-b16-224-in21k_25epochs_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed pretrained training with ${rot} rotations"
     done
     
@@ -137,7 +249,8 @@ run_fig7a_experiments() {
         log_info "Training randomly initialized model with ${rot} rotations for 75 epochs..."
         python src/train.py \
             experiment=02_fig7a_rapid_learning/random_init/train/vit-b16-224-in21k_75epochs_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed random init training (75 epochs) with ${rot} rotations"
     done
     
@@ -148,7 +261,8 @@ run_fig7a_experiments() {
         log_info "Training randomly initialized model with ${rot} rotations for 1 epoch..."
         python src/train.py \
             experiment=02_fig7a_rapid_learning/random_init/train/vit-b16-224-in21k_1epochs_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed random init training (1 epoch) with ${rot} rotations"
     done
     
@@ -159,7 +273,8 @@ run_fig7a_experiments() {
         log_info "Testing pretrained model with ${rot} rotations (25 epochs)..."
         python src/eval.py \
             experiment=02_fig7a_rapid_learning/pretrained/inference/vit-b16-224-in21k_25epochs_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed evaluation of pretrained model with ${rot} rotations"
     done
     
@@ -170,7 +285,8 @@ run_fig7a_experiments() {
         log_info "Testing randomly initialized model with ${rot} rotations (75 epochs)..."
         python src/eval.py \
             experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_75epochs_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed evaluation of random init model (75 epochs) with ${rot} rotations"
     done
     
@@ -181,7 +297,8 @@ run_fig7a_experiments() {
         log_info "Testing randomly initialized model with ${rot} rotations (1 epoch)..."
         python src/eval.py \
             experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_1epoch_n_rot \
-            data.num_rotations_for_train=${rot}
+            data.num_rotations_for_train=${rot} \
+            paths=reproduction
         log_success "Completed evaluation of random init model (1 epoch) with ${rot} rotations"
     done
     
@@ -205,7 +322,7 @@ run_fig7b_experiments() {
     
     # Run initial task (task0)
     log_info "Running initial task (task0)..."
-    python src/train.py experiment=03_fig7b_continual_learning/train/task0 "task_id=0" || handle_error "0"
+    python src/train.py experiment=03_fig7b_continual_learning/train/task0 "task_id=0" paths=reproduction || handle_error "0"
     log_success "Successfully completed task 0"
     
     # Run subsequent tasks (1-4) - limiting to first 5 total tasks
@@ -213,7 +330,7 @@ run_fig7b_experiments() {
     
     for task_id in $(seq 1 4); do
         log_info "Running training for task_id = ${task_id}"
-        python src/train.py experiment=03_fig7b_continual_learning/train/task1+ "task_id=${task_id}" || handle_error "${task_id}"
+        python src/train.py experiment=03_fig7b_continual_learning/train/task1+ "task_id=${task_id}" paths=reproduction || handle_error "${task_id}"
         log_success "Successfully completed task ${task_id}"
         
         # Small delay between tasks
@@ -222,7 +339,7 @@ run_fig7b_experiments() {
     
     # Run evaluation
     log_info "Running continual learning evaluation..."
-    python src/eval_continual.py experiment=03_fig7b_continual_learning/inference/eval_continual_learning
+    python src/eval_continual.py experiment=03_fig7b_continual_learning/inference/eval_continual_learning paths=reproduction
     log_success "Continual learning evaluation completed"
     
     log_success "Continual learning experiments (first 5 tasks) completed!"
@@ -277,21 +394,89 @@ run_fig8b_experiments() {
     log_success "All FLOP analysis experiments completed!"
 }
 
+# Parse command line arguments
+parse_arguments() {
+    # Default values
+    RUN_FIG7A=true
+    RUN_FIG7B=true
+    RUN_FIG8B=true
+    SKIP_SETUP=false
+    INTERACTIVE_MODE=true
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+            -a|--all)
+                RUN_FIG7A=true
+                RUN_FIG7B=true
+                RUN_FIG8B=true
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            -7a|--fig7a)
+                RUN_FIG7A=true
+                RUN_FIG7B=false
+                RUN_FIG8B=false
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            -7b|--fig7b)
+                RUN_FIG7A=false
+                RUN_FIG7B=true
+                RUN_FIG8B=false
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            -8b|--fig8b)
+                RUN_FIG7A=false
+                RUN_FIG7B=false
+                RUN_FIG8B=true
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            --from-7a)
+                RUN_FIG7A=true
+                RUN_FIG7B=true
+                RUN_FIG8B=true
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            --from-7b)
+                RUN_FIG7A=false
+                RUN_FIG7B=true
+                RUN_FIG8B=true
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            --from-8b)
+                RUN_FIG7A=false
+                RUN_FIG7B=false
+                RUN_FIG8B=true
+                INTERACTIVE_MODE=false
+                shift
+                ;;
+            -s|--skip-setup)
+                SKIP_SETUP=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
 # Main execution
 main() {
+    # Parse command line arguments
+    parse_arguments "$@"
+    
     log_section "ViT Experiments - Complete Reproduction Suite"
-    
-    log_info "This script will run all ViT experiments for reproducibility"
-    log_info "Estimated total time: 4-8 hours depending on hardware"
-    log_warning "Make sure you have sufficient disk space and computational resources"
-    
-    # Confirm execution
-    read -p "Do you want to proceed with all experiments? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Aborted by user"
-        exit 0
-    fi
     
     # Check if we're in the right directory
     if [ ! -f ".project-root" ]; then
@@ -300,26 +485,90 @@ main() {
         exit 1
     fi
     
+    # Interactive mode - let user choose what to run
+    if [ "$INTERACTIVE_MODE" = true ]; then
+        get_user_choice
+    fi
+    
+    # Show what will be run
+    log_info "This script will run the following experiments:"
+    if [ "$RUN_FIG7A" = true ]; then
+        log_info "  ✓ Figure 7a: Rapid Learning Experiments"
+    fi
+    if [ "$RUN_FIG7B" = true ]; then
+        log_info "  ✓ Figure 7b: Continual Learning Experiments (limited)"
+    fi
+    if [ "$RUN_FIG8B" = true ]; then
+        log_info "  ✓ Figure 8b: FLOP Analysis Experiments"
+    fi
+    
+    # Calculate estimated time
+    ESTIMATED_TIME="1-2 hours"
+    if [ "$RUN_FIG7A" = true ] && [ "$RUN_FIG7B" = true ] && [ "$RUN_FIG8B" = true ]; then
+        ESTIMATED_TIME="4-8 hours"
+    elif [ "$RUN_FIG7A" = true ] && [ "$RUN_FIG8B" = true ]; then
+        ESTIMATED_TIME="3-6 hours"
+    elif [ "$RUN_FIG7A" = true ]; then
+        ESTIMATED_TIME="2-4 hours"
+    elif [ "$RUN_FIG8B" = true ]; then
+        ESTIMATED_TIME="1-3 hours"
+    fi
+    
+    log_info "Estimated total time: $ESTIMATED_TIME depending on hardware"
+    log_warning "Make sure you have sufficient disk space and computational resources"
+    
+    # Confirm execution
+    read -p "Do you want to proceed with the selected experiments? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Aborted by user"
+        exit 0
+    fi
+    
     # Store start time
     START_TIME=$(date)
     log_info "Starting experiments at: $START_TIME"
     
-    # Setup and verification
-    check_conda
-    setup_environment
-    verify_setup
-    run_quick_test
+    # Setup and verification (unless skipped)
+    if [ "$SKIP_SETUP" = false ]; then
+        check_conda
+        setup_environment
+        verify_setup
+        run_quick_test
+    else
+        log_warning "Skipping setup and verification as requested"
+        # Still need to activate environment
+        if [[ "$CONDA_DEFAULT_ENV" != "vit" ]]; then
+            log_info "Activating vit environment..."
+            conda activate vit
+        fi
+        export PROJECT_ROOT=$(pwd)
+    fi
     
-    # Run all experiment suites
-    run_fig7a_experiments
-    run_fig7b_experiments
-    run_fig8b_experiments
+    # Run selected experiment suites
+    if [ "$RUN_FIG7A" = true ]; then
+        run_fig7a_experiments
+    else
+        log_info "Skipping Figure 7a experiments"
+    fi
+    
+    if [ "$RUN_FIG7B" = true ]; then
+        run_fig7b_experiments
+    else
+        log_info "Skipping Figure 7b experiments"
+    fi
+    
+    if [ "$RUN_FIG8B" = true ]; then
+        run_fig8b_experiments
+    else
+        log_info "Skipping Figure 8b experiments"
+    fi
     
     # Summary
     END_TIME=$(date)
     log_section "Experiment Suite Complete!"
     
-    log_success "All experiments completed successfully!"
+    log_success "Selected experiments completed successfully!"
     log_info "Started: $START_TIME"
     log_info "Finished: $END_TIME"
     
@@ -334,6 +583,15 @@ main() {
     log_info "1. Analyze results in WandB dashboard"
     log_info "2. Compare your results with published benchmarks"  
     log_info "3. For full continual learning (77 tasks): ./scripts/fig7b_continual_learning.sh"
+    
+    # Show restart instructions
+    echo
+    log_info "🔄 To restart from a specific point:"
+    log_info "  - Run only Fig 7a: $0 --fig7a"
+    log_info "  - Run only Fig 7b: $0 --fig7b"  
+    log_info "  - Run only Fig 8b: $0 --fig8b"
+    log_info "  - From Fig 7b onwards: $0 --from-7b"
+    log_info "  - Skip setup: $0 --fig7a --skip-setup"
     
     echo
     log_success "Thank you for reproducing our ViT results! 🎉"

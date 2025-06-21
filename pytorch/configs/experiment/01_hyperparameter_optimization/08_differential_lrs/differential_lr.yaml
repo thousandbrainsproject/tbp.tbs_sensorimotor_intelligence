@@ -12,7 +12,7 @@
 # While there is no change in config, the vit_module.py has been updated to use differential learning rates for the backbone and heads.
 
 defaults:
-  - /experiment/hyperparameter_optimization/starting_config
+  - /experiment/01_hyperparameter_optimization/starting_config
   - _self_
 
 model:

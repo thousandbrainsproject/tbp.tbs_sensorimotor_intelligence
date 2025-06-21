@@ -14,7 +14,7 @@
 # This script was used to deep dive into geodesic loss for pretrained ViT models
 
 defaults:
-  - /experiment/hyperparameter_optimization/optimized_config
+  - /experiment/01_hyperparameter_optimization/optimized_config
   - override /callbacks: full_train_callbacks
   - _self_
 

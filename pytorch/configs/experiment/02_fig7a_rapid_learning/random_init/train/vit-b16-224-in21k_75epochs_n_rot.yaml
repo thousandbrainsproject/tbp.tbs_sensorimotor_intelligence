@@ -13,8 +13,9 @@
 # python train.py experiment=example
 
 defaults:
-  - /experiment/hyperparameter_optimization/optimized_config
-  - override /callbacks: full_train_callbacks
+  - /experiment/01_hyperparameter_optimization/optimized_config
+  - override /callbacks: presets/full_train_callbacks
+  - override /model: base_vit_module
   - _self_
 
 # all parameters below will be merged with parameters from default configurations set above
@@ -43,4 +44,4 @@ trainer:
 
 logger:
   wandb:
-    name: "fig7a_vit-b16-224-in21k_25epochs_${data.num_rotations_for_train}rot_random_init"
+    name: "fig7a_vit-b16-224-in21k_75epochs_${data.num_rotations_for_train}rot_random_init"
