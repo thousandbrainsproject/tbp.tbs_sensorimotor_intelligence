@@ -350,10 +350,10 @@ run_fig7b_experiments() {
 run_fig8b_experiments() {
     log_section "Figure 8b: FLOP Analysis Experiments"
     
-    log_info "Comparing different ViT architectures (B/16, B/32, L/16, L/32, H/14)"
+    log_info "Comparing different ViT architectures (B/16, B/32, L/16, L/32)"
     
     # Define the models to test
-    MODELS=("vit-b16-224-in21k" "vit-b32-224-in21k" "vit-h14-224-in21k" "vit-l16-224-in21k" "vit-l32-224-in21k")
+    MODELS=("vit-b16-224-in21k" "vit-b32-224-in21k" "vit-l16-224-in21k" "vit-l32-224-in21k")
     
     # Section 1: Training with pretrained initialization
     log_info "Section 1: Training with pretrained initialization..."
