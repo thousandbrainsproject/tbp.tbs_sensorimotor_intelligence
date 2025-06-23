@@ -61,6 +61,9 @@ This captures core model performance in a realistic setting.
 
 ## Figure 5: Rapid Inference with Voting
 
+Note in our final paper, these results appear in the "Figure 6", after "Rapid Inference
+with Model-Free and Model-Based Policies"
+
 Consists of 5 experiments:
 - `dist_agent_1lm_randrot_noise`
 - `dist_agent_2lm_randrot_noise`
@@ -82,6 +85,9 @@ Performance is evaluated on:
 The main output measure is accuracy and rotation error as a function of the number of LMs.
 
 ## Figure 6: Rapid Inference with Model-Free and Model-Based Policies
+
+Note in our final paper, these results appear in the "Figure 5", before "Rapid Inference
+with Voting"
 
 Consists of 3 experiments:
 - `dist_agent_1lm_randrot_noise_nohyp` - No hypothesis-testing, and random-walk policy
