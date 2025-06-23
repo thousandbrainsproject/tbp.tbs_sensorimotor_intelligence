@@ -15,7 +15,7 @@
 defaults:
   - override /data: ycb_standard
   - override /model: base_vit_module
-  - override /callbacks: presets/default
+  - override /callbacks: default
   - override /trainer: default
   - _self_
 

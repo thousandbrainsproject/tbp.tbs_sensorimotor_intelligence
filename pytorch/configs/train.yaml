@@ -36,7 +36,7 @@ defaults:
   - _self_
   - data: ycb_standard
   - model: base_vit_module
-  - callbacks: presets/default
+  - callbacks: default
   - logger: wandb # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: default
   - paths: default

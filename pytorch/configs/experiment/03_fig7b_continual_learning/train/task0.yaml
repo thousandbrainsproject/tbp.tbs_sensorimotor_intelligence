@@ -16,7 +16,7 @@ defaults:
   - /experiment/01_hyperparameter_optimization/optimized_config
   - override /data: ycb_continual
   - override /model: continual_vit_module
-  - override /callbacks: presets/continual_learning_callbacks
+  - override /callbacks: continual_learning_callbacks
   - _self_
 
 # all parameters below will be merged with parameters from default configurations set above

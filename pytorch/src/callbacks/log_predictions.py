@@ -105,7 +105,11 @@ class LogPredictionsCallback(Callback):
         table = wandb.Table(columns=columns)
 
         for batch in dataloader:
-            rgbd_images, object_ids, unit_quaternions = batch
+            rgbd_images, object_ids, unit_quaternions = (
+                batch["rgbd_image"],
+                batch["object_ids"],
+                batch["unit_quaternion"],
+            )
 
             # Get model predictions
             with torch.no_grad():

@@ -8,15 +8,14 @@
 # https://opensource.org/licenses/MIT.
 
 defaults:
-  - /callbacks/definitions/model_checkpoint
-  - /callbacks/definitions/model_summary
-  - /callbacks/definitions/rich_progress_bar
-  - /callbacks/definitions/lr_logger
-  - /callbacks/definitions/train_acc_threshold
+  - model_checkpoint
+  - model_summary
+  - rich_progress_bar
+  - lr_logger
   - _self_
 
 model_checkpoint:
-  dirpath: ${paths.output_dir}/checkpoints
+  dirpath: ${paths.log_dir}/${logger.wandb.name}/checkpoints
   filename: "epoch_{epoch:03d}"
   monitor: null
   save_last: true

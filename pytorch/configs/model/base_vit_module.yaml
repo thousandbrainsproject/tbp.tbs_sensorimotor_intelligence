@@ -50,4 +50,5 @@ scheduler:
   _target_: transformers.get_cosine_schedule_with_warmup
   _partial_: true
 
+rotation_weight: 1.0
 compile: false # false for debugging

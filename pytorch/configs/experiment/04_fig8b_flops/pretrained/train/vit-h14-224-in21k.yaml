@@ -14,7 +14,7 @@
 
 defaults:
   - /experiment/01_hyperparameter_optimization/optimized_config
-  - override /callbacks: presets/full_train_callbacks
+  - override /callbacks: full_train_callbacks
   - _self_
 
 # all parameters below will be merged with parameters from default configurations set above
