@@ -385,7 +385,7 @@ def plot_performance() -> None:
     bar_width = 0.4
     violin_width = 0.4
     gap = 0.04
-    xticks = np.arange(len(experiments)) * 1.3
+    xticks = np.arange(len(experiments)) * 1.43
     bar_positions = xticks - bar_width / 2 - gap / 2
     violin_positions = xticks + violin_width / 2 + gap / 2
     median_style = dict(color="lightgray", lw=1, ls="-")
@@ -398,7 +398,7 @@ def plot_performance() -> None:
         width=bar_width,
     )
     ax1.set_ylim(0, 100)
-    ax1.set_ylabel("% Correct")
+    ax1.set_ylabel("Accuracy (%)")
 
     # Plot rotation error violins
     violinplot(
@@ -420,9 +420,9 @@ def plot_performance() -> None:
     xticklabels = [
         "base",
         "noise",
-        "RR",
-        "noise+RR",
-        "noise+RR\n(uniform hsv)",
+        "new\nrotations",
+        "noise + new\nrotations",
+        "+ new\ncolor",
     ]
     ax1.set_xticklabels(xticklabels, rotation=0, ha="center")
 
@@ -464,17 +464,17 @@ def draw_icons():
             "rotation": (0, 0, 0),
         },
         {
-            "label": "RR",
+            "label": "new\nrotations",
             "noise": {},
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR",
+            "label": "noise + new\nrotations",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
         {
-            "label": "noise+RR\n(uniform hsv)",
+            "label": "+ new\ncolor",
             "noise": standard_noise_params,
             "rotation": [45, 10, 30],
         },
