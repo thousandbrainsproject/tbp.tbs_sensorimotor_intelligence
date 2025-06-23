@@ -1,0 +1,25 @@
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+defaults:
+  - model_checkpoint
+  - model_summary
+  - rich_progress_bar
+  - lr_logger
+  - _self_
+
+model_checkpoint:
+  dirpath: ${paths.log_dir}/${logger.wandb.name}/checkpoints
+  filename: "epoch_{epoch:03d}"
+  monitor: null
+  save_last: true
+  auto_insert_metric_name: false
+
+model_summary:
+  max_depth: -1

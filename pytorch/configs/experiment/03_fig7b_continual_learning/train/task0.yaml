@@ -1,0 +1,61 @@
+# @package _global_
+
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - /experiment/01_hyperparameter_optimization/optimized_config
+  - override /data: ycb_continual
+  - override /model: continual_vit_module
+  - override /callbacks: continual_learning_callbacks
+  - _self_
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["fig7b"]
+
+seed: 12345
+
+task_id: 0
+num_classes_for_task: 1
+
+data:
+  task_id: ${task_id}
+  num_classes_for_task: ${num_classes_for_task}
+
+model:
+  task_id: ${task_id}
+  num_classes_for_task: ${num_classes_for_task}
+  net:
+    model_name: vit-b16-224-in21k
+
+trainer:
+  max_epochs: 10
+  num_sanity_val_steps: 0
+  log_every_n_steps: 1
+
+callbacks:
+  model_checkpoint:
+    dirpath: ${paths.log_dir}/fig7b_continual_learning/${logger.wandb.name}/checkpoints
+
+logger:
+  wandb:
+    name: "fig7b_vit-b16-224-in21k_task${task_id}_classes${num_classes_for_task}"
+
+hydra:
+  run:
+    dir: ${paths.log_dir}/fig7b_continual_learning/${logger.wandb.name}
+  job_logging:
+    handlers:
+      file:
+        filename: ${paths.log_dir}/fig7b_continual_learning/${logger.wandb.name}/${task_name}.log

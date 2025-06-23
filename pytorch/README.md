@@ -2,6 +2,34 @@
 
 A Vision Transformer (ViT) implementation for joint object classification and pose estimation using RGB-D inputs. 
 
+## 🚀 Quick Start
+
+For detailed reproduction instructions, see **[REPRODUCE_RESULTS.md](REPRODUCE_RESULTS.md)**.
+
+### Verify Your Setup
+```bash
+cd tbp.tbs_sensorimotor_intelligence/pytorch
+conda env create -f environment.yaml
+conda activate vit
+export PROJECT_ROOT=$(pwd)
+
+# Quick verification
+python scripts/verify_setup.py
+
+# End-to-end test  
+./scripts/quick_test.sh
+```
+
+### Run Experiments
+```bash
+# Single experiment
+python src/train.py experiment=04_fig8b_flops/pretrained/train/vit-b16-224-in21k
+
+# Batch experiments
+./scripts/fig8b_flops.sh         # Model architecture comparison
+./scripts/fig7a_rapid_learning.sh   # Rapid learning experiments
+```
+
 ## Set up Conda Environment
 
 ```bash
@@ -10,26 +38,28 @@ git clone https://github.com/thousandbrainsproject/tbp.tbs_sensorimotor_intellig
 cd pytorch
 
 # Create conda environment
-conda env create -f environment.yaml -n vit
-
-# Activate environment
+conda env create -f environment.yaml
 conda activate vit
+
+# Set PROJECT_ROOT (important!)
+export PROJECT_ROOT=$(pwd)
 ```
 
 ## Usage
 
-All experiments can be run following the below syntax from the project root directory (`tbp.tbs_sensorimotor_intelligence/pytorch`):
+All experiments can be run from the project root directory (`tbp.tbs_sensorimotor_intelligence/pytorch`):
 
 ```bash
 python src/train.py experiment=your_exp_config
 # Example
-python src/train.py experiment=04_fig8b_flops/pretrained/train/vit-b16-224-in21k.yaml
+python src/train.py experiment=04_fig8b_flops/pretrained/train/vit-b16-224-in21k
 ```
 
-To run all training and inference experiments, we have created a bash script to automatically run the relevant experiments in the `scripts/` directory.
+Available experiment scripts:
 ```bash
-chmod +x ./scripts/fig8b_flops.sh
-./scripts/fig8b_flops.sh
+./scripts/fig7a_rapid_learning.sh   # Rapid learning with different data amounts
+./scripts/fig7b_continual_learning.sh  # Continual learning across tasks  
+./scripts/fig8b_flops.sh           # Model architecture comparison
 ```
 
 ## Architecture

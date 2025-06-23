@@ -1,12 +1,3 @@
-# Copyright 2025 Thousand Brains Project
-#
-# Copyright may exist in Contributors' modifications
-# and/or contributions to the work.
-#
-# Use of this source code is governed by the MIT
-# license that can be found in the LICENSE file or at
-# https://opensource.org/licenses/MIT.
-# ---
 # MIT License
 
 # Copyright (c) 2021 ashleve
@@ -29,26 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-_target_: src.models.base_vit_module.BaseViTLitModule
-
-net:
-  _target_: src.models.components.rgbd_vit.ViTRgbdObjectClassifierWithRotation
-  model_name: vit-b16-224-in21k
-  num_classes: 77
-  freeze_backbone: false
-  use_pretrained: true
-
-optimizer:
-  _target_: torch.optim.AdamW
-  _partial_: true
-  lr: 0.0005
-  weight_decay: 0.01
-  betas: [0.9, 0.999] # default betas for AdamW
-  eps: 1e-8 # default eps for AdamW
-
-scheduler:
-  _target_: transformers.get_cosine_schedule_with_warmup
-  _partial_: true
-
-rotation_weight: 1.0
-compile: false # false for debugging
+model_checkpoint:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  dirpath: null # directory to save the model file
+  filename: "epoch_{epoch:03d}-val_loss={val/loss:.3f}" # checkpoint filename with metrics
+  monitor: null # name of the logged metric which determines when model is improving
+  verbose: False # verbosity mode
+  save_last: true # additionally always save an exact copy of the last checkpoint
+  save_top_k: 1 # save k best models (determined by monitor metric)
+  mode: "min" # "max" means higher metric value is better, can be also "min"
+  auto_insert_metric_name: true # when True, the checkpoints filenames will contain the metric name
+  save_weights_only: false # if True, then only the model's weights will be saved
+  every_n_train_steps: null # number of training steps between checkpoints
+  train_time_interval: null # checkpoints are monitored at the specified time interval
+  every_n_epochs: 1 # number of epochs between checkpoints
+  save_on_train_epoch_end: null # whether to run checkpointing at the end of training epoch

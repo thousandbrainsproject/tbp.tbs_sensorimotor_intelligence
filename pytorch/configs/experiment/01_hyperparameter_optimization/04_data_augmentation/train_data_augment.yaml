@@ -1,0 +1,25 @@
+# @package _global_
+
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+defaults:
+  - /experiment/01_hyperparameter_optimization/starting_config
+  - _self_
+
+trainer:
+  gradient_clip_val: 1.0 # Added following 02_gradient_clipping experiment
+
+data:
+  train_transform:
+    _target_: src.data.transforms.rgbd_transforms.RGBDTrainAugment
+
+logger:
+  wandb:
+    name: "vit-b16_data_augmentation"

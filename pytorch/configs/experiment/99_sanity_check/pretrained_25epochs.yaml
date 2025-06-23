@@ -1,0 +1,45 @@
+# @package _global_
+
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# to execute this experiment run:
+# python train.py experiment=example
+# This script was used to deep dive into geodesic loss for pretrained ViT models
+
+defaults:
+  - /experiment/01_hyperparameter_optimization/optimized_config
+  - override /callbacks: full_train_callbacks
+  - _self_
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["fig7a"]
+
+seed: 12345
+
+data:
+  data_dir: ${paths.data_dir}/view_finder_32/view_finder_rgbd
+  train_val_split: [1.0, 0.0] # Use all training data 
+  num_rotations_to_train: 32
+
+model:
+  compile: false # For debugging
+  net:
+    model_name: vit-b16-224-in21k
+  rotation_weight: 1.0
+
+trainer:
+  max_epochs: 25
+  num_sanity_val_steps: 2
+
+logger:
+  wandb:
+    name: "rotation_exp_${data.num_rotations_to_train}rot_pretrained_25epochs"

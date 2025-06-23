@@ -1,0 +1,44 @@
+# @package _global_
+
+# Copyright 2025 Thousand Brains Project
+#
+# Copyright may exist in Contributors' modifications
+# and/or contributions to the work.
+#
+# Use of this source code is governed by the MIT
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - /experiment/01_hyperparameter_optimization/optimized_config
+  - override /callbacks: full_train_callbacks
+  - _self_
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["fig8b"]
+
+seed: 12345
+
+data:
+  train_val_split: [1.0, 0.0] # Use all training data
+
+model:
+  net:
+    model_name: vit-b16-224-in21k
+    use_pretrained: false
+  optimizer:
+    lr: 0.00001
+
+trainer:
+  max_epochs: 75 # longer training for random init
+  num_sanity_val_steps: 0
+  log_every_n_steps: 1
+
+logger:
+  wandb:
+    name: "fig8b_vit-b16-224-in21k_random_init"
