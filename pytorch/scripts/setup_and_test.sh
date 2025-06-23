@@ -141,20 +141,12 @@ main() {
     echo
     log_info "🎯 Next Steps - Choose your experiment suite:"
     echo
-    log_info "📈 Individual experiment scripts:"
-    echo "   ./scripts/fig7a_rapid_learning.sh     # Rapid learning with different data amounts"
-    echo "   ./scripts/fig7b_continual_learning.sh # Continual learning (77 tasks)"
-    echo "   ./scripts/fig8b_flops.sh              # Model architecture comparison"
-    echo
-    log_info "🚀 Run ALL experiments (4-8 hours):"
+    log_info "🚀 Run ALL experiments:"
     echo "   ./scripts/run_all_experiments.sh      # Complete reproduction suite"
-    echo
-    log_info "🔬 Single experiment example:"
-    echo "   python src/train.py experiment=01_hyperparameter_optimization/starting_config"
     echo
     log_info "📊 Monitor results:"
     echo "   - WandB dashboard: https://wandb.ai/your-team/benchmark_vit"
-    echo "   - Local logs: ~/tbp/results/dmc/results/vit/logs/"
+    echo "   - Local logs: ~/tbp/results/dmc/results/vit/logs_reproduction"
     echo
     log_success "Happy experimenting! 🎉"
 }
