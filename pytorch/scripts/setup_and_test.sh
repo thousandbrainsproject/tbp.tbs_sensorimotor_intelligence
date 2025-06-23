@@ -51,7 +51,16 @@ log_section() {
 
 # Check if conda is available
 check_conda() {
-    if ! command -v conda &> /dev/null; then
+    # Initialize conda for bash if not already done
+    if [ -f ~/miniconda3/etc/profile.d/conda.sh ]; then
+        source ~/miniconda3/etc/profile.d/conda.sh
+    elif [ -f /opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh ]; then
+        source /opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh
+    elif [ -f /usr/local/miniconda3/etc/profile.d/conda.sh ]; then
+        source /usr/local/miniconda3/etc/profile.d/conda.sh
+    fi
+    
+    if ! conda --version &> /dev/null; then
         log_error "Conda not found. Please install Miniconda or Anaconda first."
         echo "Visit: https://docs.conda.io/en/latest/miniconda.html"
         exit 1
@@ -75,7 +84,11 @@ setup_environment() {
     
     # Activate environment
     log_info "Activating environment..."
-    source "$(conda info --base)/etc/profile.d/conda.sh"
+    # conda info --base might not work if conda isn't properly initialized
+    # Use the miniconda3 path we determined earlier
+    if [ -f ~/miniconda3/etc/profile.d/conda.sh ]; then
+        source ~/miniconda3/etc/profile.d/conda.sh
+    fi
     conda activate vit
     log_success "Environment 'vit' activated"
     

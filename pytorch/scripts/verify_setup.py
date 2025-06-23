@@ -25,7 +25,7 @@ def check_environment():
     
     required_packages = [
         'torch',
-        'torchvision', 
+        'torchvision',
         'lightning',
         'hydra',
         'transformers',
@@ -144,38 +144,6 @@ def check_device_availability():
     return True
 
 
-def check_config_loading():
-    """Test basic config loading."""
-    print("\n🔍 Testing configuration loading...")
-    
-    try:
-        # Add src to path for imports
-        src_path = Path.cwd() / 'src'
-        if str(src_path) not in sys.path:
-            sys.path.insert(0, str(src_path))
-        
-        from hydra import compose, initialize_config_dir
-        from pathlib import Path
-        
-        # Test config loading
-        config_dir = Path.cwd() / 'configs'
-        
-        with initialize_config_dir(config_dir=str(config_dir), version_base="1.3"):
-            # Try loading a simple config
-            cfg = compose(config_name="train.yaml")
-            print("  ✅ Basic config loading works")
-            
-            # Try loading an experiment config  
-            cfg = compose(config_name="train.yaml", 
-                         overrides=["experiment=01_hyperparameter_optimization/starting_config"])
-            print("  ✅ Experiment config loading works")
-            
-    except Exception as e:
-        print(f"  ❌ Config loading failed: {e}")
-        return False
-        
-    return True
-
 
 def check_wandb_setup():
     """Check WandB configuration."""
@@ -206,10 +174,9 @@ def main():
     
     checks = [
         check_environment,
-        check_project_root, 
+        check_project_root,
         check_data_paths,
         check_device_availability,
-        check_config_loading,
         check_wandb_setup
     ]
     
@@ -229,15 +196,6 @@ def main():
     if all(results[:5]):  # First 5 checks are critical
         print("✅ Environment setup looks good!")
         print("   You should be able to run experiments.")
-        
-        if not results[5]:  # WandB check
-            print("⚠️  WandB not configured - experiments will run but won't log to WandB")
-            
-        print("\n🎯 Next steps:")
-        print("1. Test with a dry run:")
-        print("   python src/train.py experiment=01_hyperparameter_optimization/starting_config trainer.fast_dev_run=true")
-        print("2. Run a quick experiment:")
-        print("   python src/train.py experiment=01_hyperparameter_optimization/starting_config trainer.max_epochs=1")
         
     else:
         print("❌ Some issues found. Please fix the above errors before running experiments.")

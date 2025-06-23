@@ -117,8 +117,7 @@ echo
 echo "🎯 Next steps:"
 echo "1. Review the detailed documentation: REPRODUCE_RESULTS.md"
 echo "2. Run full experiments:"
-echo "   ./scripts/fig8b_flops.sh       # Model architecture comparison"
-echo "   ./scripts/fig7a_rapid_learning.sh  # Rapid learning experiments"
+echo "   ./scripts/run_all_experiments.sh"
 echo "3. Monitor results in WandB (if configured)"
 echo
 echo "📚 For troubleshooting, see the REPRODUCE_RESULTS.md file" 
