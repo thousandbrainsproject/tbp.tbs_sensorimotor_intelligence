@@ -88,8 +88,8 @@ if [ -z "$LATEST_CHECKPOINT" ]; then
 else
     CHECKPOINT_FILE="$LATEST_CHECKPOINT/checkpoints/last.ckpt"
     if [ -f "$CHECKPOINT_FILE" ]; then
-        echo "Command: python src/eval.py ckpt_path=$CHECKPOINT_FILE"
-        python src/eval.py \
+        echo "Command: python src/eval_standard.py ckpt_path=$CHECKPOINT_FILE"
+        python src/eval_standard.py \
             ckpt_path="$CHECKPOINT_FILE" \
             trainer.accelerator=auto \
             paths=reproduction

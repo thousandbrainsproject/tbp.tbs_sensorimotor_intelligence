@@ -51,7 +51,7 @@ echo "Section 4: Evaluating pretrained models (25 epochs)..."
 
 for rot in 1 2 4 8 16 32; do
     echo "Testing pretrained model with ${rot} rotations (25 epochs)..."
-    python src/eval.py \
+    python src/eval_standard.py \
         experiment=02_fig7a_rapid_learning/pretrained/inference/vit-b16-224-in21k_25epochs_n_rot \
         data.num_rotations_for_train=${rot} \
         paths=reproduction
@@ -62,7 +62,7 @@ echo "Section 5: Evaluating randomly initialized models (75 epochs)..."
 
 for rot in 1 2 4 8 16 32; do
     echo "Testing randomly initialized model with ${rot} rotations (75 epochs)..."
-    python src/eval.py \
+    python src/eval_standard.py \
         experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_75epochs_n_rot \
         data.num_rotations_for_train=${rot} \
         paths=reproduction
@@ -72,7 +72,7 @@ echo "Section 6: Evaluating randomly initialized models (1 epoch)..."
 
 for rot in 1 2 4 8 16 32; do
     echo "Testing randomly initialized model with ${rot} rotations (1 epoch)..."
-    python src/eval.py \
+    python src/eval_standard.py \
         experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_1epoch_n_rot \
         data.num_rotations_for_train=${rot} \
         paths=reproduction

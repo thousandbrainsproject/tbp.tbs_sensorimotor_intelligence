@@ -77,13 +77,14 @@ show_usage() {
 show_menu() {
     echo
     log_section "ViT Experiments - Select What to Run"
-    echo "1) Run all experiments (Fig 7a + 7b + 8b)"
-    echo "2) Run from Figure 7a onwards (7a + 7b + 8b)"  
-    echo "3) Run from Figure 7b onwards (7b + 8b)"
-    echo "4) Run only Figure 7a (Rapid Learning)"
-    echo "5) Run only Figure 7b (Continual Learning - limited)"
-    echo "6) Run only Figure 8b (FLOP Analysis)"
-    echo "7) Exit"
+    echo "1) Run all experiments (Fig 7a + 7b + 8b - Training & Inference)"
+    echo "2) Figure 7a (Rapid Learning) - Training only"
+    echo "3) Figure 7a (Rapid Learning) - Inference only"
+    echo "4) Figure 7b (Continual Learning) - Training only"
+    echo "5) Figure 7b (Continual Learning) - Inference only"
+    echo "6) Figure 8b (FLOP Analysis) - Training only"
+    echo "7) Figure 8b (FLOP Analysis) - Inference only"
+    echo "8) Exit"
     echo
 }
 
@@ -91,56 +92,81 @@ show_menu() {
 get_user_choice() {
     while true; do
         show_menu
-        read -p "Please select an option (1-7): " choice
+        read -p "Please select an option (1-8): " choice
         case $choice in
             1) 
-                log_info "Selected: Run all experiments"
+                log_info "Selected: Run all experiments (Training & Inference)"
                 RUN_FIG7A=true
                 RUN_FIG7B=true  
                 RUN_FIG8B=true
+                RUN_FIG7A_TRAINING=true
+                RUN_FIG7A_INFERENCE=true
+                RUN_FIG7B_TRAINING=true
+                RUN_FIG7B_INFERENCE=true
+                RUN_FIG8B_TRAINING=true
+                RUN_FIG8B_INFERENCE=true
                 break
                 ;;
             2)
-                log_info "Selected: Run from Figure 7a onwards"
+                log_info "Selected: Figure 7a (Rapid Learning) - Training only"
                 RUN_FIG7A=true
-                RUN_FIG7B=true
-                RUN_FIG8B=true
+                RUN_FIG7B=false
+                RUN_FIG8B=false
+                RUN_FIG7A_TRAINING=true
+                RUN_FIG7A_INFERENCE=false
                 break
                 ;;
             3)
-                log_info "Selected: Run from Figure 7b onwards"
-                RUN_FIG7A=false
-                RUN_FIG7B=true
-                RUN_FIG8B=true
-                break
-                ;;
-            4)
-                log_info "Selected: Run only Figure 7a"
+                log_info "Selected: Figure 7a (Rapid Learning) - Inference only"
                 RUN_FIG7A=true
                 RUN_FIG7B=false
                 RUN_FIG8B=false
+                RUN_FIG7A_TRAINING=false
+                RUN_FIG7A_INFERENCE=true
                 break
                 ;;
-            5)
-                log_info "Selected: Run only Figure 7b"
+            4)
+                log_info "Selected: Figure 7b (Continual Learning) - Training only"
                 RUN_FIG7A=false
                 RUN_FIG7B=true
                 RUN_FIG8B=false
+                RUN_FIG7B_TRAINING=true
+                RUN_FIG7B_INFERENCE=false
+                break
+                ;;
+            5)
+                log_info "Selected: Figure 7b (Continual Learning) - Inference only"
+                RUN_FIG7A=false
+                RUN_FIG7B=true
+                RUN_FIG8B=false
+                RUN_FIG7B_TRAINING=false
+                RUN_FIG7B_INFERENCE=true
                 break
                 ;;
             6)
-                log_info "Selected: Run only Figure 8b"
+                log_info "Selected: Figure 8b (FLOP Analysis) - Training only"
                 RUN_FIG7A=false
                 RUN_FIG7B=false
                 RUN_FIG8B=true
+                RUN_FIG8B_TRAINING=true
+                RUN_FIG8B_INFERENCE=false
                 break
                 ;;
             7)
+                log_info "Selected: Figure 8b (FLOP Analysis) - Inference only"
+                RUN_FIG7A=false
+                RUN_FIG7B=false
+                RUN_FIG8B=true
+                RUN_FIG8B_TRAINING=false
+                RUN_FIG8B_INFERENCE=true
+                break
+                ;;
+            8)
                 log_info "Exiting..."
                 exit 0
                 ;;
             *)
-                log_error "Invalid option. Please select 1-7."
+                log_error "Invalid option. Please select 1-8."
                 ;;
         esac
     done
@@ -223,12 +249,12 @@ run_quick_test() {
     fi
 }
 
-# Figure 7a: Rapid Learning Experiments
-run_fig7a_experiments() {
-    log_section "Figure 7a: Rapid Learning Experiments"
+# Figure 7a: Rapid Learning Training
+run_fig7a_training() {
+    log_section "Figure 7a: Rapid Learning Training"
     
-    log_info "Testing learning efficiency with different amounts of training data (rotation counts)"
-    log_info "This will run training and evaluation for 1, 2, 4, 8, 16, 32 rotations"
+    log_info "Training models with different amounts of training data (rotation counts)"
+    log_info "This will train models for 1, 2, 4, 8, 16, 32 rotations"
     
     # Section 1: Training with pretrained initialization
     log_info "Section 1: Training with pretrained initialization (25 epochs)..."
@@ -266,50 +292,60 @@ run_fig7a_experiments() {
         log_success "Completed random init training (1 epoch) with ${rot} rotations"
     done
     
-    # Section 4: Evaluation of pretrained models
-    log_info "Section 4: Evaluating pretrained models (25 epochs)..."
+    log_success "Figure 7a training completed!"
+}
+
+# Figure 7a: Rapid Learning Inference
+run_fig7a_inference() {
+    log_section "Figure 7a: Rapid Learning Inference"
+    
+    log_info "Evaluating trained models with different amounts of training data"
+    log_info "This will evaluate models trained with 1, 2, 4, 8, 16, 32 rotations"
+    
+    # Section 1: Evaluation of pretrained models
+    log_info "Section 1: Evaluating pretrained models (25 epochs)..."
     
     for rot in 1 2 4 8 16 32; do
         log_info "Testing pretrained model with ${rot} rotations (25 epochs)..."
-        python src/eval.py \
+        python src/eval_standard.py \
             experiment=02_fig7a_rapid_learning/pretrained/inference/vit-b16-224-in21k_25epochs_n_rot \
             data.num_rotations_for_train=${rot} \
             paths=reproduction
         log_success "Completed evaluation of pretrained model with ${rot} rotations"
     done
     
-    # Section 5: Evaluation of randomly initialized models (75 epochs)
-    log_info "Section 5: Evaluating randomly initialized models (75 epochs)..."
+    # Section 2: Evaluation of randomly initialized models (75 epochs)
+    log_info "Section 2: Evaluating randomly initialized models (75 epochs)..."
     
     for rot in 1 2 4 8 16 32; do
         log_info "Testing randomly initialized model with ${rot} rotations (75 epochs)..."
-        python src/eval.py \
+        python src/eval_standard.py \
             experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_75epochs_n_rot \
             data.num_rotations_for_train=${rot} \
             paths=reproduction
         log_success "Completed evaluation of random init model (75 epochs) with ${rot} rotations"
     done
     
-    # Section 6: Evaluation of randomly initialized models (1 epoch)
-    log_info "Section 6: Evaluating randomly initialized models (1 epoch)..."
+    # Section 3: Evaluation of randomly initialized models (1 epoch)
+    log_info "Section 3: Evaluating randomly initialized models (1 epoch)..."
     
     for rot in 1 2 4 8 16 32; do
         log_info "Testing randomly initialized model with ${rot} rotations (1 epoch)..."
-        python src/eval.py \
+        python src/eval_standard.py \
             experiment=02_fig7a_rapid_learning/random_init/inference/vit-b16-224-in21k_1epoch_n_rot \
             data.num_rotations_for_train=${rot} \
             paths=reproduction
         log_success "Completed evaluation of random init model (1 epoch) with ${rot} rotations"
     done
     
-    log_success "All rapid learning experiments completed!"
+    log_success "Figure 7a inference completed!"
 }
 
-# Figure 7b: Continual Learning Experiments (Limited to first 5 tasks)
-run_fig7b_experiments() {
-    log_section "Figure 7b: Continual Learning Experiments (First 5 Tasks)"
+# Figure 7b: Continual Learning Training (Limited to first 5 tasks)
+run_fig7b_training() {
+    log_section "Figure 7b: Continual Learning Training (First 5 Tasks)"
     
-    log_info "Testing continual learning across sequential tasks"
+    log_info "Training continual learning across sequential tasks"
     log_info "Note: Running only first 5 tasks instead of all 77 for demonstration"
     
     # Function to handle errors
@@ -337,20 +373,30 @@ run_fig7b_experiments() {
         sleep 2
     done
     
+    log_success "Figure 7b training completed!"
+    log_warning "To run all 77 tasks, use: ./scripts/fig7b_continual_learning.sh"
+}
+
+# Figure 7b: Continual Learning Inference
+run_fig7b_inference() {
+    log_section "Figure 7b: Continual Learning Inference"
+    
+    log_info "Evaluating continual learning performance"
+    log_info "This will evaluate the model trained on the first 5 tasks"
+    
     # Run evaluation
     log_info "Running continual learning evaluation..."
     python src/eval_continual.py experiment=03_fig7b_continual_learning/inference/eval_continual_learning paths=reproduction
     log_success "Continual learning evaluation completed"
     
-    log_success "Continual learning experiments (first 5 tasks) completed!"
-    log_warning "To run all 77 tasks, use: ./scripts/fig7b_continual_learning.sh"
+    log_success "Figure 7b inference completed!"
 }
 
-# Figure 8b: FLOP Analysis Experiments
-run_fig8b_experiments() {
-    log_section "Figure 8b: FLOP Analysis Experiments"
+# Figure 8b: FLOP Analysis Training
+run_fig8b_training() {
+    log_section "Figure 8b: FLOP Analysis Training"
     
-    log_info "Comparing different ViT architectures (B/16, B/32, L/16, L/32)"
+    log_info "Training different ViT architectures (B/16, B/32, L/16, L/32)"
     
     # Define the models to test
     MODELS=("vit-b16-224-in21k" "vit-b32-224-in21k" "vit-l16-224-in21k" "vit-l32-224-in21k")
@@ -373,25 +419,37 @@ run_fig8b_experiments() {
         log_success "Completed training random init ${model}"
     done
     
-    # Section 3: Evaluation of pretrained models
-    log_info "Section 3: Evaluating pretrained models..."
+    log_success "Figure 8b training completed!"
+}
+
+# Figure 8b: FLOP Analysis Inference
+run_fig8b_inference() {
+    log_section "Figure 8b: FLOP Analysis Inference"
+    
+    log_info "Evaluating different ViT architectures (B/16, B/32, L/16, L/32)"
+    
+    # Define the models to test
+    MODELS=("vit-b16-224-in21k" "vit-b32-224-in21k" "vit-l16-224-in21k" "vit-l32-224-in21k")
+    
+    # Section 1: Evaluation of pretrained models
+    log_info "Section 1: Evaluating pretrained models..."
     
     for model in "${MODELS[@]}"; do
         log_info "Testing pretrained ${model}..."
-        python src/eval.py experiment=04_fig8b_flops/pretrained/inference/${model}
+        python src/eval_standard.py experiment=04_fig8b_flops/pretrained/inference/${model}
         log_success "Completed evaluation of pretrained ${model}"
     done
     
-    # Section 4: Evaluation of randomly initialized models
-    log_info "Section 4: Evaluating randomly initialized models..."
+    # Section 2: Evaluation of randomly initialized models
+    log_info "Section 2: Evaluating randomly initialized models..."
     
     for model in "${MODELS[@]}"; do
         log_info "Testing randomly initialized ${model}..."
-        python src/eval.py experiment=04_fig8b_flops/random_init/inference/${model}
+        python src/eval_standard.py experiment=04_fig8b_flops/random_init/inference/${model}
         log_success "Completed evaluation of random init ${model}"
     done
     
-    log_success "All FLOP analysis experiments completed!"
+    log_success "Figure 8b inference completed!"
 }
 
 # Parse command line arguments
@@ -400,6 +458,12 @@ parse_arguments() {
     RUN_FIG7A=true
     RUN_FIG7B=true
     RUN_FIG8B=true
+    RUN_FIG7A_TRAINING=true
+    RUN_FIG7A_INFERENCE=true
+    RUN_FIG7B_TRAINING=true
+    RUN_FIG7B_INFERENCE=true
+    RUN_FIG8B_TRAINING=true
+    RUN_FIG8B_INFERENCE=true
     SKIP_SETUP=false
     INTERACTIVE_MODE=true
     
@@ -493,13 +557,31 @@ main() {
     # Show what will be run
     log_info "This script will run the following experiments:"
     if [ "$RUN_FIG7A" = true ]; then
-        log_info "  ✓ Figure 7a: Rapid Learning Experiments"
+        if [ "${RUN_FIG7A_TRAINING:-true}" = true ] && [ "${RUN_FIG7A_INFERENCE:-true}" = true ]; then
+            log_info "  ✓ Figure 7a: Rapid Learning Experiments (Training & Inference)"
+        elif [ "${RUN_FIG7A_TRAINING:-true}" = true ]; then
+            log_info "  ✓ Figure 7a: Rapid Learning Experiments (Training only)"
+        else
+            log_info "  ✓ Figure 7a: Rapid Learning Experiments (Inference only)"
+        fi
     fi
     if [ "$RUN_FIG7B" = true ]; then
-        log_info "  ✓ Figure 7b: Continual Learning Experiments (limited)"
+        if [ "${RUN_FIG7B_TRAINING:-true}" = true ] && [ "${RUN_FIG7B_INFERENCE:-true}" = true ]; then
+            log_info "  ✓ Figure 7b: Continual Learning Experiments (Training & Inference)"
+        elif [ "${RUN_FIG7B_TRAINING:-true}" = true ]; then
+            log_info "  ✓ Figure 7b: Continual Learning Experiments (Training only)"
+        else
+            log_info "  ✓ Figure 7b: Continual Learning Experiments (Inference only)"
+        fi
     fi
     if [ "$RUN_FIG8B" = true ]; then
-        log_info "  ✓ Figure 8b: FLOP Analysis Experiments"
+        if [ "${RUN_FIG8B_TRAINING:-true}" = true ] && [ "${RUN_FIG8B_INFERENCE:-true}" = true ]; then
+            log_info "  ✓ Figure 8b: FLOP Analysis Experiments (Training & Inference)"
+        elif [ "${RUN_FIG8B_TRAINING:-true}" = true ]; then
+            log_info "  ✓ Figure 8b: FLOP Analysis Experiments (Training only)"
+        else
+            log_info "  ✓ Figure 8b: FLOP Analysis Experiments (Inference only)"
+        fi
     fi
     
     # Calculate estimated time
@@ -547,19 +629,34 @@ main() {
     
     # Run selected experiment suites
     if [ "$RUN_FIG7A" = true ]; then
-        run_fig7a_experiments
+        if [ "${RUN_FIG7A_TRAINING:-true}" = true ]; then
+            run_fig7a_training
+        fi
+        if [ "${RUN_FIG7A_INFERENCE:-true}" = true ]; then
+            run_fig7a_inference
+        fi
     else
         log_info "Skipping Figure 7a experiments"
     fi
     
     if [ "$RUN_FIG7B" = true ]; then
-        run_fig7b_experiments
+        if [ "${RUN_FIG7B_TRAINING:-true}" = true ]; then
+            run_fig7b_training
+        fi
+        if [ "${RUN_FIG7B_INFERENCE:-true}" = true ]; then
+            run_fig7b_inference
+        fi
     else
         log_info "Skipping Figure 7b experiments"
     fi
     
     if [ "$RUN_FIG8B" = true ]; then
-        run_fig8b_experiments
+        if [ "${RUN_FIG8B_TRAINING:-true}" = true ]; then
+            run_fig8b_training
+        fi
+        if [ "${RUN_FIG8B_INFERENCE:-true}" = true ]; then
+            run_fig8b_inference
+        fi
     else
         log_info "Skipping Figure 8b experiments"
     fi
