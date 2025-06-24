@@ -382,11 +382,11 @@ run_fig7b_inference() {
     log_section "Figure 7b: Continual Learning Inference"
     
     log_info "Evaluating continual learning performance"
-    log_info "This will evaluate the model trained on the first 5 tasks"
+    log_info "This will evaluate the models trained on the first 5 tasks (0-4)"
     
-    # Run evaluation
+    # Run evaluation for each of the 5 trained models
     log_info "Running continual learning evaluation..."
-    python src/eval_continual.py experiment=03_fig7b_continual_learning/inference/eval_continual_learning paths=reproduction
+    python src/eval_continual.py experiment=03_fig7b_continual_learning/inference/eval_continual_learning paths=reproduction +max_model_id=5
     log_success "Continual learning evaluation completed"
     
     log_success "Figure 7b inference completed!"

@@ -53,7 +53,6 @@ from src.utils.lightning_utils import (
 from src.utils.eval_utils import (
     generate_predictions,
     analyze_predictions,
-    save_and_summarize_results,
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -77,7 +76,6 @@ def get_checkpoint_path(cfg: DictConfig, model_id: int) -> Path:
     return Path(cfg.base_dir) / exp_name / "checkpoints/last.ckpt"
 
 
-@task_wrapper
 def evaluate_model(cfg: DictConfig, model_id: int, ckpt_path: Path | str) -> None:
     """Evaluate a specific model checkpoint on the test dataset.
 
@@ -95,6 +93,11 @@ def evaluate_model(cfg: DictConfig, model_id: int, ckpt_path: Path | str) -> Non
     _validate_config(cfg)
     os.makedirs(cfg.save_dir, exist_ok=True)
 
+    # Update configuration for the specific task being evaluated
+    cfg.data.task_id = model_id
+    cfg.model.task_id = model_id
+    log.info(f"Evaluating task_id={model_id} with checkpoint: {ckpt_path}")
+
     # Initialize and validate components
     datamodule, model = _setup_components(cfg)
     _validate_classes(datamodule, model)
@@ -110,9 +113,7 @@ def evaluate_model(cfg: DictConfig, model_id: int, ckpt_path: Path | str) -> Non
     results_df = results_df.drop(columns=['quaternion_error_degs'])
 
     # Save and summarize results
-    save_and_summarize_results(
-        results_df, cfg.save_dir, filename=f"predictions_model{model_id}.csv", logger=log.info
-    )
+    results_df.to_csv(Path(cfg.save_dir) / f"predictions_model{model_id}.csv", index=False)
 
 
 def _validate_config(cfg: DictConfig) -> None:
@@ -199,7 +200,10 @@ def main(cfg: DictConfig) -> None:
     """
     extras(cfg)
 
-    max_model_id = 77
+    # Get max_model_id from config or command line override, default to 77 (all tasks)
+    max_model_id = cfg.get("max_model_id", 77)
+    log.info(f"Evaluating models 0 to {max_model_id-1}")
+    
     for model_id in range(max_model_id):
         ckpt_path = get_checkpoint_path(cfg, model_id)
         if not ckpt_path.exists():

@@ -20,4 +20,6 @@ task_name: "eval"
 
 tags: ["fig7b"]
 
+ckpt_path: null
+base_dir: "${paths.log_dir}/fig7b_continual_learning"
 save_dir: "${paths.log_dir}/predictions"
