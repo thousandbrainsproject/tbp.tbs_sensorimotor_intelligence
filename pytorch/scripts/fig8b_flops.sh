@@ -41,7 +41,7 @@ echo "Section 3: Evaluating pretrained models..."
 # Evaluate different model architectures
 for model in "${MODELS[@]}"; do
     echo "Testing pretrained ${model}..."
-    python src/eval.py experiment=04_fig8b_flops/pretrained/inference/${model} paths=reproduction
+    python src/eval_standard.py experiment=04_fig8b_flops/pretrained/inference/${model} paths=reproduction
 done
 
 # Section 4: Evaluation of randomly initialized models
@@ -50,7 +50,7 @@ echo "Section 4: Evaluating randomly initialized models..."
 # Evaluate different model architectures
 for model in "${MODELS[@]}"; do
     echo "Testing randomly initialized ${model}..."
-    python src/eval.py experiment=04_fig8b_flops/random_init/inference/${model} paths=reproduction
+    python src/eval_standard.py experiment=04_fig8b_flops/random_init/inference/${model} paths=reproduction
 done
 
 echo "All flops experiments completed!" 
