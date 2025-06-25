@@ -406,7 +406,7 @@ run_fig8b_training() {
     
     for model in "${MODELS[@]}"; do
         log_info "Training pretrained ${model}..."
-        python src/train.py experiment=04_fig8b_flops/pretrained/train/${model}
+        python src/train.py experiment=04_fig8b_flops/pretrained/train/${model} paths=reproduction
         log_success "Completed training pretrained ${model}"
     done
     
@@ -415,7 +415,7 @@ run_fig8b_training() {
     
     for model in "${MODELS[@]}"; do
         log_info "Training randomly initialized ${model}..."
-        python src/train.py experiment=04_fig8b_flops/random_init/train/${model}
+        python src/train.py experiment=04_fig8b_flops/random_init/train/${model} paths=reproduction 
         log_success "Completed training random init ${model}"
     done
     
@@ -436,7 +436,7 @@ run_fig8b_inference() {
     
     for model in "${MODELS[@]}"; do
         log_info "Testing pretrained ${model}..."
-        python src/eval_standard.py experiment=04_fig8b_flops/pretrained/inference/${model}
+        python src/eval_standard.py experiment=04_fig8b_flops/pretrained/inference/${model} paths=reproduction
         log_success "Completed evaluation of pretrained ${model}"
     done
     
@@ -445,7 +445,7 @@ run_fig8b_inference() {
     
     for model in "${MODELS[@]}"; do
         log_info "Testing randomly initialized ${model}..."
-        python src/eval_standard.py experiment=04_fig8b_flops/random_init/inference/${model}
+        python src/eval_standard.py experiment=04_fig8b_flops/random_init/inference/${model} paths=reproduction
         log_success "Completed evaluation of random init ${model}"
     done
     
