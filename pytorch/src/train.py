@@ -35,7 +35,10 @@ import lightning as L
 import rootutils
 from lightning import Callback, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
+
+# Register the eval resolver to support eval interpolations in config files
+OmegaConf.register_new_resolver("eval", eval)
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
