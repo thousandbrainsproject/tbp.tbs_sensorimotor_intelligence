@@ -17,7 +17,7 @@ And the following training experiment:
  - `pretrain_dist_agent_1lm_k_none`
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
-that the argument k is set to None in DisplacementGraphLM. This is to prevent FLOP
+that the argument k=0 in DisplacementGraphLM. This is to prevent FLOP
 counts associated with building unncessary edges of a graph, as these are not used 
 during inference.
 
@@ -122,6 +122,9 @@ for sm_dict in dist_agent_1lm_randrot["monty_config"].sensor_module_configs.valu
 dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 
 # No Hypothesis Testing Config
+# Here we use the default x-percent threshold of 20%.
+# The update_x_percent_threshold_in_config function can be used to modify this
+# and evaluate FLOPs and accuracy performance as a function of x-percent threshold.
 dist_agent_1lm_randrot_nohyp = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
 )
