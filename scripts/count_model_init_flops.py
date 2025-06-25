@@ -1,14 +1,20 @@
 """
 Script to count FLOPs associated with KDTree construction during model initialization.
 
-This script initializes a MontyExperiment model from a config and counts the FLOPs
-associated with KDTree construction that occurs during load_state_dict.
+# This standalone script is used to measure the FLOPs associated with KDTree construction 
+# during model initialization in MontyExperiment. In actual deployments, Monty builds the 
+# KD-tree as part of a pre-inference stage (i.e., during model initialization rather than 
+# during training or inference). Because of this, Floppy does not track these operations 
+# as part of its runtime FLOP counting. This script manually triggers model initialization 
+# from a config, including `load_state_dict`, to account for KDTree-related computations.
 
 The FLOP counting formula used is: (5 + k)n * log2(n)
 where:
 - n = number of points in the graph
 - k = dimensionality (3 for x,y,z coordinates)
 - Formula represents construction cost for balanced KD-tree
+For full details, see the user guide in the Floppy repository at
+https://github.com/thousandbrainsproject/tbp.floppy/blob/main/docs/user_guide/index.md
 
 Call chain traced:
 KDTree -> set_graph -> _initialize_model_with_graph -> _add_graph_to_memory -> load_state_dict
