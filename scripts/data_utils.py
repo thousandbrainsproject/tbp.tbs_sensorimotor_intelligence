@@ -22,7 +22,7 @@ import torch
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation as R
 
-from scripts.count_model_init_flops import count_model_init_flops_from_config
+from count_model_init_flops import count_model_init_flops_from_config
 
 # Path settings - mirrors those in configs/common.py
 DMC_ROOT_DIR = Path(os.environ.get("DMC_ROOT_DIR", "~/tbp/results/dmc")).expanduser()
@@ -211,7 +211,7 @@ def load_floppy_traces(exp: os.PathLike) -> pd.DataFrame:
 def load_monty_training_flops() -> pd.DataFrame:
     """Compute and return Monty training FLOPs.
 
-    This function computes the FLOPs associated with Monty training via pretrain_dist_agent_1lm_k=0
+    This function computes the FLOPs associated with Monty training via pretrain_dist_agent_1lm_k_none
     by adding the FLOPs associated with KDTree construction (see count_model_init_flops.py)
     and the FLOPs associated with the training loop.
 
@@ -220,7 +220,7 @@ def load_monty_training_flops() -> pd.DataFrame:
             - experiment: Name of the experiment
             - flops: Total number of floating point operations
     """
-    train_exp_name = "pretrain_dist_agent_1lm_k=0"
+    train_exp_name = "pretrain_dist_agent_1lm_k_none"
     train_exp_path = DMC_RESULTS_DIR / train_exp_name
     kdtree_flops = count_model_init_flops_from_config(train_exp_name)["total_flops"]
     train_loop_flops = load_floppy_traces(train_exp_path)["total_flops"]
