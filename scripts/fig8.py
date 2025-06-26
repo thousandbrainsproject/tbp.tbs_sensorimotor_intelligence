@@ -25,6 +25,7 @@ from typing import Union
 
 from data_utils import (
     DMC_ANALYSIS_DIR,
+    DMC_RESULTS_DIR,
     load_eval_stats,
     load_floppy_traces,
     load_monty_training_flops,
@@ -148,15 +149,15 @@ def get_vit_flops_accuracy_data(pretrained: bool = True) -> pd.DataFrame:
     Returns:
         DataFrame containing FLOPs and accuracy data for ViT experiments.
     """
-    data_dir = Path("~/tbp/results/dmc/results/vit/logs").expanduser()
+    data_dir = Path("~/tbp/results/dmc/results/vit/logs_reproduction").expanduser()
     
     # Define model mappings
     model_mappings = {
         "ViT-B/16": "fig8b_vit-b16-224-in21k",
         "ViT-B/32": "fig8b_vit-b32-224-in21k",
-        "ViT-L/16": "fig8b_vit-l-16-224-in21k",
-        "ViT-L/32": "fig8b_vit-l-32-224-in21k",
-        "ViT-H/14": "fig8b_vit-h-14-224-in21k"
+        "ViT-L/16": "fig8b_vit-l16-224-in21k",
+        "ViT-L/32": "fig8b_vit-l32-224-in21k",
+        "ViT-H/14": "fig8b_vit-h14-224-in21k"
     }
     
     # Add _random_init suffix for random init models
@@ -252,13 +253,8 @@ Panel B: Inference FLOPs vs. Accuracy in Monty and ViT
 """
 
 
-def plot_inference_flops_vs_accuracy(monty_exps: list[str], pretrained_vit_exps: list[str], vit_exps: list[str]) -> None:
+def plot_inference_flops_vs_accuracy() -> None:
     """Plot the inference FLOPs vs. accuracy for Monty and ViT.
-    
-    Args:
-        monty_exps: List of experiment names for Monty.
-        pretrained_vit_exps: List of experiment names for pretrained ViT.
-        vit_exps: List of experiment names for ViT.
 
     Output is saved to `DMC_ANALYSIS_DIR/fig8/inference_flops_vs_accuracy`.
     """
@@ -266,7 +262,13 @@ def plot_inference_flops_vs_accuracy(monty_exps: list[str], pretrained_vit_exps:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Load data using utility functions
-    monty_df = get_monty_flops_accuracy_data(monty_exps)
+    hypothesis_testing_exp = "dist_agent_1lm_randrot_x_percent_20_floppy"
+    random_walk_exp = "dist_agent_1lm_randrot_nohyp_x_percent_20_floppy"
+    hypothesis_testing_flops = load_floppy_traces(DMC_RESULTS_DIR / hypothesis_testing_exp)["flops_mean"].values[0]
+    random_walk_flops = load_floppy_traces(DMC_RESULTS_DIR / random_walk_exp)["flops_mean"].values[0]
+    monty_df = aggregate_1lm_performance_data([hypothesis_testing_exp, random_walk_exp])
+    monty_df["hypothesis_testing_flops"] = hypothesis_testing_flops
+    monty_df["random_walk_flops"] = random_walk_flops
     pretrained_vit_df = get_vit_flops_accuracy_data(pretrained=True)
     random_init_vit_df = get_vit_flops_accuracy_data(pretrained=False)
 
@@ -370,7 +372,7 @@ Panel C: Inference FLOPs vs. Rotation Error in Monty and ViT
 --------------------------------------------------------------------------------
 """
 
-def plot_inference_flops_vs_rotation_error(monty_exps: list[str], pretrained_vit_exps: list[str], vit_exps: list[str]) -> None:
+def plot_inference_flops_vs_rotation_error() -> None:
     """Plot the inference FLOPs vs. rotation error for Monty and ViT.
     
     Args:
@@ -384,9 +386,15 @@ def plot_inference_flops_vs_rotation_error(monty_exps: list[str], pretrained_vit
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Load data using utility functions
-    monty_df = get_monty_flops_accuracy_data(monty_exps)
-    pretrained_vit_df = get_vit_flops_accuracy_data(pretrained=True)
-    random_init_vit_df = get_vit_flops_accuracy_data(pretrained=False)
+    hypothesis_testing_exp = "dist_agent_1lm_randrot_x_percent_20_floppy"
+    random_walk_exp = "dist_agent_1lm_randrot_nohyp_x_percent_20_floppy"
+    hypothesis_testing_flops = load_floppy_traces(DMC_RESULTS_DIR / hypothesis_testing_exp)["flops_mean"]
+    random_walk_flops = load_floppy_traces(DMC_RESULTS_DIR / random_walk_exp)["flops_mean"]
+    hypothesis_testing_df = get_monty_flops_accuracy_data(hypothesis_testing_exp)
+    random_walk_df = get_monty_flops_accuracy_data(random_walk_exp)
+
+    # pretrained_vit_df = get_vit_flops_accuracy_data(pretrained=True)
+    # random_init_vit_df = get_vit_flops_accuracy_data(pretrained=False)
 
     # Plot Params
     axes_width, axes_height = 4, 3
@@ -484,18 +492,7 @@ def plot_inference_flops_vs_rotation_error(monty_exps: list[str], pretrained_vit
     plt.close()
 
 if __name__ == "__main__":
-    plot_training_flops()
-
-    monty_inference_exps = [
-        "dist_agent_1lm_randrot_20p_floppy", # Hypothesis-based Testing
-        "dist_agent_1lm_randrot_nohyp_20p_floppy", # Random Walk 
-    ]
-    monty_performance_data = aggregate_1lm_performance_data(monty_inference_exps)
-    monty_flops_data = load_floppy_traces(monty_inference_exps)
+    # plot_training_flops()
     
-    plot_inference_flops_vs_accuracy(
-        monty_exps = monty_inference_exps,
-    )
-    plot_inference_flops_vs_rotation_error(
-        monty_exps = monty_inference_exps,
-    )
+    plot_inference_flops_vs_accuracy()
+    plot_inference_flops_vs_rotation_error()
