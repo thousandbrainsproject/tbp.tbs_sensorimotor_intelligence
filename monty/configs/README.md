@@ -155,8 +155,8 @@ The main output measure is accuracy as a function of number of objects seen so f
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
 
-- `dist_agent_1lm_randrot_nohyp` - 20% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot` - 20% threshold (With Hypothesis Testing)
+- `dist_agent_1lm_randrot_nohyp`
+- `dist_agent_1lm_randrot`
 
 **Notes:**
 
