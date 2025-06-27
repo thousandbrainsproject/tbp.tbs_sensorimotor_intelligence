@@ -10,25 +10,16 @@
 """Configs for Figure 8: Flops Comparison.
 
 This module defines the following inference experiments:
- - `dist_agent_1lm_randrot_nohyp_x_percent_5p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_10p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_20p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_40p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_60p`
- - `dist_agent_1lm_randrot_nohyp_x_percent_80p`
- - `dist_agent_1lm_randrot_x_percent_5p`
- - `dist_agent_1lm_randrot_x_percent_10p`
- - `dist_agent_1lm_randrot_x_percent_20p`
- - `dist_agent_1lm_randrot_x_percent_40p`
- - `dist_agent_1lm_randrot_x_percent_60p`
- - `dist_agent_1lm_randrot_x_percent_80p`
+ - `dist_agent_1lm_randrot_nohyp` (No hypothesis testing)
+ - `dist_agent_1lm_randrot` (Hypothesis testing)
 
 And the following training experiment:
- - `pretrain_dist_agent_1lm_k_none`
+ - `pretrain_dist_agent_1lm_k_0`
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
-that the argument k is set to None in DisplacementGraphLM. This is to prevent FLOP
-counts associated with building unncessary edges of a graph, as these are not used during inference.
+that the argument k=0 in DisplacementGraphLM. This is to prevent FLOP
+counts associated with building unncessary edges of a graph, as these are not used 
+during inference.
 
 Inference experiments use:
  - 77 objects
@@ -41,6 +32,7 @@ whether hypothesis testing is used.
 """
 
 import copy
+from pathlib import Path
 
 from tbp.monty.frameworks.models.evidence_matching import EvidenceGraphLM
 
@@ -130,91 +122,48 @@ for sm_dict in dist_agent_1lm_randrot["monty_config"].sensor_module_configs.valu
     sm_args["noise_params"] = {}  # Set noise_param to empty dictionary to remove noise
 dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 
-#####################################################################
-# No Hypothesis Testing Configs with different x percent thresholds #
-#####################################################################
-dist_agent_1lm_randrot_nohyp_x_percent_5p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 5
-)
-dist_agent_1lm_randrot_nohyp_x_percent_10p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 10
-)
-dist_agent_1lm_randrot_nohyp_x_percent_20p = update_x_percent_threshold_in_config(
+# Here we use the default x-percent threshold of 20%.
+# The update_x_percent_threshold_in_config function can be used to modify this
+# and evaluate FLOPs and accuracy performance as a function of x-percent threshold.
+dist_agent_1lm_randrot_nohyp = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
-)
-dist_agent_1lm_randrot_nohyp_x_percent_40p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 40
-)
-dist_agent_1lm_randrot_nohyp_x_percent_60p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 60
-)
-dist_agent_1lm_randrot_nohyp_x_percent_80p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot_nohyp, 80
-)
+) # Use default pretrained Monty model
 
-##################################################################
-# Hypothesis Testing Configs with different x percent thresholds #
-##################################################################
-dist_agent_1lm_randrot_x_percent_5p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 5
-)
-dist_agent_1lm_randrot_x_percent_10p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 10
-)
-dist_agent_1lm_randrot_x_percent_20p = update_x_percent_threshold_in_config(
+dist_agent_1lm_randrot = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot, 20
-)
-dist_agent_1lm_randrot_x_percent_40p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 40
-)
-dist_agent_1lm_randrot_x_percent_60p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 60
-)
-dist_agent_1lm_randrot_x_percent_80p = update_x_percent_threshold_in_config(
-    dist_agent_1lm_randrot, 80
-)
+) # Use default pretrained Monty model
 
+pretrained_monty_k_0_path = str(Path(
+   "~/tbp/dmc/pretrained_models/pretrain_dist_agent_1lm_k_0/pretrained/model.pt"
+).expanduser())
+dist_agent_1lm_randrot_nohyp_k_0 = copy.deepcopy(dist_agent_1lm_randrot_nohyp)
+dist_agent_1lm_randrot_nohyp_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
+dist_agent_1lm_randrot_nohyp_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_nohyp_k_0" 
+
+dist_agent_1lm_randrot_k_0 = copy.deepcopy(dist_agent_1lm_randrot)
+dist_agent_1lm_randrot_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
+dist_agent_1lm_randrot_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_k_0" 
 
 ###################
 # Training Config #
 ###################
 
-pretrain_dist_agent_1lm_k_none = copy.deepcopy(pretrain_dist_agent_1lm)
+pretrain_dist_agent_1lm_k_0 = copy.deepcopy(pretrain_dist_agent_1lm)
 
 # Replace DisplacementGraphLM with EvidenceGraphLM
-pretrain_dist_agent_1lm_k_none["monty_config"].learning_module_configs["learning_module_0"].update({
+pretrain_dist_agent_1lm_k_0["monty_config"].learning_module_configs["learning_module_0"].update({
     "learning_module_args": dict(
-        k=None,
+        k=0,
     )
 })
 
 # Update the logging config run name
-pretrain_dist_agent_1lm_k_none["logging_config"].run_name = "pretrain_dist_agent_1lm_k_none"
+pretrain_dist_agent_1lm_k_0["logging_config"].run_name = "pretrain_dist_agent_1lm_k_0"
 
 CONFIGS = {
-    "dist_agent_1lm_randrot_nohyp_x_percent_5p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_5p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_10p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_10p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_20p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_20p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_40p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_40p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_60p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_60p
-    ),
-    "dist_agent_1lm_randrot_nohyp_x_percent_80p": (
-        dist_agent_1lm_randrot_nohyp_x_percent_80p
-    ),
-    "dist_agent_1lm_randrot_x_percent_5p": dist_agent_1lm_randrot_x_percent_5p,
-    "dist_agent_1lm_randrot_x_percent_10p": dist_agent_1lm_randrot_x_percent_10p,
-    "dist_agent_1lm_randrot_x_percent_20p": dist_agent_1lm_randrot_x_percent_20p,
-    "dist_agent_1lm_randrot_x_percent_40p": dist_agent_1lm_randrot_x_percent_40p,
-    "dist_agent_1lm_randrot_x_percent_60p": dist_agent_1lm_randrot_x_percent_60p,
-    "dist_agent_1lm_randrot_x_percent_80p": dist_agent_1lm_randrot_x_percent_80p,
-    "pretrain_dist_agent_1lm_k_none": pretrain_dist_agent_1lm_k_none,
+    "dist_agent_1lm_randrot_nohyp": dist_agent_1lm_randrot_nohyp,
+    "dist_agent_1lm_randrot": dist_agent_1lm_randrot,
+    "dist_agent_1lm_randrot_nohyp_k_0": dist_agent_1lm_randrot_nohyp_k_0,
+    "dist_agent_1lm_randrot_k_0": dist_agent_1lm_randrot_k_0,
+    "pretrain_dist_agent_1lm_k_0": pretrain_dist_agent_1lm_k_0,
 }
