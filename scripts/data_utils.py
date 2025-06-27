@@ -22,6 +22,8 @@ import torch
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation as R
 
+from scripts.count_model_init_flops import count_model_init_flops_from_config
+
 # Path settings - mirrors those in configs/common.py
 DMC_ROOT_DIR = Path(os.environ.get("DMC_ROOT_DIR", "~/tbp/results/dmc")).expanduser()
 DMC_PRETRAIN_DIR = DMC_ROOT_DIR / "pretrained_models"
@@ -201,73 +203,29 @@ def load_floppy_traces(exp: os.PathLike) -> pd.DataFrame:
     if experiment_flops:
         result_dict["flops_mean"] = [np.mean(experiment_flops)]
         result_dict["flops_std"] = [np.std(experiment_flops)]
+        result_dict["total_flops"] = [np.sum(experiment_flops)]
 
     return pd.DataFrame(result_dict)
 
 
-def load_perf_stat_flops(exp: os.PathLike) -> pd.DataFrame:
-    """Load and process performance statistics data from perf stat output.
+def load_monty_training_flops() -> pd.DataFrame:
+    """Compute and return Monty training FLOPs.
 
-    This function reads performance statistics data from perf stat output files
-    and returns a DataFrame with the total FLOPs.
-
-    The input file should be in the format:
-    # started on [timestamp]
-    count,,instruction_type,percentage,value,42.00,,
-
-    Args:
-        exp (os.PathLike): CSV file containing perf stat output.
+    This function computes the FLOPs associated with Monty training via pretrain_dist_agent_1lm_k=0
+    by adding the FLOPs associated with KDTree construction (see count_model_init_flops.py)
+    and the FLOPs associated with the training loop.
 
     Returns:
         pd.DataFrame: DataFrame containing experiment statistics with columns:
             - experiment: Name of the experiment
-            - flops_mean: Total number of floating point operations
+            - flops: Total number of floating point operations
     """
-    path = Path(exp).expanduser()
-    if not path.exists():
-        raise FileNotFoundError(f"No perf stat output file found for {exp}")
-
-    # Read the perf stat output file
-    # Skip the header line with timestamp
-    df = pd.read_csv(path, comment="#", header=None)
-
-    # Rename columns based on the data format
-    df.columns = [
-        "count",
-        "empty1",
-        "instruction_type",
-        "percentage",
-        "value",
-        "empty2",
-        "empty3",
-        "empty4",
-    ]
-
-    # Clean up the data
-    df = df.drop(columns=["empty1", "empty2", "empty3", "empty4"])
-    df["percentage"] = df["percentage"].str.rstrip("%").astype(float)
-
-    # Define FLOPs per operation for different instruction types
-    flops_per_operation = {
-        "fp_arith_inst_retired.128b_packed_double": 2,
-        "fp_arith_inst_retired.128b_packed_single": 4,
-        "fp_arith_inst_retired.256b_packed_double": 4,
-        "fp_arith_inst_retired.256b_packed_single": 8,
-        "fp_arith_inst_retired.512b_packed_double": 8,
-        "fp_arith_inst_retired.512b_packed_single": 16,
-        "fp_arith_inst_retired.scalar_double": 1,
-        "fp_arith_inst_retired.scalar_single": 1,
-    }
-
-    # Calculate total FLOPs
-    total_flops = sum(
-        row["count"] * flops_per_operation.get(row["instruction_type"], 0)
-        for _, row in df.iterrows()
-        if row["count"] > 0 and row["instruction_type"] in flops_per_operation
-    )
-
-    return pd.DataFrame({"experiment": [path.name], "flops_mean": [total_flops]})
-
+    train_exp_name = "pretrain_dist_agent_1lm_k=0"
+    train_exp_path = DMC_RESULTS_DIR / train_exp_name
+    kdtree_flops = count_model_init_flops_from_config(train_exp_name)["total_flops"]
+    train_loop_flops = load_floppy_traces(train_exp_path)["total_flops"]
+    total_flops = kdtree_flops + train_loop_flops
+    return pd.DataFrame({"experiment": [train_exp_name], "flops": [total_flops]})
 
 def load_vit_predictions(path: os.PathLike) -> pd.DataFrame:
     """Load and process ViT model predictions from a CSV file.
