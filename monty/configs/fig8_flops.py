@@ -14,7 +14,7 @@ This module defines the following inference experiments:
  - `dist_agent_1lm_randrot` (Hypothesis testing)
 
 And the following training experiment:
- - `pretrain_dist_agent_1lm_k_none`
+ - `pretrain_dist_agent_1lm_k_0`
 
 Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
 that the argument k=0 in DisplacementGraphLM. This is to prevent FLOP
@@ -137,20 +137,20 @@ dist_agent_1lm_randrot = update_x_percent_threshold_in_config(
 # Training Config #
 ###################
 
-pretrain_dist_agent_1lm_k_none = copy.deepcopy(pretrain_dist_agent_1lm)
+pretrain_dist_agent_1lm_k_0 = copy.deepcopy(pretrain_dist_agent_1lm)
 
 # Replace DisplacementGraphLM with EvidenceGraphLM
-pretrain_dist_agent_1lm_k_none["monty_config"].learning_module_configs["learning_module_0"].update({
+pretrain_dist_agent_1lm_k_0["monty_config"].learning_module_configs["learning_module_0"].update({
     "learning_module_args": dict(
-        k=None,
+        k=0,
     )
 })
 
 # Update the logging config run name
-pretrain_dist_agent_1lm_k_none["logging_config"].run_name = "pretrain_dist_agent_1lm_k_none"
+pretrain_dist_agent_1lm_k_0["logging_config"].run_name = "pretrain_dist_agent_1lm_k_0"
 
 CONFIGS = {
     "dist_agent_1lm_randrot_nohyp": dist_agent_1lm_randrot_nohyp,
     "dist_agent_1lm_randrot": dist_agent_1lm_randrot,
-    "pretrain_dist_agent_1lm_k_none": pretrain_dist_agent_1lm_k_none,
+    "pretrain_dist_agent_1lm_k_0": pretrain_dist_agent_1lm_k_0,
 }
