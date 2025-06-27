@@ -48,7 +48,6 @@ if TYPE_CHECKING:
     import torch
 
 # Model Architecture Parameters
-backbone_vit_model: str = "vit-b16-224-in21k" 
 num_ycb_classes: int = 77
 input_shape: Tuple[int, int, int, int] = (1, 4, 224, 224)  # (batch_size, channels, height, width)
 
@@ -178,20 +177,49 @@ if __name__ == "__main__":
         print(f"\nForward pass FLOPs: {forward_flops:,.0f}")
         
         # Calculate and print training FLOPs
-        training_flops = calculate_training_flops(
-            model, input_shape, num_images, num_epochs_for_pretrained_vit
+        vit_b16_pretrained_training_flops = calculate_training_flops(
+            vit_b16, input_shape, num_images, num_epochs_for_pretrained_vit
         )
-        print(f"\nTraining FLOPs (YCB dataset):")
+        print(f"\nTraining FLOPs for pretrained ViT-B/16 on ImageNet-21K:")
         print(f"- Number of images: {num_images:,}")
         print(f"- Number of epochs: {num_epochs_for_pretrained_vit}")
-        print(f"- Total FLOPs: {training_flops:,.0f}")
+        print(f"- Total FLOPs: {vit_b16_pretrained_training_flops:,.0f}")
         
+        vit_b16_scratch_training_flops = calculate_training_flops(
+            vit_b16, input_shape, num_images, num_epochs_for_vit
+        )
+        print(f"\nTraining FLOPs for scratch ViT-B/16 on YCB:")
+        print(f"- Number of images: {num_images:,}")
+        print(f"- Number of epochs: {num_epochs_for_vit}")
+        print(f"- Total FLOPs: {vit_b16_scratch_training_flops:,.0f}")
+
         # Calculate and print pretraining FLOPs
-        pretraining_flops = get_imagenet21k_pretraining_flops(model)
-        print(f"\nPretraining FLOPs (ImageNet-21K):")
+        pretraining_flops = get_imagenet21k_pretraining_flops(vit_b16)
+        print(f"\nPretraining FLOPs for ViT-B/16 on ImageNet-21K:")
         print(f"- Number of images: {imagenet21k_num_images:,}")
         print(f"- Number of epochs: {imagenet21k_num_epochs}")
         print(f"- Total FLOPs: {pretraining_flops:,.0f}")
+
+        # Calculate inference FLOPs
+        vit_b16_inference_flops = get_forward_flops(vit_b16, input_shape)
+        print(f"\nInference FLOPs for ViT-B/16:")
+        print(f"- Total FLOPs: {vit_b16_inference_flops:,.0f}")
+
+        vit_b32_inference_flops = get_forward_flops(vit_b32, input_shape)
+        print(f"\nInference FLOPs for ViT-B/32:")
+        print(f"- Total FLOPs: {vit_b32_inference_flops:,.0f}")
+
+        vit_l16_inference_flops = get_forward_flops(vit_l16, input_shape)
+        print(f"\nInference FLOPs for ViT-L/16:")
+        print(f"- Total FLOPs: {vit_l16_inference_flops:,.0f}")
+
+        vit_l32_inference_flops = get_forward_flops(vit_l32, input_shape)
+        print(f"\nInference FLOPs for ViT-L/32:")
+        print(f"- Total FLOPs: {vit_l32_inference_flops:,.0f}")
+
+        vit_h14_inference_flops = get_forward_flops(vit_h14, input_shape)
+        print(f"\nInference FLOPs for ViT-H/14:")
+        print(f"- Total FLOPs: {vit_h14_inference_flops:,.0f}")
         
     except Exception as e:
         print(f"Error: {str(e)}")
