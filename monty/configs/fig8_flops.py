@@ -32,6 +32,7 @@ whether hypothesis testing is used.
 """
 
 import copy
+from pathlib import Path
 
 from tbp.monty.frameworks.models.evidence_matching import EvidenceGraphLM
 
@@ -121,17 +122,27 @@ for sm_dict in dist_agent_1lm_randrot["monty_config"].sensor_module_configs.valu
     sm_args["noise_params"] = {}  # Set noise_param to empty dictionary to remove noise
 dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 
-# No Hypothesis Testing Config
 # Here we use the default x-percent threshold of 20%.
 # The update_x_percent_threshold_in_config function can be used to modify this
 # and evaluate FLOPs and accuracy performance as a function of x-percent threshold.
 dist_agent_1lm_randrot_nohyp = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
-)
-# Hypothesis Testing Config
+) # Use default pretrained Monty model
+
 dist_agent_1lm_randrot = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot, 20
-)
+) # Use default pretrained Monty model
+
+pretrained_monty_k_0_path = str(Path(
+   "~/tbp/dmc/pretrained_models/pretrain_dist_agent_1lm_k_0/pretrained/model.pt"
+).expanduser())
+dist_agent_1lm_randrot_nohyp_k_0 = copy.deepcopy(dist_agent_1lm_randrot_nohyp)
+dist_agent_1lm_randrot_nohyp_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
+dist_agent_1lm_randrot_nohyp_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_nohyp_k_0" 
+
+dist_agent_1lm_randrot_k_0 = copy.deepcopy(dist_agent_1lm_randrot)
+dist_agent_1lm_randrot_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
+dist_agent_1lm_randrot_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_k_0" 
 
 ###################
 # Training Config #
@@ -152,5 +163,7 @@ pretrain_dist_agent_1lm_k_0["logging_config"].run_name = "pretrain_dist_agent_1l
 CONFIGS = {
     "dist_agent_1lm_randrot_nohyp": dist_agent_1lm_randrot_nohyp,
     "dist_agent_1lm_randrot": dist_agent_1lm_randrot,
+    "dist_agent_1lm_randrot_nohyp_k_0": dist_agent_1lm_randrot_nohyp_k_0,
+    "dist_agent_1lm_randrot_k_0": dist_agent_1lm_randrot_k_0,
     "pretrain_dist_agent_1lm_k_0": pretrain_dist_agent_1lm_k_0,
 }
