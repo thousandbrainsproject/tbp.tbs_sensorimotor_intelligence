@@ -149,18 +149,16 @@ The main output measure is accuracy as a function of number of objects seen so f
 
 ### Pretraining (1 experiment)
 
-- `pretrain_dist_agent_1lm_k_none` - Sets the `k=None` for `DisplacementGraphLM` to prevent FLOP counting associated with edge creation in object model graphs, which is currently unused.
+- `pretrain_dist_agent_1lm_k_0` - Sets the `k=0` for `DisplacementGraphLM` to prevent FLOP counting associated with edge creation in object model graphs, which is currently unused.
 
 ### Inference (2 experiments)
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
 
-- `dist_agent_1lm_randrot_nohyp_x_percent_20p` - 20% threshold (No Hypothesis Testing)
-- `dist_agent_1lm_randrot_x_percent_20p` - 20% threshold (With Hypothesis Testing)
+- `dist_agent_1lm_randrot_nohyp` - 20% threshold (No Hypothesis Testing)
+- `dist_agent_1lm_randrot` - 20% threshold (With Hypothesis Testing)
 
 **Notes:**
-
-- For the experiments above, `x_percent_threshold` determines the threshold at which the LM determines it has converged. In addition, we explicitly set `evidence_update_threshold="80%".
 
 This performance is evaluated with:
 
