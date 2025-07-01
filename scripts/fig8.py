@@ -27,26 +27,15 @@ import torch
 from data_utils import (
     DMC_ANALYSIS_DIR,
     DMC_RESULTS_DIR,
+    DMC_ROOT_DIR,
     load_eval_stats,
     load_floppy_traces,
-    load_monty_training_flops,
     load_vit_predictions,
     aggregate_1lm_performance_data,
 )
 from plot_utils import (
     TBP_COLORS,
     init_matplotlib_style,
-)
-from count_vit_flops import (
-    vit_b16,
-    vit_l16,
-    vit_b32,
-    vit_l32,
-    vit_h14,
-    input_shape,
-    get_forward_flops,
-    calculate_training_flops,
-    get_imagenet21k_pretraining_flops,
 )
 init_matplotlib_style()
 
@@ -62,48 +51,44 @@ DPI = 300
 Utilities
 --------------------------------------------------------------------------------
 """
-def load_training_data() -> dict[str, float]:
-    """Get the FLOPs values for plotting.
+def load_fig8a_data() -> pd.DataFrame:
+    """Load training FLOPs data for Figure 8a from saved CSV files and Monty traces.
+    
+    This function reads ViT FLOPs from fig8a_results.csv and loads Monty training FLOPs
+    from floppy traces in the dist_agent_1lm_floppy directory.
     
     Returns:
-        tuple containing:
-        - vit_inference_1image: FLOPs for ViT inference on one image
-        - vit_fintune_pretrained: FLOPs for ViT finetuning from pretrained
-        - vit_pretrain_pretrained: FLOPs for ViT pretraining
-        - vit_fintune_scratch: FLOPs for ViT finetuning from scratch
-        - monty_train: FLOPs for Monty training
+        pd.DataFrame: DataFrame with columns ['model_name', 'total_flops', 'model_type']
+                     where rows represent different models.
     """
-    vit_inference_1image = get_forward_flops(
-        model = vit_b16,
-        input_shape = input_shape,
-    )
-    vit_fintune_pretrained = calculate_training_flops(
-        model = vit_b16,
-        input_shape = input_shape,
-        num_images = 77 * 14, # 77 classes * 14 rotations per class
-        num_epochs = 25, # 25 epochs for finetuning
-    )
-    vit_pretrain_pretrained = get_imagenet21k_pretraining_flops(
-        model = vit_b16,
-    )
-    vit_fintune_scratch = calculate_training_flops(
-        model = vit_b16,
-        input_shape = input_shape,
-        num_images = 77 * 14, # 77 classes * 14 rotations per class
-        num_epochs = 75, # 75 epochs for random init
-    )
+    results = []
     
-    # Calculate Monty FLOPs
-    # monty_train = load_monty_training_flops()["flops"]
-    monty_train = 2.52e11 # TODO (Hojae): Update this value once Monty training FLOPs PR is merged
+    # Load ViT FLOPs from CSV file
+    try:
+        vit_csv_path = DMC_RESULTS_DIR / "fig8a_results.csv"
+        vit_df = pd.read_csv(vit_csv_path)
+        # Assume CSV has columns: flops, model
+        results.append(vit_df)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Could not find {vit_csv_path}. Please run `count_vit_flops.py` to compute ViT training FLOPs.")
     
-    return {
-        "vit_inference_1image": vit_inference_1image,
-        "vit_fintune_pretrained": vit_fintune_pretrained,
-        "vit_pretrain_pretrained": vit_pretrain_pretrained,
-        "vit_fintune_scratch": vit_fintune_scratch,
-        "monty_train": monty_train,
-    }
+    # Load Monty training FLOPs using load_floppy_traces
+    monty_exp_path = DMC_ROOT_DIR / "pretrained_models" / "dist_agent_1lm_floppy"
+    try:
+        monty_flops_df = load_floppy_traces(monty_exp_path)
+        monty_data = pd.DataFrame({
+            'model': ['Monty'],
+            'flops': [monty_flops_df['flops_mean'].iloc[0]],
+        })
+        results.append(monty_data)
+    except (FileNotFoundError, KeyError, IndexError) as e:
+        raise FileNotFoundError(f"Could not load Monty floppy traces from {monty_exp_path}. Error: {e}")
+
+    # combine results and save to csv in out_dir
+    combined_data = pd.concat(results, ignore_index=True)
+    combined_data.to_csv(OUT_DIR / "fig8a_training_flops.csv", index=False)
+    print(f"Saved ViT and Monty training FLOPs data to {OUT_DIR / 'fig8a_training_flops.csv'}. This will be used for plotting.")
+    return combined_data
 
 def format_flops(flops: Union[int, float]) -> str:
     """Format FLOPs value for display in scientific notation.
@@ -204,22 +189,45 @@ def plot_training_flops() -> None:
     out_dir = OUT_DIR / "training_flops"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Get FLOPs values from data function
-    data = load_training_data()
+    # Load FLOPs data using new data loading function
+    data_df = load_fig8a_data()
 
+    # Extract data from DataFrame
+    model_data = {}
+    for _, row in data_df.iterrows():
+        model_data[row['model']] = row['flops']
+    
     # Prepare data for plotting
     models = [
         "ViT\n (Pretrained)",
         "ViT",
         "Monty"
     ]
-    # Stacked bars for the first entry
-    finetune = data["vit_fintune_pretrained"]
-    pretrain = data["vit_pretrain_pretrained"]
+    
+    # Extract specific model data based on the CSV structure you provided
+    vit_scratch_flops = model_data.get('vit-b16_scratch_training_flops')
+    vit_finetuning_flops = model_data.get('vit-b16_pretrained_tuning_flops')  
+    vit_pretraining_flops = model_data.get('pretraining_flops')
+    monty_flops = model_data.get('Monty')
+    
+    # Check if we found all required data
+    if vit_scratch_flops is None:
+        raise ValueError(f"Could not find 'vit-b16_scratch_training_flops' in data. Available models: {list(model_data.keys())}")
+    if vit_finetuning_flops is None:
+        raise ValueError(f"Could not find 'vit-b16_pretrained_tuning_flops' in data. Available models: {list(model_data.keys())}")
+    if vit_pretraining_flops is None:
+        raise ValueError(f"Could not find 'pretraining_flops' in data. Available models: {list(model_data.keys())}")
+    if monty_flops is None:
+        raise ValueError(f"Could not find 'Monty' in data. Available models: {list(model_data.keys())}")
+    
+    # Prepare flops data for plotting
+    # ViT (Pretrained) = finetuning + pretraining (stacked)
+    # ViT (From Scratch) = scratch training only
+    # Monty = monty training only
     flops = [
-        [finetune, pretrain],  # Stacked for first
-        [data["vit_fintune_scratch"], 0],  # Only one bar for second
-        [data["monty_train"], 0]  # Only one bar for third
+        [vit_finetuning_flops, vit_pretraining_flops],  # Stacked for ViT (Pretrained)
+        [vit_scratch_flops, 0],  # Only one bar for ViT (From Scratch)
+        [monty_flops, 0]  # Only one bar for Monty
     ]
     # Color assignments
     stack_colors = [TBP_COLORS["purple"], TBP_COLORS["yellow"]]  # finetune, pretrain
@@ -229,8 +237,8 @@ def plot_training_flops() -> None:
     fig, ax = plt.subplots(figsize=(7, 3))
     y_pos = np.arange(len(models))
     # Plot stacked bar for first entry
-    bar1 = ax.barh(y_pos[0], flops[0][0], color=stack_colors[0], label="Finetuning")
-    bar2 = ax.barh(y_pos[0], flops[0][1], left=flops[0][0], color=stack_colors[1], label="Pretraining")
+    ax.barh(y_pos[0], flops[0][0], color=stack_colors[0], label="Finetuning")
+    ax.barh(y_pos[0], flops[0][1], left=flops[0][0], color=stack_colors[1], label="Pretraining")
     # Plot single bars for the rest
     ax.barh(y_pos[1], flops[1][0], color=colors[0], label="From Scratch")
     ax.barh(y_pos[2], flops[2][0], color=colors[1], label="Monty")
@@ -245,8 +253,8 @@ def plot_training_flops() -> None:
     ax.tick_params(axis='y', which='major', pad=25)
     
     # Add text labels with consistent placement (all outside bars)
-    ax.text(flops[0][0]*0.8, y_pos[0], format_flops(finetune), va='center', ha='right', fontsize=7, color='white', rotation=270)
-    ax.text(flops[0][0] + flops[0][1]*0.8, y_pos[0], format_flops(pretrain), va='center', ha='right', fontsize=7, color='black', rotation=270)
+    ax.text(flops[0][0]*0.8, y_pos[0], format_flops(vit_finetuning_flops), va='center', ha='right', fontsize=7, color='white', rotation=270)
+    ax.text(flops[0][0] + flops[0][1]*0.8, y_pos[0], format_flops(vit_pretraining_flops), va='center', ha='right', fontsize=7, color='black', rotation=270)
     ax.text(flops[1][0] * 0.8, y_pos[1], format_flops(flops[1][0]), va='center', ha='right', fontsize=7, color='white', rotation=270)
     ax.text(flops[2][0] * 0.8, y_pos[2], format_flops(flops[2][0]), va='center', ha='right', fontsize=7, color='black', rotation=270)
 
@@ -554,7 +562,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     plt.close()
 
 if __name__ == "__main__":
-    # plot_training_flops()
+    plot_training_flops()
     
-    plot_inference_flops_vs_accuracy()
+    # plot_inference_flops_vs_accuracy()
     # plot_inference_flops_vs_rotation_error()
