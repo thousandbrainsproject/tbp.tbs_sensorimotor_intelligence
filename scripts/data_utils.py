@@ -317,6 +317,30 @@ def get_frequency(items: Iterable, match: Union[Any, Container[Any]]) -> float:
     return n_matching / len(s)
 
 
+def aggregate_vit_predictions(df: pd.DataFrame, model_name: str, flops: float = None) -> pd.DataFrame:
+    """Aggregate ViT predictions into performance metrics.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing ViT predictions with 'real_class', 
+            'predicted_class', 'real_quaternion', and 'predicted_quaternion' columns.
+        model_name (str): Name of the ViT model (e.g., 'ViT-B/16').
+        flops (float, optional): FLOPs for this model. If not provided, will be NaN.
+        
+    Returns:
+        pd.DataFrame: DataFrame with one row containing model name, accuracy, 
+            rotation error, and FLOPs.
+    """
+    accuracy = compute_vit_accuracy(df) * 100  # Convert to percentage
+    rotation_error = compute_vit_rotation_error(df)
+    
+    return pd.DataFrame({
+        'model': [model_name],
+        'accuracy': [accuracy],
+        'rotation_error': [rotation_error],
+        'flops': [flops if flops is not None else np.nan]
+    })
+
+
 def aggregate_1lm_performance_data(experiments: Iterable[str]) -> pd.DataFrame:
     """Save the performance table for the single LM experiments.
 
@@ -406,7 +430,7 @@ class DetailedJSONStatsInterface:
 
     def __iter__(self):
         with open(self._path, "r") as f:
-            for i, line in enumerate(f):
+            for line in f:
                 yield list(json.loads(line).values())[0]
 
     def __len__(self) -> int:

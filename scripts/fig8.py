@@ -34,6 +34,7 @@ from data_utils import (
     load_floppy_traces,
     load_vit_predictions,
     aggregate_1lm_performance_data,
+    aggregate_vit_predictions,
 )
 from plot_utils import (
     TBP_COLORS,
@@ -46,14 +47,14 @@ init_matplotlib_style()
 OUT_DIR = DMC_ANALYSIS_DIR / "fig8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-DPI = 300
+DPI = 600
 
 """
 --------------------------------------------------------------------------------
 Utilities
 --------------------------------------------------------------------------------
 """
-def load_fig8a_data() -> pd.DataFrame:
+def prepare_fig8a_data() -> pd.DataFrame:
     """Load training FLOPs data for Figure 8a from saved CSV files and Monty traces.
     
     This function reads ViT FLOPs from fig8a_results.csv and loads Monty training FLOPs
@@ -93,48 +94,125 @@ def load_fig8a_data() -> pd.DataFrame:
     return combined_data
 
 
-def aggregate_vit_predictions(df: pd.DataFrame, model_name: str) -> pd.DataFrame:
-    """Aggregate ViT predictions into a single row with model performance metrics.
+def prepare_fig8b_data() -> pd.DataFrame:
+    """Load inference FLOPs, accuracy, and rotation error data for Figure 8b.
     
-    Args:
-        df: DataFrame from load_vit_predictions containing prediction results.
-        
+    This function reads ViT inference FLOPs from fig8b_results.csv, loads ViT predictions
+    from various model directories, loads Monty performance data from experiment directories,
+    and combines all data into a single DataFrame.
+    
     Returns:
-        Single-row DataFrame with columns: model, accuracy, rotation_error
-    """    
-    # Calculate accuracy
-    accuracy = (df["predicted_class"] == df["real_class"]).mean() * 100  # Convert to percentage
+        pd.DataFrame: DataFrame with columns ['model', 'accuracy', 'rotation_error', 'flops', 'model_type']
+                     where rows represent different models and experiments.
+    """
+    results = []
     
-    # Calculate rotation error using geodesic loss
-    predicted_quaternions = torch.tensor(np.stack(df["predicted_quaternion"].values))
-    real_quaternions = torch.tensor(np.stack(df["real_quaternion"].values))
-    # Compute the dot product
-    dot_product = torch.sum(predicted_quaternions * real_quaternions, dim=-1)
-    dot_product = torch.clamp(dot_product, -1.0, 1.0)
-    angle = 2 * torch.acos(torch.abs(dot_product))
-    # Convert to degrees
-    angle = angle * 180 / np.pi
-    angle = angle.mean()
+    # Load ViT inference FLOPs from CSV file
+    try:
+        vit_csv_path = DMC_RESULTS_DIR / "fig8b_results.csv"
+        vit_flops_df = pd.read_csv(vit_csv_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Could not find {vit_csv_path}. Please run the appropriate script to compute ViT inference FLOPs.")
     
-    # Calculate FLOPs (Inference)
-    if "ViT-B/16" in model_name:
-        flops = get_forward_flops(vit_b16, input_shape)
-    elif "ViT-L/16" in model_name:
-        flops = get_forward_flops(vit_l16, input_shape)
-    elif "ViT-B/32" in model_name:
-        flops = get_forward_flops(vit_b32, input_shape)
-    elif "ViT-L/32" in model_name:
-        flops = get_forward_flops(vit_l32, input_shape)
-    elif "ViT-H/14" in model_name:
-        flops = get_forward_flops(vit_h14, input_shape)
+    # ViT model configurations
+    vit_models = ['b32', 'b16', 'l32', 'l16', 'h14']
+    vit_results_dir = Path("~/tbp/results/dmc/results/vit/logs").expanduser()
+    
+    # Process ViT models (both pretrained and random_init versions)
+    for model in vit_models:
+        model_name = f"vit-{model}-224-in21k"
+        
+        # Format display name with slash (e.g., 'b32' -> 'ViT-B/32')
+        model_size = model[0].upper()  # 'b' -> 'B', 'l' -> 'L', 'h' -> 'H'
+        patch_size = model[1:]  # '32', '16', '14'
+        display_name = f"ViT-{model_size}/{patch_size}"
+        
+        # Process pretrained version
+        pretrained_path = vit_results_dir / f"fig8b_{model_name}" / "inference" / "predictions.csv"
+        if pretrained_path.exists():
+            try:
+                predictions_df = load_vit_predictions(pretrained_path)
+                # Get FLOPs for this model from the CSV
+                model_flops = None
+                if not vit_flops_df.empty:
+                    flops_row = vit_flops_df[vit_flops_df['model'].str.contains(model, case=False, na=False)]
+                    if not flops_row.empty:
+                        model_flops = flops_row['flops'].iloc[0]
+                
+                vit_data = aggregate_vit_predictions(predictions_df, display_name, model_flops)
+                vit_data['model_type'] = 'ViT (Pretrained)'
+                results.append(vit_data)
+            except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+                print(f"Warning: Could not load pretrained ViT {model} predictions: {e}")
+        
+        # Process random_init version
+        random_init_path = vit_results_dir / f"fig8b_{model_name}_random_init" / "inference" / "predictions.csv"
+        if random_init_path.exists():
+            try:
+                predictions_df = load_vit_predictions(random_init_path)
+                # Use same FLOPs as pretrained (inference FLOPs should be the same)
+                model_flops = None
+                if not vit_flops_df.empty:
+                    flops_row = vit_flops_df[vit_flops_df['model'].str.contains(model, case=False, na=False)]
+                    if not flops_row.empty:
+                        model_flops = flops_row['flops'].iloc[0]
+                
+                vit_data = aggregate_vit_predictions(predictions_df, f"{display_name} (Random Init)", model_flops)
+                vit_data['model_type'] = 'ViT (Random Init)'
+                results.append(vit_data)
+            except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+                print(f"Warning: Could not load random_init ViT {model} predictions: {e}")
+    
+    # Process Monty experiments
+    # Hypothesis testing experiment
+    hyp_exp_name = "dist_agent_1lm_randrot_x_percent_20_floppy"
+    try:
+        hyp_flops_df = load_floppy_traces(DMC_RESULTS_DIR / hyp_exp_name)
+        hyp_performance_df = aggregate_1lm_performance_data([hyp_exp_name])
+        
+        monty_hyp_data = pd.DataFrame({
+            'model': ['Monty (Hypothesis Testing)'],
+            'accuracy': [hyp_performance_df['accuracy'].iloc[0]],
+            'rotation_error': [hyp_performance_df['rotation_error.mean'].iloc[0]],
+            'flops': [hyp_flops_df['flops_mean'].iloc[0]],
+            'model_type': ['Monty']
+        })
+        results.append(monty_hyp_data)
+    except (FileNotFoundError, KeyError, IndexError) as e:
+        print(f"Warning: Could not load Monty hypothesis testing data: {e}")
+    
+    # No hypothesis testing experiment (random walk)
+    no_hyp_exp_name = "dist_agent_1lm_randrot_nohyp_x_percent_20_floppy"
+    try:
+        no_hyp_flops_df = load_floppy_traces(DMC_RESULTS_DIR / no_hyp_exp_name)
+        no_hyp_performance_df = aggregate_1lm_performance_data([no_hyp_exp_name])
+        
+        monty_no_hyp_data = pd.DataFrame({
+            'model': ['Monty (Random Walk)'],
+            'accuracy': [no_hyp_performance_df['accuracy'].iloc[0]],
+            'rotation_error': [no_hyp_performance_df['rotation_error.mean'].iloc[0]],
+            'flops': [no_hyp_flops_df['flops_mean'].iloc[0]],
+            'model_type': ['Monty']
+        })
+        results.append(monty_no_hyp_data)
+    except (FileNotFoundError, KeyError, IndexError) as e:
+        print(f"Warning: Could not load Monty no hypothesis testing data: {e}")
+    
+    # Combine all results
+    if not results:
+        raise ValueError("No data could be loaded for any models. Please check the data paths and files.")
+    
+    combined_data = pd.concat(results, ignore_index=True)
+    
+    # Save to CSV
+    output_path = OUT_DIR / "fig8b_inference_data.csv"
+    combined_data.to_csv(output_path, index=False)
+    print(f"Saved Figure 8b inference data to {output_path}")
+    
+    return combined_data
 
-    # Return single row DataFrame
-    return pd.DataFrame({
-        "model": [model_name],
-        "accuracy": [accuracy],
-        "rotation_error": [angle],
-        "flops": [flops]
-    })
+
+
 
 
 """
@@ -152,7 +230,7 @@ def plot_training_flops() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Load FLOPs data using new data loading function
-    data_df = load_fig8a_data()
+    data_df = prepare_fig8a_data()
 
     # Extract data from DataFrame
     model_data = {}
@@ -248,42 +326,24 @@ def plot_inference_flops_vs_accuracy() -> None:
     out_dir = OUT_DIR / "inference_flops_vs_accuracy"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load data using utility functions
-    hypothesis_testing_exp = "dist_agent_1lm_randrot_x_percent_20_floppy"
-    random_walk_exp = "dist_agent_1lm_randrot_nohyp_x_percent_20_floppy"
-    hypothesis_testing_flops = load_floppy_traces(DMC_RESULTS_DIR / hypothesis_testing_exp)["flops_mean"].values[0]
-    random_walk_flops = load_floppy_traces(DMC_RESULTS_DIR / random_walk_exp)["flops_mean"].values[0]
-    hypothesis_testing_df = aggregate_1lm_performance_data([hypothesis_testing_exp])
-    hypothesis_testing_df["flops"] = hypothesis_testing_flops
-    random_walk_df = aggregate_1lm_performance_data([random_walk_exp])
-    random_walk_df["flops"] = random_walk_flops
-
-    # Load ViT predictions
-    vit_results_dir = Path("~/tbp/results/dmc/results/vit/logs_reproduction").expanduser()
-    vit_b16_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b16-224-in21k" / "inference" / "predictions.csv")
-    vit_b16_pretrained_df = aggregate_vit_predictions(vit_b16_pretrained_df, "ViT-B/16")
-    vit_l16_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l16-224-in21k" / "inference" / "predictions.csv")
-    vit_l16_pretrained_df = aggregate_vit_predictions(vit_l16_pretrained_df, "ViT-L/16")
-    vit_b32_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b32-224-in21k" / "inference" / "predictions.csv")
-    vit_b32_pretrained_df = aggregate_vit_predictions(vit_b32_pretrained_df, "ViT-B/32")
-    vit_l32_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l32-224-in21k" / "inference" / "predictions.csv")
-    vit_l32_pretrained_df = aggregate_vit_predictions(vit_l32_pretrained_df, "ViT-L/32")
-    vit_h14_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-h14-224-in21k" / "inference" / "predictions.csv")
-    vit_h14_pretrained_df = aggregate_vit_predictions(vit_h14_pretrained_df, "ViT-H/14")
-    vit_b16_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b16-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_b16_scratch_df = aggregate_vit_predictions(vit_b16_scratch_df, "ViT-B/16 (Random Init)")
-    vit_l16_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l16-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_l16_scratch_df = aggregate_vit_predictions(vit_l16_scratch_df, "ViT-L/16 (Random Init)")
-    vit_b32_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b32-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_b32_scratch_df = aggregate_vit_predictions(vit_b32_scratch_df, "ViT-B/32 (Random Init)")
-    vit_l32_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l32-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_l32_scratch_df = aggregate_vit_predictions(vit_l32_scratch_df, "ViT-L/32 (Random Init)")
-    vit_h14_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-h14-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_h14_scratch_df = aggregate_vit_predictions(vit_h14_scratch_df, "ViT-H/14 (Random Init)")
-
-    # Concatenate all ViT predictions
-    pretrained_vit_df = pd.concat([vit_b16_pretrained_df, vit_l16_pretrained_df, vit_b32_pretrained_df, vit_l32_pretrained_df, vit_h14_pretrained_df])
-    scratch_vit_df = pd.concat([vit_b16_scratch_df, vit_l16_scratch_df, vit_b32_scratch_df, vit_l32_scratch_df, vit_h14_scratch_df])
+    # Load consolidated data
+    data_df = prepare_fig8b_data()
+    
+    # Filter data for different model types
+    monty_data = data_df[data_df['model_type'] == 'Monty']
+    pretrained_vit_df = data_df[data_df['model_type'] == 'ViT (Pretrained)']
+    scratch_vit_df = data_df[data_df['model_type'] == 'ViT (Random Init)']
+    
+    # Extract specific Monty experiments
+    hypothesis_testing_df = monty_data[monty_data['model'] == 'Monty (Hypothesis Testing)']
+    random_walk_df = monty_data[monty_data['model'] == 'Monty (Random Walk)']
+    
+    # Get random walk FLOPs for plotting lines
+    if not random_walk_df.empty:
+        random_walk_flops = random_walk_df['flops'].values[0]
+    else:
+        print("Warning: No Random Walk data found for plotting reference lines")
+        random_walk_flops = 0
 
     # Plot Params
     axes_width, axes_height = 4, 3
@@ -298,9 +358,9 @@ def plot_inference_flops_vs_accuracy() -> None:
 
     # Create scatter plot
     bax.scatter(hypothesis_testing_df['flops'].values[0], hypothesis_testing_df['accuracy'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
-    bax.scatter(random_walk_df['flops'].values[0], random_walk_df['accuracy'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
+    bax.scatter(random_walk_df['flops'].values[0], random_walk_df['accuracy'].values[0], color=TBP_COLORS['blue'], s=marker_size, zorder=zorder)  # No label to avoid duplicate
     bax.scatter(pretrained_vit_df['flops'], pretrained_vit_df['accuracy'], color=TBP_COLORS['purple'], label='ViT (Pretrained)', s=marker_size, zorder=zorder)
-    bax.scatter(scratch_vit_df['flops'], scratch_vit_df['accuracy'], color=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)
+    bax.scatter(scratch_vit_df['flops'], scratch_vit_df['accuracy'], facecolors='none', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)
     # Add horizontal and vertical lines from Random Walk point
     random_walk_point = random_walk_flops
     
@@ -331,7 +391,7 @@ def plot_inference_flops_vs_accuracy() -> None:
     # Add annotations for Monty points
     bax.annotate('Hypothesis-Testing Policy', 
                 (hypothesis_testing_df['flops'], hypothesis_testing_df['accuracy']),
-                xytext=(7, 0), textcoords='offset points',
+                xytext=(7, 2), textcoords='offset points',
                 color=TBP_COLORS['blue'],
                 fontsize=6)
     bax.annotate('Random Walk', 
@@ -340,40 +400,50 @@ def plot_inference_flops_vs_accuracy() -> None:
                 color=TBP_COLORS['blue'],
                 fontsize=6)
     
-    # Add annotations for ViT points
-    for i, row in pretrained_vit_df.iterrows():
-        if row['model'] == 'ViT-L/32' or row['model'] == 'ViT-H/14':
-            # Make is lower left
+    # Add annotations for ViT points (pretrained)
+    for _, row in pretrained_vit_df.iterrows():
+        if row['model'] == 'ViT-L/32':
             bax.annotate(row['model'],
                         (row['flops'], row['accuracy']),
-                        xytext=(-10, -10), textcoords='offset points',
+                        xytext=(7, -7), textcoords='offset points',
                         color=TBP_COLORS['purple'],
                         fontsize=6)
         else:
             bax.annotate(row['model'],
-                        (row['flops'], row['accuracy']),
+                    (row['flops'], row['accuracy']),
                         xytext=(7, 0), textcoords='offset points',
                         color=TBP_COLORS['purple'],
                         fontsize=6)
+    
+    
+    # Add annotations for ViT points (random init)
+    for _, row in scratch_vit_df.iterrows():
+        # Extract base model name from 'ViT-B/32 (Random Init)' format
+        model_name = row['model'].replace(' (Random Init)', '')
+        bax.annotate(model_name,
+                    (row['flops'], row['accuracy']),
+                    xytext=(7, 0), textcoords='offset points',
+                    color=TBP_COLORS['purple'],
+                    fontsize=6)
 
     bax.set_xscale('log')
     bax.set_xlabel('Inference FLOPs')
     bax.set_ylabel('Accuracy (%)')
 
     # Set x-axis ticks and limits with LaTeX formatting for superscripts
-    # xticks = [5e9, 5e10, 5e11]
-    # xticklabels = [r'$5\times10^9$', r'$5\times10^{10}$', r'$5\times10^{11}$']
-    # bax.set_xlim(5e9, 5e11)
-    # for ax in bax.axs:
-    #     ax.set_xticks(xticks)
-    #     ax.xaxis.set_major_locator(FixedLocator(xticks))
-    #     ax.set_xticklabels(xticklabels)
+    xticks = [5e9, 5e10, 5e11]
+    xticklabels = [r'$5\times10^9$', r'$5\times10^{10}$', r'$5\times10^{11}$']
+    bax.set_xlim(4e9, 5e11)
+    for ax in bax.axs:
+        ax.set_xticks(xticks)
+        ax.xaxis.set_major_locator(FixedLocator(xticks))
+        ax.set_xticklabels(xticklabels)
 
     bax.legend(loc="lower right", fontsize=6)
 
     fig.savefig(out_dir / "inference_flops_vs_accuracy.png", dpi=DPI, bbox_inches="tight")
     fig.savefig(out_dir / "inference_flops_vs_accuracy.pdf", dpi=DPI, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 """
@@ -385,52 +455,29 @@ Panel C: Inference FLOPs vs. Rotation Error in Monty and ViT
 def plot_inference_flops_vs_rotation_error() -> None:
     """Plot the inference FLOPs vs. rotation error for Monty and ViT.
     
-    Args:
-        monty_exps: List of experiment names for Monty.
-        pretrained_vit_exps: List of experiment names for pretrained ViT.
-        vit_exps: List of experiment names for ViT.
-
     Output is saved to `DMC_ANALYSIS_DIR/fig8/inference_flops_vs_rotation_error`.
     """
     out_dir = OUT_DIR / "inference_flops_vs_rotation_error"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load data using utility functions
-    hypothesis_testing_exp = "dist_agent_1lm_randrot_x_percent_20_floppy"
-    random_walk_exp = "dist_agent_1lm_randrot_nohyp_x_percent_20_floppy"
-    hypothesis_testing_flops = load_floppy_traces(DMC_RESULTS_DIR / hypothesis_testing_exp)["flops_mean"].values[0]
-    random_walk_flops = load_floppy_traces(DMC_RESULTS_DIR / random_walk_exp)["flops_mean"].values[0]
-    hypothesis_testing_df = aggregate_1lm_performance_data([hypothesis_testing_exp])
-    hypothesis_testing_df["flops"] = hypothesis_testing_flops
-    random_walk_df = aggregate_1lm_performance_data([random_walk_exp])
-    random_walk_df["flops"] = random_walk_flops
-
-    # Load ViT predictions
-    vit_results_dir = Path("~/tbp/results/dmc/results/vit/logs_reproduction").expanduser()
-    vit_b16_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b16-224-in21k" / "inference" / "predictions.csv")
-    vit_b16_pretrained_df = aggregate_vit_predictions(vit_b16_pretrained_df, "ViT-B/16")
-    vit_l16_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l16-224-in21k" / "inference" / "predictions.csv")
-    vit_l16_pretrained_df = aggregate_vit_predictions(vit_l16_pretrained_df, "ViT-L/16")
-    vit_b32_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b32-224-in21k" / "inference" / "predictions.csv")
-    vit_b32_pretrained_df = aggregate_vit_predictions(vit_b32_pretrained_df, "ViT-B/32")
-    vit_l32_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l32-224-in21k" / "inference" / "predictions.csv")
-    vit_l32_pretrained_df = aggregate_vit_predictions(vit_l32_pretrained_df, "ViT-L/32")
-    vit_h14_pretrained_df = load_vit_predictions(vit_results_dir / "fig8b_vit-h14-224-in21k" / "inference" / "predictions.csv")
-    vit_h14_pretrained_df = aggregate_vit_predictions(vit_h14_pretrained_df, "ViT-H/14")
-    vit_b16_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b16-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_b16_scratch_df = aggregate_vit_predictions(vit_b16_scratch_df, "ViT-B/16 (Random Init)")
-    vit_l16_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l16-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_l16_scratch_df = aggregate_vit_predictions(vit_l16_scratch_df, "ViT-L/16 (Random Init)")
-    vit_b32_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-b32-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_b32_scratch_df = aggregate_vit_predictions(vit_b32_scratch_df, "ViT-B/32 (Random Init)")
-    vit_l32_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-l32-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_l32_scratch_df = aggregate_vit_predictions(vit_l32_scratch_df, "ViT-L/32 (Random Init)")
-    vit_h14_scratch_df = load_vit_predictions(vit_results_dir / "fig8b_vit-h14-224-in21k_random_init" / "inference" / "predictions.csv")
-    vit_h14_scratch_df = aggregate_vit_predictions(vit_h14_scratch_df, "ViT-H/14 (Random Init)")
-
-    # Concatenate all ViT predictions
-    pretrained_vit_df = pd.concat([vit_b16_pretrained_df, vit_l16_pretrained_df, vit_b32_pretrained_df, vit_l32_pretrained_df, vit_h14_pretrained_df])
-    scratch_vit_df = pd.concat([vit_b16_scratch_df, vit_l16_scratch_df, vit_b32_scratch_df, vit_l32_scratch_df, vit_h14_scratch_df])
+    # Load consolidated data
+    data_df = prepare_fig8b_data()
+    
+    # Filter data for different model types
+    monty_data = data_df[data_df['model_type'] == 'Monty']
+    pretrained_vit_df = data_df[data_df['model_type'] == 'ViT (Pretrained)']
+    scratch_vit_df = data_df[data_df['model_type'] == 'ViT (Random Init)']
+    
+    # Extract specific Monty experiments
+    hypothesis_testing_df = monty_data[monty_data['model'] == 'Monty (Hypothesis Testing)']
+    random_walk_df = monty_data[monty_data['model'] == 'Monty (Random Walk)']
+    
+    # Get random walk FLOPs for plotting lines
+    if not random_walk_df.empty:
+        random_walk_flops = random_walk_df['flops'].values[0]
+    else:
+        print("Warning: No Random Walk data found for plotting reference lines")
+        random_walk_flops = 0
 
     # Plot Params
     axes_width, axes_height = 4, 3
@@ -441,16 +488,16 @@ def plot_inference_flops_vs_rotation_error() -> None:
     fig, ax = plt.subplots(figsize=(axes_width, axes_height))
 
     # Create scatter plot
-    ax.scatter(hypothesis_testing_df['flops'].values[0], hypothesis_testing_df['rotation_error.mean'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
-    ax.scatter(random_walk_df['flops'].values[0], random_walk_df['rotation_error.mean'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
+    ax.scatter(hypothesis_testing_df['flops'].values[0], hypothesis_testing_df['rotation_error'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
+    ax.scatter(random_walk_df['flops'].values[0], random_walk_df['rotation_error'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
     ax.scatter(pretrained_vit_df['flops'], pretrained_vit_df['rotation_error'], color=TBP_COLORS['purple'], label='ViT (Pretrained)', s=marker_size, zorder=zorder)
-    ax.scatter(scratch_vit_df['flops'], scratch_vit_df['rotation_error'], color=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)  
+    ax.scatter(scratch_vit_df['flops'], scratch_vit_df['rotation_error'], facecolors='none', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)  
     # Add horizontal and vertical lines from Random Walk point
     random_walk_point = random_walk_flops
     
     # Draw horizontal line
     ax.plot([0, random_walk_point], 
-            [random_walk_df['rotation_error.mean'].values[0], random_walk_df['rotation_error.mean'].values[0]], 
+            [random_walk_df['rotation_error'].values[0], random_walk_df['rotation_error'].values[0]], 
             color=TBP_COLORS['blue'], 
             linestyle='--', 
             alpha=0.5, 
@@ -458,7 +505,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     
     # Draw vertical line
     ax.plot([random_walk_point, random_walk_point], 
-            [0, random_walk_df['rotation_error.mean'].values[0]], 
+            [0, random_walk_df['rotation_error'].values[0]], 
             color=TBP_COLORS['blue'], 
             linestyle='--', 
             alpha=0.5, 
@@ -466,7 +513,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     
     # Fill the rectangle top right corner
     ax.fill_between([0, random_walk_point], 
-                    [random_walk_df['rotation_error.mean'].values[0], random_walk_df['rotation_error.mean'].values[0]], 
+                    [random_walk_df['rotation_error'].values[0], random_walk_df['rotation_error'].values[0]], 
                     [0, 0],
                     color=TBP_COLORS['blue'], 
                     alpha=0.1, 
@@ -474,18 +521,18 @@ def plot_inference_flops_vs_rotation_error() -> None:
     
     # Add annotations for Monty points
     ax.annotate('Hypothesis-Testing Policy', 
-                (hypothesis_testing_df['flops'], hypothesis_testing_df['rotation_error.mean']),
+                (hypothesis_testing_df['flops'], hypothesis_testing_df['rotation_error']),
                         xytext=(0, -10), textcoords='offset points',
                         color=TBP_COLORS['blue'],
                         fontsize=6)
     ax.annotate('Random Walk', 
-                (random_walk_df['flops'], random_walk_df['rotation_error.mean']),
+                (random_walk_df['flops'], random_walk_df['rotation_error']),
                         xytext=(7, 0), textcoords='offset points',
                         color=TBP_COLORS['blue'],
                         fontsize=6)
     
-    # Add annotations for ViT points
-    for i, row in pretrained_vit_df.iterrows():
+    # Add annotations for ViT points (pretrained)
+    for _, row in pretrained_vit_df.iterrows():
         if row['model'] == 'ViT-L/32':
             ax.annotate(row['model'],
                         (row['flops'], row['rotation_error']),
@@ -504,6 +551,29 @@ def plot_inference_flops_vs_rotation_error() -> None:
                         xytext=(-10, -10), textcoords='offset points',
                         color=TBP_COLORS['purple'],
                         fontsize=6)
+    
+    # Add annotations for ViT points (random init)
+    for _, row in scratch_vit_df.iterrows():
+        # Extract base model name from 'ViT-B/32 (Random Init)' format
+        model_name = row['model'].replace(' (Random Init)', '')
+        if model_name == 'ViT-L/32':
+            ax.annotate(row['model'],
+                        (row['flops'], row['rotation_error']),
+                        xytext=(-20, 16), textcoords='offset points',
+                        color=TBP_COLORS['purple'],
+                        fontsize=6)
+        elif model_name == "ViT-B/16":
+            ax.annotate(row['model'],
+                        (row['flops'], row['rotation_error']),
+                        xytext=(0, -10), textcoords='offset points',
+                        color=TBP_COLORS['purple'],
+                        fontsize=6)
+        else:
+            ax.annotate(row['model'],
+                        (row['flops'], row['rotation_error']),
+                        xytext=(-10, -10), textcoords='offset points',
+                        color=TBP_COLORS['purple'],
+                        fontsize=6)
 
     ax.set_xscale('log')
     ax.set_xlabel('Inference FLOPs')
@@ -511,12 +581,12 @@ def plot_inference_flops_vs_rotation_error() -> None:
     ax.set_ylim(0, 180)
     
     # Set x-axis ticks and limits with LaTeX formatting for superscripts
-    # xticks = [5e9, 5e10, 5e11]
-    # xticklabels = [r'$5\times10^9$', r'$5\times10^{10}$', r'$5\times10^{11}$']
-    # ax.set_xlim(5e9, 5e11)
-    # ax.set_xticks(xticks)
-    # ax.xaxis.set_major_locator(FixedLocator(xticks))
-    # ax.set_xticklabels(xticklabels)
+    xticks = [5e9, 5e10, 5e11]
+    xticklabels = [r'$5\times10^9$', r'$5\times10^{10}$', r'$5\times10^{11}$']
+    ax.set_xlim(3e9, 5e11)
+    ax.set_xticks(xticks)
+    ax.xaxis.set_major_locator(FixedLocator(xticks))
+    ax.set_xticklabels(xticklabels)
 
     ax.legend(loc="upper right", fontsize=6)
 
@@ -525,7 +595,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     plt.close()
 
 if __name__ == "__main__":
-    plot_training_flops()
+    # plot_training_flops()
     
-    # plot_inference_flops_vs_accuracy()
-    # plot_inference_flops_vs_rotation_error()
+    plot_inference_flops_vs_accuracy()
+    plot_inference_flops_vs_rotation_error()
