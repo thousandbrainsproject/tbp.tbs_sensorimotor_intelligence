@@ -13,14 +13,6 @@ This module defines the following inference experiments:
  - `dist_agent_1lm_randrot_nohyp` (No hypothesis testing)
  - `dist_agent_1lm_randrot` (Hypothesis testing)
 
-And the following training experiment:
- - `pretrain_dist_agent_1lm_k_0`
-
-Note that the training experiment is identical to `pretrain_dist_agent_1lm` except
-that the argument k=0 in DisplacementGraphLM. This is to prevent FLOP
-counts associated with building unncessary edges of a graph, as these are not used 
-during inference.
-
 Inference experiments use:
  - 77 objects
  - 5 random rotations
@@ -42,7 +34,6 @@ from .fig5_rapid_inference_with_voting import (
 from .fig6_rapid_inference_with_model_based_policies import (
     dist_agent_1lm_randrot_noise_nohyp,
 )  # No hypothesis testing
-from .pretraining_experiments import pretrain_dist_agent_1lm
 
 
 def update_x_percent_threshold_in_config(
@@ -127,43 +118,13 @@ dist_agent_1lm_randrot["logging_config"].run_name = "dist_agent_1lm_randrot"
 # and evaluate FLOPs and accuracy performance as a function of x-percent threshold.
 dist_agent_1lm_randrot_nohyp = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot_nohyp, 20
-) # Use default pretrained Monty model
+)
 
 dist_agent_1lm_randrot = update_x_percent_threshold_in_config(
     dist_agent_1lm_randrot, 20
-) # Use default pretrained Monty model
-
-pretrained_monty_k_0_path = str(Path(
-   "~/tbp/dmc/pretrained_models/pretrain_dist_agent_1lm_k_0/pretrained/model.pt"
-).expanduser())
-dist_agent_1lm_randrot_nohyp_k_0 = copy.deepcopy(dist_agent_1lm_randrot_nohyp)
-dist_agent_1lm_randrot_nohyp_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
-dist_agent_1lm_randrot_nohyp_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_nohyp_k_0" 
-
-dist_agent_1lm_randrot_k_0 = copy.deepcopy(dist_agent_1lm_randrot)
-dist_agent_1lm_randrot_k_0["experiment_args"].model_name_or_path = pretrained_monty_k_0_path # Use pretrained Monty with k=0
-dist_agent_1lm_randrot_k_0["logging_config"].run_name = "dist_agent_1lm_randrot_k_0" 
-
-###################
-# Training Config #
-###################
-
-pretrain_dist_agent_1lm_k_0 = copy.deepcopy(pretrain_dist_agent_1lm)
-
-# Replace DisplacementGraphLM with EvidenceGraphLM
-pretrain_dist_agent_1lm_k_0["monty_config"].learning_module_configs["learning_module_0"].update({
-    "learning_module_args": dict(
-        k=0,
-    )
-})
-
-# Update the logging config run name
-pretrain_dist_agent_1lm_k_0["logging_config"].run_name = "pretrain_dist_agent_1lm_k_0"
+)
 
 CONFIGS = {
     "dist_agent_1lm_randrot_nohyp": dist_agent_1lm_randrot_nohyp,
     "dist_agent_1lm_randrot": dist_agent_1lm_randrot,
-    "dist_agent_1lm_randrot_nohyp_k_0": dist_agent_1lm_randrot_nohyp_k_0,
-    "dist_agent_1lm_randrot_k_0": dist_agent_1lm_randrot_k_0,
-    "pretrain_dist_agent_1lm_k_0": pretrain_dist_agent_1lm_k_0,
 }

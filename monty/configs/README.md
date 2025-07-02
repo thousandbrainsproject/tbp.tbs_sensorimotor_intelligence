@@ -153,10 +153,6 @@ The main output measure is accuracy as a function of number of objects seen so f
 
 ## Figure 8: Computationally Efficient Learning and Inference
 
-### Pretraining (1 experiment)
-
-- `pretrain_dist_agent_1lm_k_0` - Sets the `k=0` for `DisplacementGraphLM` to prevent FLOP counting associated with edge creation in object model graphs, which is currently unused.
-
 ### Inference (2 experiments)
 
 There are two experiments, one using hypothesis testing and another using no hypothesis testing.
