@@ -81,7 +81,7 @@ def prepare_fig8a_data() -> pd.DataFrame:
         monty_flops_df = load_floppy_traces(monty_exp_path)
         monty_data = pd.DataFrame({
             'model': ['Monty'],
-            'flops': [monty_flops_df['flops_mean'].iloc[0]],
+            'flops': [monty_flops_df['total_flops'].iloc[0]],
         })
         results.append(monty_data)
     except (FileNotFoundError, KeyError, IndexError) as e:
@@ -598,7 +598,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     plt.close()
 
 if __name__ == "__main__":
-    # plot_training_flops()
+    plot_training_flops()
     
-    plot_inference_flops_vs_accuracy()
-    plot_inference_flops_vs_rotation_error()
+    # plot_inference_flops_vs_accuracy()
+    # plot_inference_flops_vs_rotation_error()
