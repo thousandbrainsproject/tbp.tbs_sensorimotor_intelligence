@@ -41,8 +41,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple
 
 from calflops import calculate_flops
-# TODO (Hojae): Update import path once ViT code is merged into this repo.
-from benchmark_vit.src.models.custom_vit import RGBD_ViT
+
+import sys
+from pathlib import Path
+
+# Add path to pytorch directory to Python path
+sys.path.append(str(Path(__file__).parent.parent / "pytorch"))
+
+from src.models.components.rgbd_vit import ViTRgbdObjectClassifierWithRotation
 
 if TYPE_CHECKING:
     import torch
@@ -54,8 +60,6 @@ input_shape: Tuple[int, int, int, int] = (1, 4, 224, 224)  # (batch_size, channe
 
 # Model Configuration
 freeze_backbone: bool = True
-classification_head_type: str = "norm_linear"
-quaternion_head_type: str = "norm_linear"
 use_pretrained: bool = True
 
 # Training Parameters for YCB Dataset
@@ -67,14 +71,12 @@ num_epochs_for_vit: int = 75
 # ImageNet-21K Pretraining Parameters
 imagenet21k_num_images: int = 14_000_000
 imagenet21k_num_epochs: int = 90  # See Table 3 of ViT paper - value for ViT-B/16 (Dosovitskiy et al, 2020
-    An image is worth 16x16 words: Transformers for image recognition at scale)
+    # An image is worth 16x16 words: Transformers for image recognition at scale)
 
-model = RGBD_ViT(
+model = ViTRgbdObjectClassifierWithRotation(
     model_name=backbone_vit_model,
     num_classes=num_ycb_classes,
     freeze_backbone=freeze_backbone, # Has no impact on FLOPs
-    classification_head_type=classification_head_type,
-    quaternion_head_type=quaternion_head_type,
     use_pretrained=use_pretrained, # Has no impact on FLOPs
 )
 
@@ -173,8 +175,6 @@ if __name__ == "__main__":
         print(f"Model Configuration:")
         print(f"- Backbone: {backbone_vit_model}")
         print(f"- Input Shape: {input_shape}")
-        print(f"- Classification Head: {classification_head_type}")
-        print(f"- Quaternion Head: {quaternion_head_type}")
         print(f"\nForward pass FLOPs: {forward_flops:,.0f}")
         
         # Calculate and print training FLOPs

@@ -31,3 +31,6 @@ dependencies:
   - pip:
     - -e .[dev]
     - calflops # For counting FLOPs of pytorch models, see https://github.com/MrYxJ/calculate-flops.pytorch
+    - transformers # For counting FLOPs of ViT 
+    - brokenaxes # For plotting
+

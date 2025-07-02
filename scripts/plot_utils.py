@@ -99,6 +99,36 @@ def update_style(
     return {**base, **new}
 
 
+def format_flops(flops: Union[int, float]) -> str:
+    """Format FLOPs value for display in scientific notation.
+    
+    Args:
+        flops: Number of FLOPs to format.
+        
+    Returns:
+        Formatted string representation of FLOPs in scientific notation.
+    """
+    # Convert to float if it's a string
+    if isinstance(flops, int):
+        flops = float(flops)
+
+    if flops == 0:
+        return "0"
+    
+    # Calculate the exponent
+    exponent = int(np.floor(np.log10(abs(flops))))
+    
+    # Calculate the coefficient
+    coefficient = flops / (10 ** exponent)
+    
+    # Format with appropriate precision
+    if coefficient >= 10:
+        coefficient /= 10
+        exponent += 1
+    
+    return f"{coefficient:.2f} × 10$^{{{exponent}}}$"
+
+
 """
 3D Plotting Utilities
 -------------------------------------------------------------------------------
