@@ -24,6 +24,8 @@ import pandas as pd
 from typing import Union
 import torch
 
+from plot_utils import format_flops
+
 from data_utils import (
     DMC_ANALYSIS_DIR,
     DMC_RESULTS_DIR,
@@ -89,46 +91,6 @@ def load_fig8a_data() -> pd.DataFrame:
     combined_data.to_csv(OUT_DIR / "fig8a_training_flops.csv", index=False)
     print(f"Saved ViT and Monty training FLOPs data to {OUT_DIR / 'fig8a_training_flops.csv'}. This will be used for plotting.")
     return combined_data
-
-def format_flops(flops: Union[int, float]) -> str:
-    """Format FLOPs value for display in scientific notation.
-    
-    Args:
-        flops: Number of FLOPs to format.
-        
-    Returns:
-        Formatted string representation of FLOPs in scientific notation.
-    """
-    # Convert to float if it's a string
-    if isinstance(flops, int):
-        flops = float(flops)
-
-    if flops == 0:
-        return "0"
-    
-    # Calculate the exponent
-    exponent = int(np.floor(np.log10(abs(flops))))
-    
-    # Calculate the coefficient
-    coefficient = flops / (10 ** exponent)
-    
-    # Format with appropriate precision
-    if coefficient >= 10:
-        coefficient /= 10
-        exponent += 1
-    
-    return f"{coefficient:.2f} × 10$^{{{exponent}}}$"
-
-def get_monty_flops_accuracy_data(exp_names: list[str]) -> pd.DataFrame:
-    """Get Monty FLOPs and accuracy data from experiments.
-    
-    Args:
-        exp_names: List of experiment names for Monty.
-        
-    Returns:
-        DataFrame containing FLOPs and accuracy data for Monty experiments.
-    """
-    return load_eval_stats(exp_names)
 
 
 def aggregate_vit_predictions(df: pd.DataFrame, model_name: str) -> pd.DataFrame:
@@ -259,8 +221,8 @@ def plot_training_flops() -> None:
     ax.text(flops[2][0] * 0.8, y_pos[2], format_flops(flops[2][0]), va='center', ha='right', fontsize=7, color='black', rotation=270)
 
     # For ViT, add text annotation for Finetuning and Pretraining with more spacing
-    ax.text(flops[0][0]*0.5, y_pos[0], 'Finetuning', va='center', ha='right', fontsize=7, color='white', rotation=270)
-    ax.text(flops[0][0] + flops[0][1]*0.5, y_pos[0], 'Pretraining', va='center', ha='right', fontsize=7, color='black', rotation=270)
+    ax.text(flops[0][0]*0.4, y_pos[0], 'Finetuning', va='center', ha='right', fontsize=7, color='white', rotation=270)
+    ax.text(flops[0][0] + flops[0][1]*0.4, y_pos[0], 'Pretraining', va='center', ha='right', fontsize=7, color='black', rotation=270)
     
     plt.tight_layout()
     
@@ -268,6 +230,7 @@ def plot_training_flops() -> None:
     fig.savefig(out_dir / "training_flops.png", dpi=DPI, bbox_inches="tight")
     fig.savefig(out_dir / "training_flops.pdf", dpi=DPI, bbox_inches="tight")
     plt.close(fig)
+    print(f"Saved training FLOPs plot to {out_dir / 'training_flops.png'}")
 
 
 """
