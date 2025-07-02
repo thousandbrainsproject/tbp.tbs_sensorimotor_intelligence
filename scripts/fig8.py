@@ -360,7 +360,7 @@ def plot_inference_flops_vs_accuracy() -> None:
     bax.scatter(hypothesis_testing_df['flops'].values[0], hypothesis_testing_df['accuracy'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
     bax.scatter(random_walk_df['flops'].values[0], random_walk_df['accuracy'].values[0], color=TBP_COLORS['blue'], s=marker_size, zorder=zorder)  # No label to avoid duplicate
     bax.scatter(pretrained_vit_df['flops'], pretrained_vit_df['accuracy'], color=TBP_COLORS['purple'], label='ViT (Pretrained)', s=marker_size, zorder=zorder)
-    bax.scatter(scratch_vit_df['flops'], scratch_vit_df['accuracy'], facecolors='none', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)
+    bax.scatter(scratch_vit_df['flops'], scratch_vit_df['accuracy'], facecolors='none', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder+10)
     # Add horizontal and vertical lines from Random Walk point
     random_walk_point = random_walk_flops
     
@@ -489,9 +489,12 @@ def plot_inference_flops_vs_rotation_error() -> None:
 
     # Create scatter plot
     ax.scatter(hypothesis_testing_df['flops'].values[0], hypothesis_testing_df['rotation_error'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
-    ax.scatter(random_walk_df['flops'].values[0], random_walk_df['rotation_error'].values[0], color=TBP_COLORS['blue'], label='Monty', s=marker_size, zorder=zorder)
+    ax.scatter(random_walk_df['flops'].values[0], random_walk_df['rotation_error'].values[0], color=TBP_COLORS['blue'], s=marker_size, zorder=zorder)  # No label to avoid duplicate
+    # Plot pretrained ViT first with lower zorder
     ax.scatter(pretrained_vit_df['flops'], pretrained_vit_df['rotation_error'], color=TBP_COLORS['purple'], label='ViT (Pretrained)', s=marker_size, zorder=zorder)
-    ax.scatter(scratch_vit_df['flops'], scratch_vit_df['rotation_error'], facecolors='none', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)  
+    # Plot scratch ViT last with higher zorder and thicker edge
+    ax.scatter(scratch_vit_df['flops'], scratch_vit_df['rotation_error'], facecolors='white', edgecolors=TBP_COLORS['purple'], label='ViT (Random Init)', s=marker_size, zorder=zorder)
+    
     # Add horizontal and vertical lines from Random Walk point
     random_walk_point = random_walk_flops
     
@@ -553,27 +556,27 @@ def plot_inference_flops_vs_rotation_error() -> None:
                         fontsize=6)
     
     # Add annotations for ViT points (random init)
-    for _, row in scratch_vit_df.iterrows():
-        # Extract base model name from 'ViT-B/32 (Random Init)' format
-        model_name = row['model'].replace(' (Random Init)', '')
-        if model_name == 'ViT-L/32':
-            ax.annotate(row['model'],
-                        (row['flops'], row['rotation_error']),
-                        xytext=(-20, 16), textcoords='offset points',
-                        color=TBP_COLORS['purple'],
-                        fontsize=6)
-        elif model_name == "ViT-B/16":
-            ax.annotate(row['model'],
-                        (row['flops'], row['rotation_error']),
-                        xytext=(0, -10), textcoords='offset points',
-                        color=TBP_COLORS['purple'],
-                        fontsize=6)
-        else:
-            ax.annotate(row['model'],
-                        (row['flops'], row['rotation_error']),
-                        xytext=(-10, -10), textcoords='offset points',
-                        color=TBP_COLORS['purple'],
-                        fontsize=6)
+    # for _, row in scratch_vit_df.iterrows():
+    #     # Extract base model name from 'ViT-B/32 (Random Init)' format
+    #     model_name = row['model'].replace(' (Random Init)', '')
+    #     if model_name == 'ViT-L/32':
+    #         ax.annotate(model_name,
+    #                     (row['flops'], row['rotation_error']),
+    #                     xytext=(-20, 16), textcoords='offset points',
+    #                     color=TBP_COLORS['purple'],
+    #                     fontsize=6)
+    #     elif model_name == "ViT-B/16":
+    #         ax.annotate(model_name,
+    #                     (row['flops'], row['rotation_error']),
+    #                     xytext=(0, -10), textcoords='offset points',
+    #                     color=TBP_COLORS['purple'],
+    #                     fontsize=6)
+    #     else:
+    #         ax.annotate(model_name,
+    #                     (row['flops'], row['rotation_error']),
+    #                     xytext=(-10, -10), textcoords='offset points',
+    #                     color=TBP_COLORS['purple'],
+    #                     fontsize=6)
 
     ax.set_xscale('log')
     ax.set_xlabel('Inference FLOPs')
@@ -583,7 +586,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
     # Set x-axis ticks and limits with LaTeX formatting for superscripts
     xticks = [5e9, 5e10, 5e11]
     xticklabels = [r'$5\times10^9$', r'$5\times10^{10}$', r'$5\times10^{11}$']
-    ax.set_xlim(3e9, 5e11)
+    ax.set_xlim(4e9, 5e11)
     ax.set_xticks(xticks)
     ax.xaxis.set_major_locator(FixedLocator(xticks))
     ax.set_xticklabels(xticklabels)
