@@ -261,20 +261,28 @@ def compute_vit_rotation_error(df: pd.DataFrame) -> float:
     """Compute the geodesic rotation error between real and predicted quaternions.
     
     This function computes the angular distance between rotations represented by
-    quaternions using the geodesic distance formula on SO(3).
+    quaternions using the geodesic distance formula on SO(3). Only calculates
+    rotation error for correctly classified samples.
     
     Args:
         df (pd.DataFrame): DataFrame containing ViT predictions, expected to have
-            'real_quaternion' and 'predicted_quaternion' columns with numpy arrays.
+            'real_quaternion', 'predicted_quaternion', 'real_class', and 
+            'predicted_class' columns.
             
     Returns:
-        float: The mean geodesic rotation error in degrees.
+        float: The mean geodesic rotation error in degrees for correctly classified samples.
     """
     if len(df) == 0:
         return 0.0
     
+    # Filter for correctly classified samples only
+    correct_subset = df[df['real_class'] == df['predicted_class']]
+    
+    if len(correct_subset) == 0:
+        return 0.0
+    
     errors = []
-    for _, row in df.iterrows():
+    for _, row in correct_subset.iterrows():
         real_quat = row['real_quaternion']
         pred_quat = row['predicted_quaternion']
         

@@ -539,7 +539,7 @@ def plot_inference_flops_vs_rotation_error() -> None:
         if row['model'] == 'ViT-L/32':
             ax.annotate(row['model'],
                         (row['flops'], row['rotation_error']),
-                        xytext=(-20, 16), textcoords='offset points',
+                        xytext=(-20, 20), textcoords='offset points',
                         color=TBP_COLORS['purple'],
                         fontsize=6)
         elif row["model"] == "ViT-B/16":
@@ -555,29 +555,6 @@ def plot_inference_flops_vs_rotation_error() -> None:
                         color=TBP_COLORS['purple'],
                         fontsize=6)
     
-    # Add annotations for ViT points (random init)
-    # for _, row in scratch_vit_df.iterrows():
-    #     # Extract base model name from 'ViT-B/32 (Random Init)' format
-    #     model_name = row['model'].replace(' (Random Init)', '')
-    #     if model_name == 'ViT-L/32':
-    #         ax.annotate(model_name,
-    #                     (row['flops'], row['rotation_error']),
-    #                     xytext=(-20, 16), textcoords='offset points',
-    #                     color=TBP_COLORS['purple'],
-    #                     fontsize=6)
-    #     elif model_name == "ViT-B/16":
-    #         ax.annotate(model_name,
-    #                     (row['flops'], row['rotation_error']),
-    #                     xytext=(0, -10), textcoords='offset points',
-    #                     color=TBP_COLORS['purple'],
-    #                     fontsize=6)
-    #     else:
-    #         ax.annotate(model_name,
-    #                     (row['flops'], row['rotation_error']),
-    #                     xytext=(-10, -10), textcoords='offset points',
-    #                     color=TBP_COLORS['purple'],
-    #                     fontsize=6)
-
     ax.set_xscale('log')
     ax.set_xlabel('Inference FLOPs')
     ax.set_ylabel('Rotation Error (deg)')
@@ -600,5 +577,5 @@ def plot_inference_flops_vs_rotation_error() -> None:
 if __name__ == "__main__":
     plot_training_flops()
     
-    # plot_inference_flops_vs_accuracy()
-    # plot_inference_flops_vs_rotation_error()
+    plot_inference_flops_vs_accuracy()
+    plot_inference_flops_vs_rotation_error()
