@@ -38,23 +38,28 @@ The script provides functions to calculate:
 
 from __future__ import annotations
 
+import pandas as pd
 from typing import TYPE_CHECKING, Tuple
 
 from calflops import calculate_flops
 
 import sys
-from pathlib import Path
+import os
 
-# Add path to pytorch directory to Python path
-sys.path.append(str(Path(__file__).parent.parent / "pytorch"))
+# Add paths relative to this script's location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+pytorch_path = os.path.join(script_dir, "..", "pytorch")
+monty_path = os.path.join(script_dir, "..", "monty")
 
+sys.path.append(pytorch_path)
+sys.path.append(monty_path)
+from configs.common import DMC_RESULTS_DIR
 from src.models.components.rgbd_vit import ViTRgbdObjectClassifierWithRotation
 
 if TYPE_CHECKING:
     import torch
 
 # Model Architecture Parameters
-backbone_vit_model: str = "vit-b16-224-in21k" 
 num_ycb_classes: int = 77
 input_shape: Tuple[int, int, int, int] = (1, 4, 224, 224)  # (batch_size, channels, height, width)
 
@@ -70,14 +75,42 @@ num_epochs_for_vit: int = 75
 
 # ImageNet-21K Pretraining Parameters
 imagenet21k_num_images: int = 14_000_000
-imagenet21k_num_epochs: int = 90  # See Table 3 of ViT paper - value for ViT-B/16 (Dosovitskiy et al, 2020
-    # An image is worth 16x16 words: Transformers for image recognition at scale)
+imagenet21k_num_epochs: int = 90  # See Table 3 of ViT paper - value for ViT-B/16 (Dosovitskiy et al, 2020)
 
-model = ViTRgbdObjectClassifierWithRotation(
-    model_name=backbone_vit_model,
+# Create different ViT model instances
+vit_b16 = ViTRgbdObjectClassifierWithRotation(
+    model_name="vit-b16-224-in21k",
     num_classes=num_ycb_classes,
-    freeze_backbone=freeze_backbone, # Has no impact on FLOPs
-    use_pretrained=use_pretrained, # Has no impact on FLOPs
+    freeze_backbone=freeze_backbone,
+    use_pretrained=use_pretrained,
+)
+
+vit_b32 = ViTRgbdObjectClassifierWithRotation(
+    model_name="vit-b32-224-in21k",
+    num_classes=num_ycb_classes,
+    freeze_backbone=freeze_backbone,
+    use_pretrained=use_pretrained,
+)
+
+vit_l16 = ViTRgbdObjectClassifierWithRotation(
+    model_name="vit-l16-224-in21k",
+    num_classes=num_ycb_classes,
+    freeze_backbone=freeze_backbone,
+    use_pretrained=use_pretrained,
+)
+
+vit_l32 = ViTRgbdObjectClassifierWithRotation(
+    model_name="vit-l32-224-in21k",
+    num_classes=num_ycb_classes,
+    freeze_backbone=freeze_backbone,
+    use_pretrained=use_pretrained,
+)
+
+vit_h14 = ViTRgbdObjectClassifierWithRotation(
+    model_name="vit-h14-224-in21k",
+    num_classes=num_ycb_classes,
+    freeze_backbone=freeze_backbone,
+    use_pretrained=use_pretrained,
 )
 
 def get_forward_flops(model: torch.nn.Module, input_shape: Tuple[int, int, int, int]) -> float:
@@ -168,31 +201,65 @@ def get_imagenet21k_pretraining_flops(model: torch.nn.Module) -> float:
 
 if __name__ == "__main__":
     try:
-        # Calculate and print forward pass FLOPs
-        forward_flops = get_forward_flops(model, input_shape)
         print("\nViT Model FLOPs Analysis")
         print("=" * 50)
-        print(f"Model Configuration:")
-        print(f"- Backbone: {backbone_vit_model}")
+        print("Model Configuration:")
         print(f"- Input Shape: {input_shape}")
-        print(f"\nForward pass FLOPs: {forward_flops:,.0f}")
         
-        # Calculate and print training FLOPs
-        training_flops = calculate_training_flops(
-            model, input_shape, num_images, num_epochs_for_pretrained_vit
+        # Fig8a: Training FLOPs
+        print("\nFig8a: Training FLOPs")
+        print("-" * 30)
+        
+        # 1. Training from scratch
+        vit_b16_scratch_training_flops = calculate_training_flops(
+            vit_b16, input_shape, num_images, num_epochs_for_vit
         )
-        print(f"\nTraining FLOPs (YCB dataset):")
-        print(f"- Number of images: {num_images:,}")
-        print(f"- Number of epochs: {num_epochs_for_pretrained_vit}")
-        print(f"- Total FLOPs: {training_flops:,.0f}")
+        print(f"1. Training from scratch: {vit_b16_scratch_training_flops:,.0f}")
         
-        # Calculate and print pretraining FLOPs
-        pretraining_flops = get_imagenet21k_pretraining_flops(model)
-        print(f"\nPretraining FLOPs (ImageNet-21K):")
-        print(f"- Number of images: {imagenet21k_num_images:,}")
-        print(f"- Number of epochs: {imagenet21k_num_epochs}")
-        print(f"- Total FLOPs: {pretraining_flops:,.0f}")
+        # 2. Tuning from pretrained
+        vit_b16_pretrained_tuning_flops = calculate_training_flops(
+            vit_b16, input_shape, num_images, num_epochs_for_pretrained_vit
+        )
+        print(f"2. Tuning from pretrained: {vit_b16_pretrained_tuning_flops:,.0f}")
         
+        # 3. Pretraining on ImageNet21k
+        pretraining_flops = get_imagenet21k_pretraining_flops(vit_b16)
+        print(f"3. Pretraining on ImageNet21k: {pretraining_flops:,.0f}")
+
+        # Fig8b: Inference FLOPs
+        print("\nFig8b: Inference FLOPs")
+        print("-" * 30)
+        
+        # Calculate inference FLOPs for all models
+        vit_b32_inference_flops = get_forward_flops(vit_b32, input_shape)
+        print(f"1. vit-b32: {vit_b32_inference_flops:,.0f}")
+
+        vit_b16_inference_flops = get_forward_flops(vit_b16, input_shape)
+        print(f"2. vit-b16: {vit_b16_inference_flops:,.0f}")
+
+        vit_l32_inference_flops = get_forward_flops(vit_l32, input_shape)
+        print(f"3. vit-l32: {vit_l32_inference_flops:,.0f}")
+
+        vit_l16_inference_flops = get_forward_flops(vit_l16, input_shape)
+        print(f"4. vit-l16: {vit_l16_inference_flops:,.0f}")
+
+        vit_h14_inference_flops = get_forward_flops(vit_h14, input_shape)
+        print(f"5. vit-h14: {vit_h14_inference_flops:,.0f}")
+    
+        fig8a_results = pd.DataFrame({
+            'flops': [vit_b16_scratch_training_flops, vit_b16_pretrained_tuning_flops, pretraining_flops],
+            'model': ['vit-b16_scratch_training_flops', 'vit-b16_pretrained_tuning_flops', 'pretraining_flops']
+        })
+        fig8a_results.to_csv(DMC_RESULTS_DIR / "fig8a_results.csv", index=False)
+
+        fig8b_results = pd.DataFrame({
+            'flops': [vit_b32_inference_flops, vit_b16_inference_flops, vit_l32_inference_flops, vit_l16_inference_flops, vit_h14_inference_flops],
+            'model': ['vit-b32_inference_flops', 'vit-b16_inference_flops', 'vit-l32_inference_flops', 'vit-l16_inference_flops', 'vit-h14_inference_flops']
+        })
+        fig8b_results.to_csv(DMC_RESULTS_DIR / "fig8b_results.csv", index=False)
+
+        print(f"(Saved results to {DMC_RESULTS_DIR / 'fig8a_results.csv'} and {DMC_RESULTS_DIR / 'fig8b_results.csv'})")
+
     except Exception as e:
         print(f"Error: {str(e)}")
         exit(1)

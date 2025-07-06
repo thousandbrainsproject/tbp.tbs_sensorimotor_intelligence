@@ -7,8 +7,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-from typing import Tuple
 
+from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,8 +17,6 @@ from transformers import AutoConfig, ViTModel
 from .norm_linear_head import NormLinearHead
 
 ProjectionInfo = Tuple[torch.Tensor, torch.Tensor, tuple, tuple, tuple]
-
-
 class ViTRgbdObjectClassifierWithRotation(nn.Module):
     """Vision Transformer model adapted for RGB-D input with classification and quaternion
     prediction.
