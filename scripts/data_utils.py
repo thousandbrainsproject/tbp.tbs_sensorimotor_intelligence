@@ -279,7 +279,7 @@ def compute_vit_rotation_error(df: pd.DataFrame) -> float:
     correct_subset = df[df['real_class'] == df['predicted_class']]
     
     if len(correct_subset) == 0:
-        return 0.0
+        raise ValueError("Rotation error cannot be computed because the model has not classified a single object correctly")
     
     errors = []
     for _, row in correct_subset.iterrows():
