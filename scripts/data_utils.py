@@ -22,8 +22,6 @@ import torch
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation as R
 
-from scripts.count_model_init_flops import count_model_init_flops_from_config
-
 # Path settings - mirrors those in configs/common.py
 DMC_ROOT_DIR = Path(os.environ.get("DMC_ROOT_DIR", "~/tbp/results/dmc")).expanduser()
 DMC_PRETRAIN_DIR = DMC_ROOT_DIR / "pretrained_models"
@@ -208,25 +206,6 @@ def load_floppy_traces(exp: os.PathLike) -> pd.DataFrame:
     return pd.DataFrame(result_dict)
 
 
-def load_monty_training_flops() -> pd.DataFrame:
-    """Compute and return Monty training FLOPs.
-
-    This function computes the FLOPs associated with Monty training via pretrain_dist_agent_1lm_k=0
-    by adding the FLOPs associated with KDTree construction (see count_model_init_flops.py)
-    and the FLOPs associated with the training loop.
-
-    Returns:
-        pd.DataFrame: DataFrame containing experiment statistics with columns:
-            - experiment: Name of the experiment
-            - flops: Total number of floating point operations
-    """
-    train_exp_name = "pretrain_dist_agent_1lm_k=0"
-    train_exp_path = DMC_RESULTS_DIR / train_exp_name
-    kdtree_flops = count_model_init_flops_from_config(train_exp_name)["total_flops"]
-    train_loop_flops = load_floppy_traces(train_exp_path)["total_flops"]
-    total_flops = kdtree_flops + train_loop_flops
-    return pd.DataFrame({"experiment": [train_exp_name], "flops": [total_flops]})
-
 def load_vit_predictions(path: os.PathLike) -> pd.DataFrame:
     """Load and process ViT model predictions from a CSV file.
 
@@ -259,6 +238,75 @@ def load_vit_predictions(path: os.PathLike) -> pd.DataFrame:
 
     return df
 
+def compute_vit_accuracy(df: pd.DataFrame) -> float:
+    """Compute the classification accuracy of the ViT model.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing ViT predictions, expected to have
+            'real_class' and 'predicted_class' columns.
+        
+    Returns:
+        float: The classification accuracy as a fraction (0.0 to 1.0).
+    """
+    if len(df) == 0:
+        return 0.0
+    
+    # Compare real_class and predicted_class
+    correct_predictions = (df['real_class'] == df['predicted_class'])
+    accuracy = correct_predictions.mean()
+    return accuracy
+
+
+def compute_vit_rotation_error(df: pd.DataFrame) -> float:
+    """Compute the geodesic rotation error between real and predicted quaternions.
+    
+    This function computes the angular distance between rotations represented by
+    quaternions using the geodesic distance formula on SO(3). Only calculates
+    rotation error for correctly classified samples.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing ViT predictions, expected to have
+            'real_quaternion', 'predicted_quaternion', 'real_class', and 
+            'predicted_class' columns.
+            
+    Returns:
+        float: The mean geodesic rotation error in degrees for correctly classified samples.
+    """
+    if len(df) == 0:
+        return 0.0
+    
+    # Filter for correctly classified samples only
+    correct_subset = df[df['real_class'] == df['predicted_class']]
+    
+    if len(correct_subset) == 0:
+        raise ValueError("Rotation error cannot be computed because the model has not classified a single object correctly")
+    
+    errors = []
+    for _, row in correct_subset.iterrows():
+        real_quat = row['real_quaternion']
+        pred_quat = row['predicted_quaternion']
+        
+        # Normalize quaternions to ensure they're unit quaternions
+        real_quat = real_quat / np.linalg.norm(real_quat)
+        pred_quat = pred_quat / np.linalg.norm(pred_quat)
+        
+        # Compute dot product
+        dot_product = np.dot(real_quat, pred_quat)
+        
+        # Take absolute value to handle quaternion double cover (q and -q represent same rotation)
+        dot_product = abs(dot_product)
+        
+        # Clamp to avoid numerical issues with arccos
+        dot_product = min(1.0, dot_product)
+        
+        # Compute geodesic distance using the formula for angular distance on SO(3)
+        angle_rad = 2 * np.arccos(dot_product)
+        angle_deg = np.degrees(angle_rad)
+        
+        errors.append(angle_deg)
+    
+    return np.mean(errors)
+
 
 def get_frequency(items: Iterable, match: Union[Any, Container[Any]]) -> float:
     """Get the fraction of values that belong to a collection of values.
@@ -275,6 +323,30 @@ def get_frequency(items: Iterable, match: Union[Any, Container[Any]]) -> float:
     value_counts = dict(s.value_counts())
     n_matching = sum([value_counts.get(val, 0) for val in match])
     return n_matching / len(s)
+
+
+def aggregate_vit_predictions(df: pd.DataFrame, model_name: str, flops: float = None) -> pd.DataFrame:
+    """Aggregate ViT predictions into performance metrics.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing ViT predictions with 'real_class', 
+            'predicted_class', 'real_quaternion', and 'predicted_quaternion' columns.
+        model_name (str): Name of the ViT model (e.g., 'ViT-B/16').
+        flops (float, optional): FLOPs for this model. If not provided, will be NaN.
+        
+    Returns:
+        pd.DataFrame: DataFrame with one row containing model name, accuracy, 
+            rotation error, and FLOPs.
+    """
+    accuracy = compute_vit_accuracy(df) * 100  # Convert to percentage
+    rotation_error = compute_vit_rotation_error(df)
+    
+    return pd.DataFrame({
+        'model': [model_name],
+        'accuracy': [accuracy],
+        'rotation_error': [rotation_error],
+        'flops': [flops if flops is not None else np.nan]
+    })
 
 
 def aggregate_1lm_performance_data(experiments: Iterable[str]) -> pd.DataFrame:
@@ -366,7 +438,7 @@ class DetailedJSONStatsInterface:
 
     def __iter__(self):
         with open(self._path, "r") as f:
-            for i, line in enumerate(f):
+            for line in f:
                 yield list(json.loads(line).values())[0]
 
     def __len__(self) -> int:
