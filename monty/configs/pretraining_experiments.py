@@ -23,7 +23,7 @@ and corners).
 This module also defines a set of function that return default configs for learning
 modules, sensor modules, and motor systems specific to pretraining experiments. They
 may be useful for other modules that define pretraining experiments but should not
-be used for eval experiments. The config 'getter'functions defined here are
+be used for eval experiments. The config 'getter' functions defined here are
  - `get_pretrain_lm_config`
  - `get_pretrain_patch_config`
  - `get_pretrain_motor_config`

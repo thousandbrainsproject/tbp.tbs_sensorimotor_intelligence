@@ -10,7 +10,7 @@
 """Configs for Figure 6: Rapid Inference with Model-Based Policies.
 
 This module defines the following experiments:
-- `dist_agent_1lm_randrot_noise_nohyp`
+ - `dist_agent_1lm_randrot_noise_nohyp`
  - `surf_agent_1lm_randrot_noise`
  - `surf_agent_1lm_randrot_noise_nohyp`
 
