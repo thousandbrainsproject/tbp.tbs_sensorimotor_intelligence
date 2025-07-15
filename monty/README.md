@@ -61,6 +61,8 @@ The `-n` argument is optional, and it will be set automatically if not provided.
 
 Below is an exhaustive list of the experiment configs used in this paper, along with descriptions motivating the choice of parameters. This summary is largely organized by figure, the exceptions being configs used to generate [pretrained models](#pretraining-experiments), [data used for visualizations](#visualization-experiments), and [images used by ViT model](#other-experiments).
 
+**Important**: Figures 5 and 6 in this repository were swapped in the final draft of our paper. `configs/fig5.py` contains experiments used for figure 6 in the paper, and `configs/fig6.py` contain experiments used for figure 5.
+
 ### Figure 3: Robust Sensorimotor Inference
 
 This figure presents results from five inference experiments testing Monty's robustness under different conditions. Monty was pre-trained on 14 standard rotations derived from cube face and corner views (see full configuration details in `configs/pretraining_experiments/dist_agent_1lm`).
