@@ -55,7 +55,7 @@ python run_parallel.py -e <experiment_name> -n <num_parallel>
 ```
 The `-n` argument is optional, and it will be set automatically if not provided. 
 
-**Note**: Not all experiments can be parallel. Use [this table](#run-settings) to determine whether to use `run.py` or `run_parallel.py`.
+**Note**: Not all experiments can be run in parallel. Use [this table](#run-settings) to determine whether to use `run.py` or `run_parallel.py`.
 
 ## Summary of Experiments
 
