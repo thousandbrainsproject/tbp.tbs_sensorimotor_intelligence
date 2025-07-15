@@ -6,8 +6,8 @@ Experiments make use of either the Monty framework, or Pytorch in the case of de
 
 The basic structure of this repository is as follows:
 
- - `monty/`: Contains all the code needed to run experiments using [tbp.monty](https://github.com/thousandbrainsproject/tbp.monty), the open-source, sensorimotor learning system presented in our paper. This directory includes a [README]((monty/README.md)) file with for setting up a Python environment and executing the experiments.
- - `pytorch/`: Contains the vision transformer (ViT) model used in the paper and the experiments performed with it. Like with `monty/`, this directory contains a [README](pytorch/README.md) file with instructions for setting up an appropriate Python environment and running the ViT experiments.
+ - `monty/`: Contains all the code needed to run experiments using [tbp.monty](https://github.com/thousandbrainsproject/tbp.monty), the open-source, sensorimotor learning system presented in our paper. This directory includes a [README](monty/README.md) file with instructions for setting up a Python environment and executing the experiments.
+ - `pytorch/`: Contains the vision transformer (ViT) model used in the paper and the experiments performed with it. Like with `monty/`, this directory contains a [README](pytorch/README.md) file with instructions for setting up an appropriate Python environment and running the ViT-based experiments.
  - `scripts/`: Contains analysis and plotting scripts used to generate figures.
   
 ## Filesystem Setup

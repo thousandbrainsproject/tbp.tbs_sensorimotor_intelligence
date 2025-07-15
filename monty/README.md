@@ -1,6 +1,6 @@
 # Monty Experiments
 
-This directory contains all experiments from the paper that use the Monty framework. In this file, you can find instructions for [setting up an appropriate python environment](#environment-installation), [running experiments](#running-experiments), and an [exhaustive summary of all experiments](#summary-of-experiments) defined in the `configs` directory.
+This directory contains all experiments from the paper that use the Monty framework. In this file, you can find instructions for [setting up an appropriate python environment](#environment-installation), [running experiments](#running-experiments), and an [exhaustive summary of all experiments](#summary-of-experiments) defined under the `configs` directory.
 
 ## Environment Installation
 
@@ -318,4 +318,4 @@ Use the following table to determine whether to run an experiment with `run.py` 
 | fig6_curvature_guided_policy | no |
 | fig6_hypothesis_driven_policy | no |
 
-Note that `dist_agent_1lm_randrot_nohyp_[n]rot_trained` stands in for all variations of this experiment, and `n` is one of 1, 2, 4, 8, or 16. Similarly, `continual_learning_dist_agent_1lm_task[n]` stands in for all variations of the continual learning group, where `n` is one of 1, 2, ..., 76.
+Note that `dist_agent_1lm_randrot_nohyp_[n]rot_trained` stands in for all variations of this experiment, where `n` is one of 1, 2, 4, 8, or 16. Similarly, `continual_learning_dist_agent_1lm_task[n]` stands in for all variations of the continual learning group, where `n` is one of 1, 2, 3, ..., 76.
