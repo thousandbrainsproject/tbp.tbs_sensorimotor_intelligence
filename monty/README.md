@@ -186,6 +186,7 @@ The main output measure is accuracy and rotation error as a function of training
 Consists of 78 experiments:
 - `pretrain_continual_learning_dist_agent_1lm_checkpoints`
 - `continual_learning_dist_agent_1lm_task0`
+- `continual_learning_dist_agent_1lm_task1`
 - `continual_learning_dist_agent_1lm_task2`
 - ...
 - `continual_learning_dist_agent_1lm_task76`
