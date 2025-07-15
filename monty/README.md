@@ -61,8 +61,6 @@ The `-n` argument is optional, and it will be set automatically if not provided.
 
 Below is an exhaustive list of the experiment configs used in this paper, along with descriptions motivating the choice of parameters. This summary is largely organized by figure, the exceptions being configs used to generate [pretrained models](#pretraining-experiments), [data used for visualizations](#visualization-experiments), and [images used by ViT model](#other-experiments).
 
-**Important**: Figures 5 and 6 in this repository were swapped in the final draft of our paper. `configs/fig5.py` contains experiments used for figure 6 in the paper, and `configs/fig6.py` contain experiments used for figure 5.
-
 ### Figure 3: Robust Sensorimotor Inference
 
 This figure presents results from five inference experiments testing Monty's robustness under different conditions. Monty was pre-trained on 14 standard rotations derived from cube face and corner views (see full configuration details in `configs/pretraining_experiments/dist_agent_1lm`).
@@ -108,10 +106,22 @@ Unless specified otherwise, the following figures/experiments use:
 
 This captures core model performance in a realistic setting.
 
-### Figure 5: Rapid Inference with Voting
+### Figure 5: Rapid Inference with Model-Free and Model-Based Policies
 
-Note in our final paper, these results appear in the "Figure 6", after "Rapid Inference
-with Model-Free and Model-Based Policies"
+Consists of 3 experiments:
+- `dist_agent_1lm_randrot_noise_nohyp` - No hypothesis-testing, and random-walk policy
+- `surf_agent_1lm_randrot_noise_nohyp` - Model-free policy to explore surface
+- `surf_agent_1lm_randrot_noise` - Default, i.e. model-free and model-based policies
+
+This means performance is evaluated with:
+- 77 objects
+- Sensor noise and 5 random rotations
+- No voting
+- Varying policies; the surface agent (i.e. with color etc) gets the same kind of sensory information as the distant agent, and so differs only in its model-free policy that encourages rapid exploration of the surface of the object. We can make it clear in the paper that there is nothing preventing the distant agent from also having model-free and model-based policies.
+
+The main output measure is accuracy and rotation error as a function of the policy used.
+
+### Figure 6: Rapid Inference with Voting
 
 Consists of 5 experiments:
 - `dist_agent_1lm_randrot_noise`
@@ -132,24 +142,6 @@ Performance is evaluated on:
 - Voting over 2, 4, 8, or 16 LMs
 
 The main output measure is accuracy and rotation error as a function of the number of LMs.
-
-### Figure 6: Rapid Inference with Model-Free and Model-Based Policies
-
-Note in our final paper, these results appear in the "Figure 5", before "Rapid Inference
-with Voting"
-
-Consists of 3 experiments:
-- `dist_agent_1lm_randrot_noise_nohyp` - No hypothesis-testing, and random-walk policy
-- `surf_agent_1lm_randrot_noise_nohyp` - Model-free policy to explore surface
-- `surf_agent_1lm_randrot_noise` - Default, i.e. model-free and model-based policies
-
-This means performance is evaluated with:
-- 77 objects
-- Sensor noise and 5 random rotations
-- No voting
-- Varying policies; the surface agent (i.e. with color etc) gets the same kind of sensory information as the distant agent, and so differs only in its model-free policy that encourages rapid exploration of the surface of the object. We can make it clear in the paper that there is nothing preventing the distant agent from also having model-free and model-based policies.
-
-The main output measure is accuracy and rotation error as a function of the policy used.
 
 ### Figure 7a: Rapid Learning
 
@@ -296,14 +288,14 @@ Use the following table to determine whether to run an experiment with `run.py` 
 | dist_agent_1lm_randrot_14_noise_all_color_clamped | yes |
 | dist_agent_1lm | yes |
 | surf_agent_1lm_randrot_noise_10simobj | no |
+| dist_agent_1lm_randrot_noise_nohyp | yes |
+| surf_agent_1lm_randrot_noise_nohyp | yes |
+| surf_agent_1lm_randrot_noise | yes |
 | dist_agent_1lm_randrot_noise | yes |
 | dist_agent_2lm_randrot_noise | yes |
 | dist_agent_4lm_randrot_noise | yes |
 | dist_agent_8lm_randrot_noise | yes |
 | dist_agent_16lm_randrot_noise | yes |
-| dist_agent_1lm_randrot_noise_nohyp | yes |
-| surf_agent_1lm_randrot_noise_nohyp | yes |
-| surf_agent_1lm_randrot_noise | yes |
 | pretrain_dist_agent_1lm_checkpoints | no |
 | dist_agent_1lm_randrot_nohyp_[n]rot_trained | yes |
 | pretrain_continual_learning_dist_agent_1lm_checkpoints | no |
