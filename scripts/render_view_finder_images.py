@@ -22,10 +22,8 @@ $ python render_view_finder_images.py -e EXPERIMENT_NAME
 Running this script creates the directory
 `EXPERIMENT_DIR/view_finder_rgbd/visualizations` where `EXPERIMENT_DIR` is one of
  - `view_finder_base`: 14 standard training rotations
- - `view_finder_randrot_all`: 14 randomly generated rotations
  - `view_finder_randrot`: 5 pre-defined "random" rotations
  - `view_finder_32`: 32 rotations used for rapid learning experiments.
- - `view_finder_base_highres`: Higher-resolution images for visualization.
 
 77 figures will be created, one for each object, showing all its rotations.
 """
@@ -50,11 +48,6 @@ figure_settings = {
         "n_rows": 2,
         "n_cols": 7,
     },
-    "view_finder_randrot_all": {
-        "n_rotations": 14,
-        "n_rows": 2,
-        "n_cols": 7,
-    },
     "view_finder_randrot": {
         "n_rotations": 5,
         "n_rows": 1,
@@ -64,11 +57,6 @@ figure_settings = {
         "n_rotations": 32,
         "n_rows": 4,
         "n_cols": 8,
-    },
-    "view_finder_base_highres": {
-        "n_rotations": 14,
-        "n_rows": 2,
-        "n_cols": 7,
     },
 }
 inches_per_subplot = 1.5
@@ -92,10 +80,8 @@ def parse_args():
         required=True,
         choices=[
             "view_finder_base",
-            "view_finder_randrot_all",
             "view_finder_randrot",
             "view_finder_32",
-            "view_finder_base_highres",
         ],
         help="Name of experiment to render images from",
     )
