@@ -24,15 +24,15 @@ paper figures. The configs defined are:
   evidence and symmetry including symmetry data for the MLH object only, and only
   for the terminal step of each episode. The output is read and plotted by
   functions in `scripts/fig4.py`.
-- `fig6_visualize_8lm_patches`: An one-episode, one-step experiment that is used to
-  collect one set of observations for the 8-LM model. The output is read and plotted
-  by functions in `scripts/fig6.py` to show how the sensors patches fall on the object.
 - `fig5_curvature_guided_policy`: A one-episode surface agent experiment with
   no hypothesis-testing policy active. The output is read and plotted by
   functions in `scripts/fig5.py`.
 - `fig5_hypothesis_driven_policy`: A one-episode surface agent experiment with
   hypothesis-testing policy active. The output is read and plotted by
   functions in `scripts/fig5.py`.
+- `fig6_visualize_8lm_patches`: An one-episode, one-step experiment that is used to
+  collect one set of observations for the 8-LM model. The output is read and plotted
+  by functions in `scripts/fig6.py` to show how the sensors patches fall on the object.
 
 All of these experiments should be run in serial due to the memory needs of
 detailed logging (or checkpoint-saving in the case of
@@ -207,43 +207,6 @@ fig4_symmetry_run.update(
 
 
 """
-Figure 6
--------------------------------------------------------------------------------
-"""
-
-# `fig6_visualize_8lm_patches`: An experiment that runs one eval step with
-# the 8-LM model so we can collect enough sensor data to visualize the arrangement
-# of the sensors patches on the object. Used in `scripts/fig6.py`. Run in serial.
-fig6_visualize_8lm_patches = deepcopy(dist_agent_8lm_randrot_noise)
-fig6_visualize_8lm_patches.update(
-    dict(
-        experiment_args=EvalExperimentArgs(
-            model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_8lm/pretrained"),
-            n_eval_epochs=1,
-            max_total_steps=1,
-            max_eval_steps=1,
-        ),
-        # Exclude LM data to save space.
-        logging_config=SelectiveEvidenceLoggingConfig(
-            output_dir=str(VISUALIZATION_RESULTS_DIR),
-            run_name="fig6_visualize_8lm_patches",
-            selective_handler_args=dict(exclude=[f"LM_{i}" for i in range(8)]),
-        ),
-        eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
-            object_names=["mug"],
-            object_init_sampler=PredefinedObjectInitializer(rotations=[[0, 0, 0]]),
-        ),
-    )
-)
-# Set view-finder resolution to 256 x 256 for a denser "background" image. The remaining
-# patches use the standard resolution for this model (64 x 64).
-resolutions = [[64, 64]] * 9
-resolutions[-1] = [256, 256]
-dataset_args = fig6_visualize_8lm_patches["dataset_args"]
-dataset_args.env_init_args["agents"][0].agent_args["resolutions"] = resolutions
-dataset_args.__post_init__()
-
-"""
 Figure 5
 -------------------------------------------------------------------------------
 """
@@ -347,6 +310,44 @@ fig5_hypothesis_driven_policy["eval_dataloader_args"] = (
     )
 )
 
+
+"""
+Figure 6
+-------------------------------------------------------------------------------
+"""
+
+# `fig6_visualize_8lm_patches`: An experiment that runs one eval step with
+# the 8-LM model so we can collect enough sensor data to visualize the arrangement
+# of the sensors patches on the object. Used in `scripts/fig6.py`. Run in serial.
+fig6_visualize_8lm_patches = deepcopy(dist_agent_8lm_randrot_noise)
+fig6_visualize_8lm_patches.update(
+    dict(
+        experiment_args=EvalExperimentArgs(
+            model_name_or_path=str(DMC_PRETRAIN_DIR / "dist_agent_8lm/pretrained"),
+            n_eval_epochs=1,
+            max_total_steps=1,
+            max_eval_steps=1,
+        ),
+        # Exclude LM data to save space.
+        logging_config=SelectiveEvidenceLoggingConfig(
+            output_dir=str(VISUALIZATION_RESULTS_DIR),
+            run_name="fig6_visualize_8lm_patches",
+            selective_handler_args=dict(exclude=[f"LM_{i}" for i in range(8)]),
+        ),
+        eval_dataloader_args=EnvironmentDataloaderPerObjectArgs(
+            object_names=["mug"],
+            object_init_sampler=PredefinedObjectInitializer(rotations=[[0, 0, 0]]),
+        ),
+    )
+)
+# Set view-finder resolution to 256 x 256 for a denser "background" image. The remaining
+# patches use the standard resolution for this model (64 x 64).
+resolutions = [[64, 64]] * 9
+resolutions[-1] = [256, 256]
+dataset_args = fig6_visualize_8lm_patches["dataset_args"]
+dataset_args.env_init_args["agents"][0].agent_args["resolutions"] = resolutions
+dataset_args.__post_init__()
+
 CONFIGS = {
     "fig2_object_views": fig2_object_views,
     "fig2_pretrain_surf_agent_1lm_checkpoints": (
@@ -354,7 +355,7 @@ CONFIGS = {
     ),
     "fig3_evidence_run": fig3_evidence_run,
     "fig4_symmetry_run": fig4_symmetry_run,
-    "fig6_visualize_8lm_patches": fig6_visualize_8lm_patches,
     "fig5_curvature_guided_policy": fig5_curvature_guided_policy,
     "fig5_hypothesis_driven_policy": fig5_hypothesis_driven_policy,
+    "fig6_visualize_8lm_patches": fig6_visualize_8lm_patches,
 }
