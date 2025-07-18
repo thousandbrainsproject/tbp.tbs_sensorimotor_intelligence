@@ -28,12 +28,12 @@ from pathlib import Path
 
 from tbp.monty.frameworks.models.evidence_matching import EvidenceGraphLM
 
-from .fig5_rapid_inference_with_voting import (
-    dist_agent_1lm_randrot_noise,  # With hypothesis testing
-)
-from .fig6_rapid_inference_with_model_based_policies import (
+from .fig5_rapid_inference_with_model_based_policies import (
     dist_agent_1lm_randrot_noise_nohyp,
 )  # No hypothesis testing
+from .fig6_rapid_inference_with_voting import (
+    dist_agent_1lm_randrot_noise,  # With hypothesis testing
+)
 
 
 def update_x_percent_threshold_in_config(

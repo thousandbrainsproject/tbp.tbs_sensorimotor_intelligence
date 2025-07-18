@@ -33,7 +33,7 @@ from .common import (
     SelectiveEvidenceHandler,
     SelectiveEvidenceLoggingConfig,
 )
-from .fig6_rapid_inference_with_model_based_policies import (
+from .fig5_rapid_inference_with_model_based_policies import (
     surf_agent_1lm_randrot_noise,
 )
 
