@@ -286,7 +286,6 @@ Use the following table to determine whether to run an experiment with `run.py` 
 | dist_agent_1lm_randrot_14 | yes |
 | dist_agent_1lm_randrot_14_noise_all | yes |
 | dist_agent_1lm_randrot_14_noise_all_color_clamped | yes |
-| dist_agent_1lm | yes |
 | surf_agent_1lm_randrot_noise_10simobj | no |
 | dist_agent_1lm_randrot_noise_nohyp | yes |
 | surf_agent_1lm_randrot_noise_nohyp | yes |
