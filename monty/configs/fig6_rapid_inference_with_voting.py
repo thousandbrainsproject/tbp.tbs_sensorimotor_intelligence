@@ -147,4 +147,4 @@ CONFIGS = {
     "dist_agent_4lm_randrot_noise": dist_agent_4lm_randrot_noise,
     "dist_agent_8lm_randrot_noise": dist_agent_8lm_randrot_noise,
     "dist_agent_16lm_randrot_noise": dist_agent_16lm_randrot_noise,
-} 
+}

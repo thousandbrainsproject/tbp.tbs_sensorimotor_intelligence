@@ -120,4 +120,4 @@ CONFIGS = {
     "dist_agent_1lm_randrot_noise_nohyp": dist_agent_1lm_randrot_noise_nohyp,
     "surf_agent_1lm_randrot_noise": surf_agent_1lm_randrot_noise,
     "surf_agent_1lm_randrot_noise_nohyp": surf_agent_1lm_randrot_noise_nohyp,
-} 
+}
