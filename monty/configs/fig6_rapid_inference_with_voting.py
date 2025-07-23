@@ -6,7 +6,7 @@
 # Use of this source code is governed by the MIT
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-"""Configs for Figure 5: Rapid Inference with Voting.
+"""Configs for Figure 6: Rapid Inference with Voting.
 
 This module defines the following single-LM config:
  - `dist_agent_1lm_randrot_noise`
@@ -24,9 +24,6 @@ All of these experiments use:
  - Goal-state-driven/hypothesis-testing policy active
  - Sensor noise and 5 (predefined) random rotations
  - Voting over 2, 4, 8, or 16 LM, and terminating when 2 LMs have converged.
-
-Note in our final paper, these results appear in the "Figure 6", after "Rapid Inference
-with Model-Free and Model-Based Policies".
 
 """
 
